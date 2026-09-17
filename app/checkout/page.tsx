@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart, WHATSAPP_PHONE_NUMBER, WHATSAPP_PHONE_DISPLAY, PlacedOrder } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 type Step = 1 | 2 | 3;
 type PaymentMethod = "momo" | "card" | "staged" | "layby" | "wire";
@@ -24,18 +25,34 @@ export default function CheckoutPage() {
     saveOrder,
   } = useCart();
 
+  const { user, isAuthenticated, addOrder } = useAuth();
+
   const [currentStep, setCurrentStep] = useState<Step>(1);
 
   // Step 1: Site & Contact Form State
-  const [email, setEmail] = useState("procurement@enterprise.zm");
+  const [email, setEmail] = useState("mwape@gmail.com");
   const [phone, setPhone] = useState("97 183 8038");
   const [whatsappAlerts, setWhatsappAlerts] = useState(true);
   const [fullName, setFullName] = useState("Mwape Chilufya");
-  const [address, setAddress] = useState("Plot 104, Leopard's Hill Rd, Kabulonga");
+  const [address, setAddress] = useState("Plot 4812, Independence Avenue, Woodlands");
   const [province, setProvince] = useState("lusaka");
   const [roofType, setRoofType] = useState("ibr");
   const [accessNotes, setAccessNotes] = useState("Heavy-duty boom gate clearance. Inverter wall in garage.");
   const [scheduleOption, setScheduleOption] = useState<"fastest" | "scheduled" | "staged">("fastest");
+
+  // Sync with logged in user profile
+  useEffect(() => {
+    if (user) {
+      if (user.fullName) setFullName(user.fullName);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone.replace("+260", "").trim());
+      if (user.primaryAddress) setAddress(user.primaryAddress);
+      if (user.primaryProvince && user.primaryProvince.toLowerCase().includes("lusaka")) {
+        setProvince("lusaka");
+        setDeliveryZone("lusaka");
+      }
+    }
+  }, [user, setDeliveryZone]);
 
   // Step 2: Payment Gateway Form State
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
@@ -105,6 +122,39 @@ export default function CheckoutPage() {
     };
 
     saveOrder(orderData);
+
+    // Save into authenticated user profile history if available
+    try {
+      addOrder({
+        items: items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          quantity: i.qty,
+          price: i.price,
+          image: i.image,
+        })),
+        total: grandTotal,
+        subtotal: hardwareSubtotal + installationSubtotal,
+        deliveryFee: deliveryCost,
+        deliveryAddress: address,
+        district: province === "lusaka" ? "Lusaka" : "Regional",
+        province: province === "lusaka" ? "Lusaka Province" : `${province} Province`,
+        phone: phone,
+        paymentMethod:
+          paymentMethod === "momo"
+            ? `Mobile Money (${momoProvider.toUpperCase()})`
+            : paymentMethod === "card"
+            ? "Card (3D Secure)"
+            : paymentMethod === "staged"
+            ? "70/30 Staged Financing"
+            : paymentMethod === "layby"
+            ? "Lay-By Reserve"
+            : "Bank Transfer",
+      });
+    } catch (e) {
+      console.error("Failed to add order to auth profile", e);
+    }
+
     setCurrentStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 import CartDrawer from "@/components/CartDrawer";
 
 const spaceGrotesk = Space_Grotesk({
@@ -89,15 +90,17 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface-container-lowest antialiased min-h-screen flex flex-col">
-        <CartProvider>
-          <Header />
-          <CartDrawer />
-          <div className="flex-1 flex flex-col">
-            {children}
-          </div>
-          <Footer />
-          <WhatsAppWidget />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Header />
+            <CartDrawer />
+            <div className="flex-1 flex flex-col">
+              {children}
+            </div>
+            <Footer />
+            <WhatsAppWidget />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

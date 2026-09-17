@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   WHATSAPP_PHONE_NUMBER,
   WHATSAPP_PHONE_DISPLAY,
@@ -13,19 +14,35 @@ import {
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const pathname = usePathname();
   const { openDrawer, totalItemsCount, grandTotal, isFreeDelivery, freeDeliveryProgress } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu on route change
+  // Close mobile menu and dropdown on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
   }, [pathname]);
 
-  // Handle ESC key to close mobile menu
+  // Click outside listener for user dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle ESC key to close mobile menu & dropdown
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && mobileMenuOpen) {
+      if (e.key === "Escape") {
         setMobileMenuOpen(false);
+        setUserDropdownOpen(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -117,16 +134,19 @@ export default function Header() {
               aria-expanded={mobileMenuOpen}
             >
               <span
-                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-300 transform ${mobileMenuOpen ? "rotate-45 translate-y-2 bg-secondary" : ""
-                  }`}
+                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-300 transform ${
+                  mobileMenuOpen ? "rotate-45 translate-y-2 bg-secondary" : ""
+                }`}
               />
               <span
-                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-200 ${mobileMenuOpen ? "opacity-0" : "opacity-100"
-                  }`}
+                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-200 ${
+                  mobileMenuOpen ? "opacity-0" : "opacity-100"
+                }`}
               />
               <span
-                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-300 transform ${mobileMenuOpen ? "-rotate-45 -translate-y-2 bg-secondary" : ""
-                  }`}
+                className={`w-5 h-0.5 bg-primary rounded-full transition-all duration-300 transform ${
+                  mobileMenuOpen ? "-rotate-45 -translate-y-2 bg-secondary" : ""
+                }`}
               />
             </button>
 
@@ -157,10 +177,11 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`nav-link font-body-sm text-body-sm font-medium transition-colors ${isActive
-                    ? "text-primary active font-semibold"
-                    : "text-on-surface-variant hover:text-primary"
-                    }`}
+                  className={`nav-link font-body-sm text-body-sm font-medium transition-colors ${
+                    isActive
+                      ? "text-primary active font-semibold"
+                      : "text-on-surface-variant hover:text-primary"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -169,7 +190,7 @@ export default function Header() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2.5 md:gap-stack-md">
+          <div className="flex items-center gap-2 md:gap-3">
             <Link
               href="/shop"
               className="text-charcoal hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-surface-container"
@@ -177,9 +198,10 @@ export default function Header() {
             >
               <span className="material-symbols-outlined text-xl md:text-2xl">search</span>
             </Link>
+
             <button
               onClick={openDrawer}
-              className="relative text-charcoal hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-surface-container mr-1 md:mr-3 focus:outline-none cursor-pointer"
+              className="relative text-charcoal hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-surface-container focus:outline-none cursor-pointer"
               aria-label="Open Shopping Cart Drawer"
               type="button"
             >
@@ -190,8 +212,105 @@ export default function Header() {
                 </span>
               )}
             </button>
+
+            {/* Desktop User / Auth Button */}
+            <div className="relative hidden md:block" ref={userDropdownRef}>
+              {isAuthenticated && user ? (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-2 py-1.5 px-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-border-light text-xs font-semibold text-charcoal transition-all cursor-pointer shadow-sm"
+                    aria-expanded={userDropdownOpen}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <span className="text-charcoal font-bold max-w-[120px] truncate">{user.fullName.split(" ")[0]}</span>
+                    <span className="material-symbols-outlined text-[16px] text-outline">
+                      {userDropdownOpen ? "expand_less" : "expand_more"}
+                    </span>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-border-medium shadow-2xl p-2 z-50 animate-fadeIn">
+                      <div className="p-3 border-b border-border-light">
+                        <div className="font-bold text-sm text-charcoal truncate">{user.fullName}</div>
+                        <div className="text-[11px] text-on-surface-variant truncate">{user.email}</div>
+                        <div className="mt-1.5">
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-light text-primary border border-primary/20">
+                            {user.role === "admin" ? "ADMINISTRATOR" : `${user.accountType} account`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="py-1 space-y-0.5 text-xs font-medium">
+                        {user.role === "admin" && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary-light text-primary font-bold hover:bg-primary/20 transition-colors mb-1"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                            <span>Admin Operations</span>
+                          </Link>
+                        )}
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-primary">person</span>
+                          <span>Client Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-secondary">verified_user</span>
+                          <span>Warranty Vault ({user.warranties.length})</span>
+                        </Link>
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[18px] text-secondary">local_shipping</span>
+                          <span>Orders &amp; Dispatch</span>
+                        </Link>
+                      </div>
+
+                      <div className="pt-1 border-t border-border-light">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-error hover:bg-error-container/20 transition-colors text-xs font-semibold cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">logout</span>
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal hover:text-primary text-xs font-semibold transition-all shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                  <span>Sign In</span>
+                </Link>
+              )}
+            </div>
+
             <Link
-              className="hidden md:flex bg-primary hover:bg-primary-hover text-white font-label-cta text-label-cta px-6 py-3 rounded-full hover:scale-95 duration-100 transition-all shadow-sm font-bold"
+              className="hidden md:flex bg-primary hover:bg-primary-hover text-white font-label-cta text-label-cta px-5 py-2.5 rounded-full hover:scale-95 duration-100 transition-all shadow-sm font-bold"
               href="/contact"
             >
               GET A QUOTE
@@ -244,6 +363,85 @@ export default function Header() {
 
           {/* Drawer Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
+            {/* User Account Portal Card in Mobile Menu */}
+            {isAuthenticated && user ? (
+              <div className="p-3.5 rounded-2xl bg-surface-container-low border border-border-light">
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs text-charcoal truncate">{user.fullName}</div>
+                      <div className="text-[10px] text-secondary font-medium truncate uppercase">
+                        {user.role === "admin" ? "ADMINISTRATOR" : `${user.accountType} Account`}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      logout();
+                    }}
+                    className="p-1.5 rounded-lg bg-surface-container hover:bg-error-container/20 text-on-surface-variant hover:text-error text-xs transition-colors"
+                    title="Sign Out"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">logout</span>
+                  </button>
+                </div>
+
+                <div className={`grid ${user.role === "admin" ? "grid-cols-3" : "grid-cols-2"} gap-1.5 pt-2 border-t border-border-light`}>
+                  {user.role === "admin" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 px-2 rounded-lg bg-primary text-white text-[10px] font-bold text-center hover:bg-primary-hover flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">admin_panel_settings</span>
+                      <span>Admin</span>
+                    </Link>
+                  )}
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-1.5 px-2 rounded-lg bg-white border border-border-light text-charcoal text-[10px] font-semibold text-center hover:bg-surface-container flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[13px] text-primary">person</span>
+                    <span>Portal</span>
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-1.5 px-2 rounded-lg bg-white border border-border-light text-charcoal text-[10px] font-semibold text-center hover:bg-surface-container flex items-center justify-center gap-1 shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[13px] text-secondary">verified_user</span>
+                    <span>Vault</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-surface-container-low border border-border-light flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-bold text-xs text-charcoal">Client Portal</div>
+                    <div className="text-[10px] text-on-surface-variant truncate">Warranties &amp; Tracking</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-1.5 px-3 rounded-xl bg-primary text-white font-bold text-[11px] hover:bg-primary-hover shadow-sm"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* Quick Cart Status Bar inside Menu */}
             {totalItemsCount > 0 ? (
               <div
