@@ -17,43 +17,50 @@ This Cloudflare Worker acts as a secure, low-latency edge API gateway between th
 - **CORS Enabled**: Configured for cross-origin requests from your frontend domains.
 - **Dev Sandbox Simulation**: Allows seamless local frontend testing even before pawaPay live credentials are configured.
 
----
+## pawaPay Dashboard Callback Configuration
 
-## Deployment Instructions
+Before pawaPay lets you generate an API Token, you must register your callback URLs in the **pawaPay Merchant Dashboard** (Settings / Integration / Callbacks).
 
-### 1. Install Wrangler CLI
-```bash
-npm install -g wrangler
-```
+Once your Cloudflare Worker is deployed, configure your URLs as follows:
 
-### 2. Login to Cloudflare
-```bash
-wrangler login
-```
+| Setting in pawaPay Dashboard | URL to Enter |
+| :--- | :--- |
+| **Deposit Callback URL** | `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev/api/pay/callback` |
+| **Payout Callback URL** (optional/refunds) | `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev/api/pay/callback/payout` |
+| **Return / Redirect URL** (Card / 3DS) | `https://elleyhillzm.com/order-confirmation` *(or `http://localhost:3000/order-confirmation`)* |
 
-### 3. Configure Your pawaPay Secret API Token
-Run the following command to securely store your token in Cloudflare (never commit API keys into source control):
-```bash
-wrangler secret put PAWAPAY_API_TOKEN
-```
-When prompted, paste your pawaPay JWT API Token provided by the pawaPay developer dashboard.
-
-### 4. Deploy to Cloudflare Workers
-```bash
-# Deploy to Sandbox / Staging
-npm run deploy
-
-# Or deploy to Production
-npm run deploy:prod
-```
-
-After deploying, Cloudflare will output your worker URL (e.g., `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev`).
+> 💡 **Tip:** The worker handles both `GET` verification pings and `POST` webhook payloads returning `200 OK`, so the pawaPay dashboard will instantly validate and approve your URLs.
 
 ---
 
-## Connecting with Next.js Frontend
+## Deployment & Setup Steps
 
-In the Next.js site root, set the worker URL in your `.env.local`:
+### 1. Deploy the Cloudflare Worker First
+To get your live worker URL for the pawaPay dashboard:
+```bash
+cd cloudflare-worker
+npx wrangler deploy
+```
+*Cloudflare will print your URL: e.g. `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev`*
+
+### 2. Enter Callbacks in pawaPay Dashboard
+1. Go to your **pawaPay Merchant Dashboard** → **Settings** → **Callbacks / Integration**.
+2. Paste the **Deposit Callback URL**:
+   `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev/api/pay/callback`
+3. Paste the **Payout Callback URL**:
+   `https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev/api/pay/callback/payout`
+4. Click **Save / Verify**.
+
+### 3. Generate & Store your pawaPay API Token
+1. In the pawaPay Dashboard, click **Generate API Token** (now unlocked!).
+2. Copy your token and store it securely in your Cloudflare Worker:
+   ```bash
+   npx wrangler secret put PAWAPAY_API_TOKEN
+   ```
+   *(Paste your pawaPay token when prompted)*
+
+### 4. Connect to Next.js Web App
+In the root directory of your Next.js project, add to `.env.local`:
 ```env
 NEXT_PUBLIC_PAWAPAY_WORKER_URL=https://elleyhill-pawapay-gateway.<your-subdomain>.workers.dev
 ```
