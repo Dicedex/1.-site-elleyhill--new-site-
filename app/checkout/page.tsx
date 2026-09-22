@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 type Step = 1 | 2 | 3;
 type PaymentMethod = "momo" | "card" | "staged" | "layby" | "wire";
-type MomoProvider = "mtn" | "airtel";
+type MomoProvider = "mtn" | "airtel" | "zamtel";
 
 export default function CheckoutPage() {
   const {
@@ -111,6 +111,7 @@ export default function CheckoutPage() {
         method: paymentMethod,
         momoProvider,
         momoPhone,
+        gateway: "pawaPay",
         status: "authorized",
       },
       items: items.length > 0 ? items : [],
@@ -743,11 +744,19 @@ export default function CheckoutPage() {
               <div className="lg:col-span-7 flex flex-col gap-4">
                 <div className="flex items-center justify-between pb-2">
                   <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-technical-data text-xs uppercase font-bold tracking-wider text-secondary">
+                        OFFICIAL PAYMENT SWITCH
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-technical-data text-[10px] font-bold uppercase border border-primary/20">
+                        pawaPay Gateway
+                      </span>
+                    </div>
                     <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
-                      Select Financing Gateway
+                      Select Payment Gateway
                     </h1>
                     <p className="font-body-sm text-body-sm text-text-secondary mt-1">
-                      Industrial &amp; residential energy systems authorized via licensed Bank of Zambia channels.
+                      Secure, instant multi-channel settlements powered by <strong className="text-primary font-bold">pawaPay</strong> under Bank of Zambia oversight.
                     </p>
                   </div>
                   <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-[12px] font-semibold">
@@ -756,7 +765,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
 
-                {/* Accordion Option 1: Mobile Money (Default Selected) */}
+                {/* Accordion Option 1: Mobile Money via pawaPay (Default Selected) */}
                 <div
                   className={`payment-card rounded-xl bg-surface-container-lowest p-6 shadow-sm transition-all duration-200 border ${
                     paymentMethod === "momo"
@@ -778,32 +787,40 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <div className="flex items-center gap-3">
-                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Mobile Money</span>
+                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Mobile Money (pawaPay)</span>
                           <span className="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-[11px] font-bold">
-                            0% Processing Fee
+                            Instant STK Push
                           </span>
                         </div>
                         <p className="font-body-sm text-body-sm text-text-secondary mt-0.5">
-                          MTN MoMo &amp; Airtel Money Zambia automated push authorization.
+                          MTN MoMo, Airtel Money &amp; Zamtel Kwacha direct automated push PIN authorization.
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-1 rounded bg-surface-container font-technical-data text-[12px] font-bold text-on-surface tracking-wide">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      <span className="px-2.5 py-1 rounded bg-surface-container font-technical-data text-[11px] font-bold text-on-surface tracking-wide">
                         MTN MoMo
                       </span>
-                      <span className="px-2.5 py-1 rounded bg-error-container font-technical-data text-[12px] font-bold text-error tracking-wide">
-                        airtel
+                      <span className="px-2.5 py-1 rounded bg-error-container font-technical-data text-[11px] font-bold text-error tracking-wide">
+                        Airtel
+                      </span>
+                      <span className="px-2.5 py-1 rounded bg-brand-light-tint font-technical-data text-[11px] font-bold text-brand-primary-green tracking-wide">
+                        Zamtel
                       </span>
                     </div>
                   </div>
 
                   {paymentMethod === "momo" && (
                     <div className="mt-6 pt-5 bg-surface-container-low rounded-lg p-5 border border-border-light">
-                      <span className="font-technical-data text-[12px] uppercase text-outline tracking-wider font-semibold">
-                        Carrier Gateway
-                      </span>
-                      <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-technical-data text-[12px] uppercase text-outline tracking-wider font-semibold">
+                          Select Mobile Money Carrier
+                        </span>
+                        <span className="text-[11px] font-technical-data text-secondary font-bold">
+                          Powered by pawaPay
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
                         <label
                           onClick={() => setMomoProvider("mtn")}
                           className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border ${
@@ -818,8 +835,8 @@ export default function CheckoutPage() {
                             type="radio"
                           />
                           <div className="flex flex-col">
-                            <span className="font-headline-md text-[14px] text-on-surface font-semibold">MTN Zambia</span>
-                            <span className="font-technical-data text-[11px] text-outline">+260 96 / 076 series</span>
+                            <span className="font-headline-md text-[13px] text-on-surface font-semibold">MTN Zambia</span>
+                            <span className="font-technical-data text-[10px] text-outline">096 / 076 series</span>
                           </div>
                         </label>
                         <label
@@ -836,8 +853,26 @@ export default function CheckoutPage() {
                             type="radio"
                           />
                           <div className="flex flex-col">
-                            <span className="font-headline-md text-[14px] text-on-surface font-semibold">Airtel Money</span>
-                            <span className="font-technical-data text-[11px] text-outline">+260 97 / 077 series</span>
+                            <span className="font-headline-md text-[13px] text-on-surface font-semibold">Airtel Money</span>
+                            <span className="font-technical-data text-[10px] text-outline">097 / 077 series</span>
+                          </div>
+                        </label>
+                        <label
+                          onClick={() => setMomoProvider("zamtel")}
+                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border ${
+                            momoProvider === "zamtel" ? "border-secondary ring-1 ring-secondary" : "border-border-light"
+                          }`}
+                        >
+                          <input
+                            checked={momoProvider === "zamtel"}
+                            onChange={() => setMomoProvider("zamtel")}
+                            className="accent-secondary"
+                            name="momo_provider"
+                            type="radio"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-headline-md text-[13px] text-on-surface font-semibold">Zamtel Kwacha</span>
+                            <span className="font-technical-data text-[10px] text-outline">095 series</span>
                           </div>
                         </label>
                       </div>
@@ -863,15 +898,15 @@ export default function CheckoutPage() {
                           phonelink_ring
                         </span>
                         <p className="font-body-sm text-[13px] leading-snug">
-                          You will receive an instant push prompt on your handset to approve{" "}
-                          <strong className="font-technical-data font-bold">ZMW {grandTotal.toLocaleString()}</strong> with your secure PIN.
+                          pawaPay will trigger an instant push notification on your handset to authorize{" "}
+                          <strong className="font-technical-data font-bold">ZMW {grandTotal.toLocaleString()}</strong> with your secure MoMo PIN.
                         </p>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Accordion Option 2: Card */}
+                {/* Accordion Option 2: Card via pawaPay */}
                 <div
                   className={`payment-card rounded-xl bg-surface-container-lowest p-6 shadow-sm transition-all duration-200 border ${
                     paymentMethod === "card"
@@ -893,13 +928,13 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <div className="flex items-center gap-3">
-                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Credit / Debit Card</span>
+                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Credit / Debit Card (pawaPay)</span>
                           <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-outline font-technical-data text-[11px] font-bold">
-                            Instant Release
+                            3D-Secure
                           </span>
                         </div>
                         <p className="font-body-sm text-body-sm text-text-secondary mt-0.5">
-                          Visa, Mastercard, &amp; local Kwacha dual-currency cards.
+                          Visa, Mastercard, &amp; dual-currency cards processed via pawaPay secure encryption.
                         </p>
                       </div>
                     </div>
@@ -1427,7 +1462,7 @@ export default function CheckoutPage() {
                         Payment Clearance
                       </div>
                       <div className="font-body-sm text-xs text-on-surface-variant truncate">
-                        {paymentMethod === "momo" ? "MTN / Airtel MoMo Verified" : `${paymentMethod.toUpperCase()} Settled`}
+                        {paymentMethod === "momo" ? `pawaPay Verified (${momoProvider.toUpperCase()} MoMo)` : `pawaPay ${paymentMethod.toUpperCase()} Settled`}
                       </div>
                     </div>
                   </div>

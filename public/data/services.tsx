@@ -6,6 +6,7 @@ export type Service = {
     icon: React.ReactNode;
     title: string;
     description: string;
+    image: string;
     price?: string;
     details: {
         introduction: string;
@@ -23,6 +24,7 @@ export const SERVICES: Service[] = [
     icon: <Wrench className="h-10 w-10 text-primary" />,
     title: "Solar Panel Installation",
     description: "Expert installation of high-efficiency solar panel systems for residential, commercial, and industrial clients.",
+    image: "/images/services/installation.jpg",
     details: {
         introduction: "Our team of certified professionals ensures your solar panel installation is seamless, efficient, and built to last. We handle every aspect of the process, from initial design and consultation to the final commissioning of your system, guaranteeing optimal performance and a swift return on your investment.",
         keyAspects: [
@@ -49,6 +51,7 @@ export const SERVICES: Service[] = [
     icon: <Sun className="h-10 w-10 text-primary" />,
     title: "Solar Panel Cleaning",
     description: "Maximize your system's efficiency with our professional panel cleaning service to ensure peak power output.",
+    image: "/images/services/cleaning.jpg",
     price: "K70 per panel",
     details: {
         introduction: "Dust, dirt, and bird droppings can significantly reduce your solar system's energy output. Our professional cleaning service uses specialized equipment and techniques to safely and effectively clean your panels, ensuring they operate at maximum efficiency and protecting your investment.",
@@ -76,6 +79,7 @@ export const SERVICES: Service[] = [
     icon: <ShieldCheck className="h-10 w-10 text-primary" />,
     title: "System Maintenance & Support",
     description: "Ensure your solar investment lasts with comprehensive maintenance packages and prompt support.",
+    image: "/images/services/maintenance.jpg",
     details: {
         introduction: "A solar power system is a long-term investment. Our comprehensive maintenance and support plans are designed to keep your system running at peak performance for years to come. We offer proactive check-ups, prompt troubleshooting, and expert support to give you complete peace of mind.",
         keyAspects: [
@@ -102,6 +106,7 @@ export const SERVICES: Service[] = [
     icon: <Leaf className="h-10 w-10 text-primary" />,
     title: "Energy Auditing & Consultation",
     description: "Our experts audit your energy usage and provide a detailed consultation to design the perfect solar solution.",
+    image: "/images/services/audit.jpg",
     details: {
         introduction: "Thinking about going solar but not sure where to start? Our energy auditing and consultation service is the perfect first step. We analyze your current and future energy consumption patterns to provide expert advice and design a solar solution that is perfectly tailored to your needs and budget.",
         keyAspects: [

@@ -221,8 +221,35 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Payment Security & Gateways Strip */}
+        <div className="pt-6 pb-4 border-t border-border-light/60 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs text-on-surface-variant font-medium">
+            <span className="material-symbols-outlined text-secondary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+              verified_user
+            </span>
+            <span>Secured by <strong className="text-primary font-bold">pawaPay</strong> Payment Switch</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-technical-data font-semibold">
+            <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-[#FFCC00] bg-black/5 font-bold">
+              MTN MoMo
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-[#E60000] font-bold">
+              Airtel Money
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-[#006633] font-bold">
+              Zamtel Kwacha
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-primary">
+              Visa / Mastercard
+            </span>
+            <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-on-surface-variant">
+              EFT Wire
+            </span>
+          </div>
+        </div>
+
         {/* Sub-footer Legal Bar */}
-        <div className="pt-6 border-t border-border-light/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+        <div className="pt-4 border-t border-border-light/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/terms" className="hover:text-primary hover:underline transition-colors">
               Terms &amp; Conditions

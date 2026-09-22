@@ -3,8 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import ProductImageGallery from "@/components/ProductImageGallery";
 
 const galleryImages = [
+  {
+    url: "/images/products/complete systems/5kw sys.png",
+    alt: "Elleyhill Power 5kW Complete Solar System with Inverter, Battery, and Haitai Solar Panels.",
+  },
   {
     url: "/images/products/Inverter.png",
     alt: "Elleyhill Power 5kW Hybrid Inverter with digital LCD screen and pure sine wave architecture.",
@@ -15,7 +20,7 @@ const galleryImages = [
   },
   {
     url: "/images/products/panels.png",
-    alt: "Tier-1 605W JA Solar Bifacial High-Efficiency Solar Panels.",
+    alt: "Tier-1 545W Haitai High-Efficiency Solar Panels.",
   },
   {
     url: "/images/products/ssre kit.jpeg",
@@ -26,22 +31,21 @@ const galleryImages = [
 
 export default function ProductDetailPage() {
   const { openDrawer, addItem } = useCart();
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [installationOption, setInstallationOption] = useState<"professional" | "kit-only">("professional");
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
   const handleAddToCart = () => {
     const isProfessional = installationOption === "professional";
     addItem({
-      id: "6kw-standard-home-comfort-kit",
-      name: "6kW Standard Home Comfort Kit",
-      price: 85500,
-      originalPrice: 96000,
-      image: "/images/products/Inverter.png",
-      tag: "TIER 1 HARDWARE",
+      id: "5kw-standard-home-comfort-kit",
+      name: "5kW Complete Solar System",
+      price: 65806,
+      originalPrice: 74500,
+      image: "/images/products/complete systems/5kw sys.png",
+      tag: "COMPLETE SYSTEM",
       stockStatus: "In Stock (Lusaka Warehouse)",
       description:
-        "Includes 6kW Greenrich Hybrid Inverter, 10.24kWh LiFePO4 Battery, and 8x 605W JA Solar Bifacial Panels.",
+        "5kW (200Ah) Greenrich Inverter, 1 x 5kWh (100Ah) 48V Lithium Battery, 8 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
       installationIncluded: isProfessional,
       installationOption: installationOption,
       installationPrice: 4500,
@@ -69,51 +73,20 @@ export default function ProductDetailPage() {
           </Link>
           <span className="material-symbols-outlined text-sm">chevron_right</span>
           <span className="text-primary font-medium">
-            5kW Standard Home Comfort Kit
+            5kW Complete Solar System
           </span>
         </div>
 
         {/* Split Screen Architecture */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter lg:gap-16 items-start relative">
-          {/* Left: Sticky Gallery */}
-          <div className="md:sticky md:top-24 flex flex-col gap-4">
-            {/* Main Image Stage */}
-            <div className="relative w-full aspect-square bg-surface-bright rounded-xl border border-border-light overflow-hidden group">
-              <div
-                className="w-full h-full bg-cover bg-center transition-all duration-300"
-                data-alt={galleryImages[selectedImageIndex].alt}
-                id="main-gallery-image"
-                style={{
-                  backgroundImage: `url('${galleryImages[selectedImageIndex].url}')`,
-                }}
-              ></div>
-              {/* 360 Toggle */}
-              <button className="absolute bottom-4 left-4 bg-surface-container-lowest/80 backdrop-blur-md border border-border-light text-primary px-4 py-2 rounded-full font-label-cta text-sm flex items-center gap-2 hover:bg-surface-container-lowest transition-colors shadow-sm">
-                <span className="material-symbols-outlined text-lg">360</span>
-                Interactive View
-              </button>
-            </div>
-
-            {/* Thumbnails Row */}
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {galleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImageIndex(idx)}
-                  className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden gallery-thumb focus:outline-none transition-all ${
-                    selectedImageIndex === idx
-                      ? "border-2 border-primary opacity-100"
-                      : "border border-border-light hover:border-outline-variant opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <div
-                    className="w-full h-full bg-cover bg-center"
-                    data-alt={img.alt}
-                    style={{ backgroundImage: `url('${img.url}')` }}
-                  ></div>
-                </button>
-              ))}
-            </div>
+          {/* Left: Sticky Gallery with Fullscreen Lightbox */}
+          <div className="md:sticky md:top-24">
+            <ProductImageGallery
+              images={galleryImages}
+              productName="5kW Complete Solar System"
+              category="Complete Kits"
+              inStock={true}
+            />
           </div>
 
           {/* Right: Purchase Panel */}
@@ -121,10 +94,10 @@ export default function ProductDetailPage() {
             {/* Title & Status */}
             <div className="flex flex-col gap-2">
               <span className="text-on-surface-variant font-technical-data tracking-widest uppercase text-xs">
-                ELLEYHILL POWER SYSTEM
+                ELLEYHILL POWER COMPLETE SYSTEM
               </span>
               <h1 className="font-headline-lg-mobile md:font-headline-lg text-primary">
-                5kW Standard Home Comfort Kit
+                5kW Complete Solar System
               </h1>
               <div className="flex items-center gap-4 mt-2">
                 <div className="flex items-center gap-1 text-tertiary-fixed-dim">
@@ -159,17 +132,17 @@ export default function ProductDetailPage() {
             {/* Pricing */}
             <div className="flex flex-col gap-1 border-b border-border-light pb-stack-lg">
               <div className="font-display-hero-mobile md:font-display-hero text-primary">
-                ZMW 85,500
+                ZMW 65,806
               </div>
               <div className="text-on-surface-variant text-body-sm flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">payments</span>
-                or 3-month Lay-By Available at ZMW 28,500/mo
+                or 3-month Lay-By Available at ZMW 21,935/mo
               </div>
             </div>
 
             {/* Key Specs Bento Block */}
             <div className="bg-surface-bright rounded-xl p-6 border border-border-light flex flex-col gap-4">
-              <h3 className="font-headline-md text-base text-primary">
+              <h3 className="font-headline-md text-base text-primary font-bold">
                 KEY SYSTEM SPECS
               </h3>
               <ul className="flex flex-col gap-3">
@@ -178,11 +151,11 @@ export default function ProductDetailPage() {
                     electric_bolt
                   </span>
                   <div>
-                    <p className="font-technical-data text-primary">
-                      5kW Hybrid Inverter (Greenrich)
+                    <p className="font-technical-data text-primary font-bold">
+                      5kW (200Ah) Greenrich Inverter
                     </p>
                     <p className="text-body-sm text-on-surface-variant">
-                      98% peak efficiency, 10ms UPS switchover.
+                      98% peak efficiency, 10ms UPS instant switchover.
                     </p>
                   </div>
                 </li>
@@ -191,11 +164,11 @@ export default function ProductDetailPage() {
                     battery_charging_full
                   </span>
                   <div>
-                    <p className="font-technical-data text-primary">
-                      4.95kWh LiFePO4 Battery Storage
+                    <p className="font-technical-data text-primary font-bold">
+                      1 x 5kWh (100Ah) 48V Lithium Battery
                     </p>
                     <p className="text-body-sm text-on-surface-variant">
-                      6,000+ Cycle Life, scalable up to 4 units.
+                      LiFePO4 Lithium storage, 6,000+ cycle life.
                     </p>
                   </div>
                 </li>
@@ -204,12 +177,21 @@ export default function ProductDetailPage() {
                     solar_power
                   </span>
                   <div>
-                    <p className="font-technical-data text-primary">
-                      3.63kW Solar Array (6x 605W JA Solar Bifacial)
+                    <p className="font-technical-data text-primary font-bold">
+                      8 x 545W Haitai Solar Panels
                     </p>
                     <p className="text-body-sm text-on-surface-variant">
-                      Dual-sided bifacial light absorption with up to +25% rear albedo gain.
+                      4.36kW High-Efficiency Tier-1 Solar Array.
                     </p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3 pt-2 border-t border-border-light">
+                  <span className="material-symbols-outlined text-secondary mt-0.5">
+                    check_circle
+                  </span>
+                  <div className="text-xs text-charcoal space-y-0.5 font-medium">
+                    <div>• Excl. Protection Accessories</div>
+                    <div>• Excl. Installation</div>
                   </div>
                 </li>
               </ul>
@@ -334,7 +316,7 @@ export default function ProductDetailPage() {
               </button>
               <a
                 href={`https://wa.me/260971838038?text=${encodeURIComponent(
-                  `Hello Elleyhill Power, I am interested in inquiring about the 6kW Standard Home Comfort Kit (ZMW 85,500) with ${installationOption === "professional" ? "Professional Installation (+ZMW 4,500)" : "Kit-Only Delivery"}. Please provide availability and technical details.`
+                  `Hello Elleyhill Power, I am interested in inquiring about the 5kW Complete Solar System (ZMW 65,806): 5kW (200Ah) Greenrich Inverter, 1x 5kWh (100Ah) 48V Lithium Battery, 8x 545W Haitai Solar Panels (Excl. Protection Accessories & Installation) with ${installationOption === "professional" ? "Professional Installation (+ZMW 4,500)" : "Kit-Only Delivery"}. Please provide availability and technical details.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -501,7 +483,7 @@ export default function ProductDetailPage() {
               {openAccordion === 0 && (
                 <div className="pb-6 text-body-sm text-on-surface-variant leading-relaxed">
                   <ul className="list-disc pl-5 space-y-2">
-                    <li>Rated Output Power: 5000W</li>
+                    <li>Rated Output Power: 5000W (200Ah continuous capability)</li>
                     <li>Surge Power: 10000VA for 5 seconds</li>
                     <li>MPPT Voltage Range: 120VDC - 450VDC</li>
                     <li>Max Solar Input: 6000W</li>
@@ -531,10 +513,10 @@ export default function ProductDetailPage() {
                 <div className="pb-6 text-body-sm text-on-surface-variant leading-relaxed">
                   <ul className="list-disc pl-5 space-y-2">
                     <li>Chemistry: Lithium Iron Phosphate (LiFePO4)</li>
-                    <li>Nominal Energy: 4.95kWh</li>
-                    <li>Usable Energy (90% DOD): 4.45kWh</li>
+                    <li>Nominal Energy: 5.0kWh (100Ah @ 48V / 51.2V)</li>
+                    <li>Usable Energy (90% DOD): 4.5kWh</li>
                     <li>Cycle Life: &gt;6,000 cycles at 25°C</li>
-                    <li>Scalability: Parallel up to 4 units</li>
+                    <li>Scalability: Parallel up to 16 units</li>
                   </ul>
                 </div>
               )}
@@ -569,8 +551,8 @@ export default function ProductDetailPage() {
                       Warranty.
                     </li>
                     <li>
-                      <strong>Panels:</strong> 12-Year Workmanship / 30-Year Linear
-                      Bifacial Performance Guarantee.
+                      <strong>Panels:</strong> 12-Year Workmanship / 25-Year Linear
+                      Solar Panel Performance Guarantee.
                     </li>
                     <li>
                       <strong>Installation:</strong> 1-Year Workmanship Guarantee
@@ -603,10 +585,10 @@ export default function ProductDetailPage() {
       <div className="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-border-light shadow-[0_-4px_24px_rgba(0,0,0,0.06)] z-40 p-4 md:hidden flex justify-between items-center pb-safe">
         <div className="flex flex-col">
           <span className="font-technical-data text-primary text-sm truncate w-40">
-            5kW Standard Kit
+            5kW Complete System
           </span>
           <span className="font-display-hero-mobile text-lg text-primary">
-            ZMW 85,500
+            ZMW 65,806
           </span>
         </div>
         <button

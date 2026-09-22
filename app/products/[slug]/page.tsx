@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PRODUCTS, Product } from "@/data/products";
 import type { Metadata } from "next";
 import ProductPurchaseActions from "@/components/ProductPurchaseActions";
+import ProductImageGallery from "@/components/ProductImageGallery";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -75,14 +76,13 @@ export default async function DynamicProductPage({ params }: Props) {
 
         {/* Product Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter lg:gap-16 items-start">
-          {/* Left: Product Image */}
-          <div className="bg-surface-bright rounded-2xl border border-border-light overflow-hidden p-8 flex items-center justify-center aspect-square shadow-sm">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="max-h-[85%] max-w-[85%] object-contain mix-blend-multiply hover:scale-105 transition-transform duration-300"
-            />
-          </div>
+          {/* Left: Product Image Gallery with Fullscreen Lightbox */}
+          <ProductImageGallery
+            images={[product.image]}
+            productName={product.name}
+            category={product.category}
+            inStock={product.inStock ?? true}
+          />
 
           {/* Right: Info & Pricing */}
           <div className="flex flex-col gap-6">

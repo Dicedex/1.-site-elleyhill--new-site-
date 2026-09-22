@@ -420,14 +420,14 @@ const DEMO_COMMERCIAL_USER: UserProfile = {
       paymentMethod: "Corporate Bank Transfer",
       trackingNumber: "EHP-FREIGHT-4402",
       estimatedDelivery: "Delivered & Commissioned 20 Nov 2023",
-      assignedEngineer: "Eng. Kelvin Mwanza",
+      assignedEngineer: "Elleyhill EPC Lead Engineer",
     },
   ],
 };
 
 const DEMO_ADMIN_USER: UserProfile = {
   id: "adm_zm_001",
-  fullName: "Eng. Kelvin Mwanza",
+  fullName: "Elleyhill Operations Admin",
   email: "admin@elleyhill.co.zm",
   phone: "0971 838 038",
   role: "admin",

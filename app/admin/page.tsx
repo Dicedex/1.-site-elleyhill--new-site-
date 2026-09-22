@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
               className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Sign In as Admin (Eng. Kelvin Mwanza)</span>
+              <span>Sign In as Admin (Operations Lead)</span>
             </button>
             <Link
               href="/login?redirect=/admin"
@@ -370,7 +370,7 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="text-xs text-on-surface-variant flex items-center gap-1.5 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-                  <span>Lusaka HQ Depot • {user?.fullName || "Eng. Kelvin Mwanza"}</span>
+                  <span>Lusaka HQ Depot • {user?.fullName || "Operations Administrator"}</span>
                 </div>
               </div>
             </div>

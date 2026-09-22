@@ -153,7 +153,7 @@ function LoginFormContent() {
               </div>
               <div className="min-w-0">
                 <div className="font-bold text-charcoal flex items-center gap-1.5 truncate">
-                  <span>Eng. Kelvin Mwanza</span>
+                  <span>Elleyhill Operations Admin</span>
                   <span className="px-1.5 py-0.2 rounded bg-primary text-white text-[9px] font-extrabold uppercase">ADMIN</span>
                 </div>
                 <div className="text-[10px] text-primary">HQ Operations, Dispatch &amp; Inventory Console</div>

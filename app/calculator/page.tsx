@@ -107,24 +107,27 @@ export default function SolarCalculatorPage() {
   const peakLoadNum = parseFloat(peakLoadKw);
 
   // Recommended Inverter
-  let recommendedInverter = "6.0";
-  let recommendedProduct = PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit" || p.slug === "5kw-standard-home-comfort-kit") || PRODUCTS[0];
+  let recommendedInverter = "5.0";
+  let recommendedProduct = PRODUCTS.find((p) => p.slug === "5kw-standard-home-comfort-kit") || PRODUCTS[0];
 
-  if (peakLoadNum > 15.0) {
-    recommendedInverter = "20.0";
-    recommendedProduct = PRODUCTS.find((p) => p.slug === "greenrich-hybrid-inverter-8kw") || PRODUCTS[0];
+  if (peakLoadNum > 20.0) {
+    recommendedInverter = "30.0";
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "30kw-deye-3p-complete-solar-system") || PRODUCTS[0];
+  } else if (peakLoadNum > 15.0) {
+    recommendedInverter = "16.0";
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "16kw-deye-1p-complete-solar-system") || PRODUCTS[0];
   } else if (peakLoadNum > 8.0) {
     recommendedInverter = "12.0";
-    recommendedProduct = PRODUCTS.find((p) => p.slug === "greenrich-hybrid-inverter-8kw") || PRODUCTS[0];
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "12kw-deye-3p-complete-solar-system") || PRODUCTS[0];
   } else if (peakLoadNum > 5.0) {
     recommendedInverter = "8.0";
-    recommendedProduct = PRODUCTS.find((p) => p.slug === "greenrich-hybrid-inverter-8kw") || PRODUCTS[0];
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "8kw-complete-solar-system") || PRODUCTS[0];
   } else if (peakLoadNum > 3.5) {
     recommendedInverter = "6.0";
-    recommendedProduct = PRODUCTS.find((p) => p.slug === "greenrich-hybrid-inverter-6kw") || PRODUCTS[0];
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit") || PRODUCTS[0];
   } else {
-    recommendedInverter = "6.0";
-    recommendedProduct = PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit" || p.slug === "5kw-standard-home-comfort-kit") || PRODUCTS[0];
+    recommendedInverter = "5.0";
+    recommendedProduct = PRODUCTS.find((p) => p.slug === "5kw-standard-home-comfort-kit") || PRODUCTS[0];
   }
 
   const hours = hoursMapping[sliderVal] || 8;

@@ -40,8 +40,9 @@ export interface PlacedOrder {
   };
   payment: {
     method: "momo" | "card" | "staged" | "layby" | "wire";
-    momoProvider?: "mtn" | "airtel";
+    momoProvider?: "mtn" | "airtel" | "zamtel";
     momoPhone?: string;
+    gateway?: string;
     status: string;
   };
   items: CartItem[];

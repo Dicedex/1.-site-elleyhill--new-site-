@@ -22,7 +22,7 @@ export default function Home() {
               FRESH ENERGY INDEPENDENCE IN ZAMBIA
             </span>
             <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero text-charcoal mb-stack-md">
-              Uninterrupted Power. <span className="text-primary">Zero Compromise.</span>
+              Uninterrupted Power. <span className="block text-primary mt-1">Zero Compromise.</span>
             </h1>
             <p className="font-body-lg text-body-lg text-neutral-grey-dark max-w-2xl mb-stack-lg">
               Standard-setting hybrid solar systems engineered for homes, farms,
@@ -412,73 +412,88 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Bento Grid: Featured System Showcase (6kW Standard Kit) */}
+        {/* Bento Grid: Featured System Showcase (5kW Complete System) */}
         <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pb-margin-desktop">
           <div className="flex flex-col md:flex-row justify-between items-end mb-stack-lg">
             <div>
+              <span className="inline-block bg-secondary/15 text-secondary font-technical-data text-[12px] uppercase tracking-widest px-3.5 py-1 rounded-full mb-2 border border-secondary/30 font-bold">
+                COMPLETE TURNKEY HARDWARE
+              </span>
               <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary">
-                Featured: 6kW Standard Kit
+                Featured: 5kW Complete System
               </h2>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mt-2">
-                The quintessential setup for modern Zambian homes.
+              <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">
+                5kW (200Ah) Inverter + 5kWh (100Ah) 48V Lithium Battery + 8x 545W Haitai Solar Panels.
               </p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-gutter h-auto md:h-[600px]">
             {/* Card 1 (Large - Inverter Core) */}
-            <div className="md:col-span-2 md:row-span-2 rounded-[16px] bg-background p-8 relative overflow-hidden bento-card flex flex-col justify-between">
+            <div className="md:col-span-2 md:row-span-2 rounded-[16px] bg-background p-8 relative overflow-hidden bento-card flex flex-col justify-between border border-border-light">
               <div className="z-10 max-w-sm">
-                <span className="inline-block bg-primary text-on-primary font-technical-data text-[12px] uppercase px-3 py-1 rounded-full mb-4">
-                  INVERTER CORE
+                <span className="inline-block bg-primary text-on-primary font-technical-data text-[12px] uppercase px-3 py-1 rounded-full mb-4 font-bold">
+                  5KW (200AH) INVERTER CORE
                 </span>
-                <h3 className="font-headline-md text-[32px] leading-tight text-primary font-bold mb-2">
-                  98% Efficiency under heavy load.
+                <h3 className="font-headline-md text-[30px] leading-tight text-primary font-bold mb-2">
+                  5kW (200Ah) Greenrich Inverter
                 </h3>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Greenrich 6kW Hybrid Inverter. Built to handle extreme grid fluctuations.
+                  Pure sine wave hybrid inverter with 10ms seamless UPS automatic grid switchover.
                 </p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-charcoal font-semibold">
+                  <span className="px-2.5 py-1 rounded-md bg-surface-container-low border border-border-light">
+                    8x 545W Haitai Solar Panels
+                  </span>
+                  <span className="px-2.5 py-1 rounded-md bg-surface-container-low border border-border-light">
+                    4.36kW Total Solar Array
+                  </span>
+                </div>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="absolute bottom-4 right-4 w-1/2 md:w-2/5 object-contain z-0 filter drop-shadow-xl"
                 src="/images/products/Inverter.png"
-                alt="6kW Greenrich Hybrid Inverter"
+                alt="5kW Greenrich Hybrid Inverter"
               />
             </div>
             {/* Card 2 (Upper Right - Battery Storage) */}
             <div className="rounded-[16px] bg-surface-container-low p-6 bento-card border border-border-light relative overflow-hidden flex flex-col justify-between h-[288px]">
               <div className="z-10">
-                <span className="inline-block bg-primary text-on-primary font-technical-data text-[12px] uppercase px-3 py-1 rounded-full mb-3">
-                  LITHIUM STORAGE
+                <span className="inline-block bg-secondary text-white font-technical-data text-[12px] uppercase px-3 py-1 rounded-full mb-3 font-bold">
+                  48V LITHIUM STORAGE
                 </span>
                 <h4 className="font-headline-md text-xl text-primary font-bold">
-                  10kWh Lithium Bank
+                  1 x 5kWh (100Ah) 48V Battery
                 </h4>
                 <p className="font-body-sm text-[13px] text-on-surface-variant mt-1">
-                  6,000+ Cycle Life | 1.5C High Discharge Rate.
+                  LiFePO4 Chemistry | 6,000+ Cycle Life | 10-Yr Warranty.
                 </p>
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="absolute bottom-2 right-2 w-1/2 object-contain z-0 filter drop-shadow-md"
                 src="/images/products/UP5000.png"
-                alt="10kWh Lithium Bank"
+                alt="5kWh 100Ah 48V Lithium Battery"
               />
             </div>
             {/* Card 4 (Lower Right - Price & Quick Buy) */}
             <div className="rounded-[16px] bg-surface-container-lowest p-6 bento-card border border-secondary/30 flex flex-col justify-center items-center text-center h-[288px]">
-              <span className="bg-secondary/10 text-secondary font-technical-data text-[12px] px-3 py-1 rounded-full mb-4 flex items-center gap-1 font-semibold">
+              <span className="bg-secondary/10 text-secondary font-technical-data text-[12px] px-3 py-1 rounded-full mb-2 flex items-center gap-1 font-semibold">
                 <span className="w-2 h-2 rounded-full bg-secondary"></span>{" "}
-                IN STOCK
+                IN STOCK (LUSAKA)
               </span>
-              <div className="font-display-hero text-headline-md text-primary font-bold mb-6">
-                ZMW 85,500
+              <div className="font-display-hero text-headline-md text-primary font-bold mb-1">
+                ZMW 65,806
+              </div>
+              <div className="text-[11px] text-charcoal font-medium mb-4 space-y-0.5">
+                <div>Excl. Protection Accessories</div>
+                <div>Excl. Installation</div>
               </div>
               <Link
                 className="bg-primary hover:bg-primary-hover text-white font-label-cta text-label-cta px-6 py-3 rounded-full hover:scale-95 duration-100 transition-all w-full shadow-md block text-center font-bold"
-                href="/products/6kw-standard-home-comfort-kit"
+                href="/products/5kw-standard-home-comfort-kit"
               >
-                VIEW BUNDLE DETAILS &rarr;
+                VIEW SYSTEM DETAILS &rarr;
               </Link>
             </div>
           </div>
@@ -503,48 +518,60 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PRODUCTS.slice(0, 6).map((product) => (
-              <Link
-                key={product.slug}
-                href={`/products/${product.slug}`}
-                className="group bento-card bg-surface-container-lowest rounded-2xl border border-border-light p-6 flex flex-col justify-between hover:shadow-hover-card transition-all"
-              >
-                <div>
-                  <div className="relative w-full h-48 rounded-xl bg-surface-container-low mb-4 overflow-hidden flex items-center justify-center p-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <span className="absolute top-3 left-3 bg-surface-container-lowest/90 backdrop-blur-sm text-charcoal font-technical-data text-[11px] px-2.5 py-0.5 rounded-full border border-border-light">
-                      {product.category}
-                    </span>
-                  </div>
-                  <h3 className="font-headline-md text-base text-charcoal font-semibold group-hover:text-primary transition-colors line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <p className="font-body-sm text-text-secondary text-xs mt-1.5 line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-border-light flex items-center justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              "605w-ja-solar-bifacial-panels",
+              "greenrich-up5000-lithium-battery",
+              "growatt-spf5000-inverter",
+              "kapa-energie-q2400-portable-power-station",
+              "545w-haitai-solar-panels",
+              "greenrich-hybrid-inverter-8kw",
+              "ssre-eu10k-10kwh-battery",
+              "db-combiner-box-5kw",
+            ]
+              .map((slug) => PRODUCTS.find((p) => p.slug === slug))
+              .filter((p): p is (typeof PRODUCTS)[number] => Boolean(p))
+              .map((product) => (
+                <Link
+                  key={product.slug}
+                  href={`/products/${product.slug}`}
+                  className="group bento-card bg-surface-container-lowest rounded-2xl border border-border-light p-5 flex flex-col justify-between hover:shadow-hover-card transition-all"
+                >
                   <div>
-                    <span className="font-technical-data text-[11px] text-text-secondary uppercase block">
-                      Price
-                    </span>
-                    <span className="font-headline-md text-lg text-primary font-bold">
-                      ZMW {product.price.toLocaleString()}
+                    <div className="relative w-full h-44 rounded-xl bg-surface-container-low mb-4 overflow-hidden flex items-center justify-center p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <span className="absolute top-2.5 left-2.5 bg-surface-container-lowest/90 backdrop-blur-sm text-charcoal font-technical-data text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-border-light shadow-xs">
+                        {product.category}
+                      </span>
+                    </div>
+                    <h3 className="font-headline-md text-sm text-charcoal font-semibold group-hover:text-primary transition-colors line-clamp-1">
+                      {product.name}
+                    </h3>
+                    <p className="font-body-sm text-text-secondary text-xs mt-1.5 line-clamp-2">
+                      {product.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t border-border-light flex items-center justify-between">
+                    <div>
+                      <span className="font-technical-data text-[10px] text-text-secondary uppercase block">
+                        Price
+                      </span>
+                      <span className="font-headline-md text-base text-primary font-bold">
+                        {product.price}
+                      </span>
+                    </div>
+                    <span className="font-label-cta text-xs py-1.5 px-3 rounded-full bg-surface-container text-charcoal group-hover:bg-primary group-hover:text-white transition-colors font-medium">
+                      View Specs
                     </span>
                   </div>
-                  <span className="font-label-cta text-xs py-2 px-3.5 rounded-full bg-surface-container text-charcoal group-hover:bg-primary group-hover:text-white transition-colors font-medium">
-                    View Specs
-                  </span>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
           </div>
         </section>
 

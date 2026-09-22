@@ -15,6 +15,58 @@ export type Product = {
 
 export const PRODUCTS: Product[] = [
   {
+    name: "5kW Complete Solar System",
+    slug: "5kw-standard-home-comfort-kit",
+    category: "Complete Kits",
+    description: "5kW Complete System: 5kW (200Ah) Greenrich Inverter, 1 x 5kWh (100Ah) 48V Lithium Battery, 8 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "Our signature 5kW Complete Hybrid Solar System engineered for uninterrupted home and business energy in Zambia. Includes a 5kW (200Ah) Greenrich Inverter, 1 x 5kWh (100Ah) 48V Lithium Battery, and 8 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    price: "K 65,806.00",
+    features: [
+      "5kW (200Ah) Greenrich Inverter",
+      "1 x 5kWh (100Ah) 48V Lithium Battery",
+      "8 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 5kW (200Ah) Greenrich Inverter",
+      "1 x 5kWh (100Ah) 48V Lithium Battery",
+      "8 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Panel Performance Warranty.",
+    image: "/images/products/complete systems/5kw sys.png",
+    aiHint: "complete system",
+    inStock: true
+  },
+  {
+    name: "5kW Growatt Complete Solar System",
+    slug: "5kw-growatt-complete-solar-system",
+    category: "Complete Kits",
+    description: "5kW Growatt System: 5kW (200Ah) Growatt Inverter, 1 x 5kWh (100Ah) 48V Lithium Battery, 8 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "Cost-effective, high-reliability 5kW hybrid solar solution for Zambian homes and offices. Built with a 5kW (200Ah) Growatt SPF Inverter, 1 x 5kWh (100Ah) 48V LiFePO4 Lithium Battery, and 8 x 545W Haitai Monocrystalline Solar Panels (4.36kW Total Array). Excl. Protection Accessories, Excl. Installation.",
+    price: "K 50,406.00",
+    features: [
+      "5kW (200Ah) Growatt Inverter",
+      "1 x 5kWh (100Ah) 48V Lithium Battery",
+      "8 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 5kW (200Ah) Growatt Inverter",
+      "1 x 5kWh (100Ah) 48V Lithium Battery",
+      "8 x 545W Haitai Solar Panels (4.36kW Array)",
+      "User Manual & System Documentation",
+      "Note: Excl. Protection Accessories & Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Solar Panel Warranty.",
+    image: "/images/products/complete systems/5kw sys.png",
+    aiHint: "growatt complete system",
+    inStock: true
+  },
+  {
     name: "6kW Standard Home Comfort Kit",
     slug: "6kw-standard-home-comfort-kit",
     category: "Complete Kits",
@@ -24,7 +76,7 @@ export const PRODUCTS: Product[] = [
     features: [
       "6.0 kW Continuous Hybrid Inverter",
       "10.24 kWh LiFePO4 Lithium Battery (6000+ Cycles)",
-      "8 x `605W JA Solar Bifacial Tier-1 Panels",
+      "8 x 605W JA Solar Bifacial Tier-1 Panels",
       "<10ms UPS-Grade Instant Transfer Switch",
       "Full IBR / Tile Mounting & DC Protection Kit"
     ],
@@ -38,8 +90,116 @@ export const PRODUCTS: Product[] = [
       "Engineering Installation & Commissioning Guide"
     ],
     warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 30-Year Bifacial Panel Performance Warranty.",
-    image: "/images/products/Inverter.png",
+    image: "/images/products/complete systems/6kw sys.png",
     aiHint: "complete kit",
+    inStock: true
+  },
+  {
+    name: "8kW Complete Solar System",
+    slug: "8kw-complete-solar-system",
+    category: "Complete Kits",
+    description: "8kW Complete System: 8kW (200Ah) Greenrich Inverter, 2 x 5kWh (100Ah) 48V Lithium Battery, 10 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "High-capacity 8kW Complete Hybrid Solar System engineered for large residential estates, commercial offices, and agricultural setups in Zambia. Includes an 8kW (200Ah) Greenrich Hybrid Inverter, 2 x 5kWh (100Ah) 48V LiFePO4 Lithium Batteries (10kWh total capacity), and 10 x 545W Haitai Solar Panels (5.45kW Array). Excl. Protection Accessories, Excl. Installation.",
+    price: "K 104,712.00",
+    features: [
+      "8kW (200Ah) Greenrich Inverter",
+      "2 x 5kWh (100Ah) 48V Lithium Battery",
+      "10 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 8kW (200Ah) Greenrich Inverter",
+      "2 x 5kWh (100Ah) 48V Lithium Battery Modules",
+      "10 x 545W Haitai Solar Panels (5.45kW Total Solar Array)",
+      "Inter-battery communication & power link cables",
+      "Comprehensive System User & Safety Guide",
+      "Note: Excl. Protection Accessories & Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Panel Performance Warranty.",
+    image: "/images/products/complete systems/8kw sys.png",
+    aiHint: "8kw complete system",
+    inStock: true
+  },
+  {
+    name: "12kW Deye 3P Complete Solar System",
+    slug: "12kw-deye-3p-complete-solar-system",
+    category: "Complete Kits",
+    description: "12kW 3-Phase System: 12kW Deye 3P 48V Inverter, 2 x 10kWh (200Ah) 48V Lithium Battery, 18 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "Heavy-duty 12kW 3-Phase 48V Complete Hybrid Solar System for commercial buildings, agricultural processing, and high-demand properties in Zambia. Includes a 12kW Deye 3-Phase 48V Low Voltage Hybrid Inverter, 2 x 10kWh (200Ah) 48V Lithium Batteries (20kWh total LiFePO4 storage), and 18 x 545W Haitai Solar Panels (9.81kW Total Solar Array). Excl. Protection Accessories, Excl. Installation.",
+    price: "K 180,956.00",
+    features: [
+      "12kW Deye 3P 48V Inverter",
+      "2 x 10kWh (200Ah) 48V Lithium Battery",
+      "18 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 12kW Deye 3-Phase 48V Low Voltage Hybrid Inverter",
+      "2 x 10kWh (200Ah) 48V LiFePO4 High-Capacity Lithium Battery Banks",
+      "18 x 545W Haitai Tier-1 Monocrystalline Solar Panels (9.81kW Array)",
+      "Battery parallel connection links & CT sensors",
+      "User Manual & 3-Phase System Documentation",
+      "Note: Excl. Protection Accessories & Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Panel Performance Warranty.",
+    image: "/images/products/complete systems/12kw sys.png",
+    aiHint: "12kw 3-phase complete system",
+    inStock: true
+  },
+  {
+    name: "16kW Deye 1P Complete Solar System",
+    slug: "16kw-deye-1p-complete-solar-system",
+    category: "Complete Kits",
+    description: "16kW Single-Phase System: 16kW Deye 1P 48V Inverter, 2 x 10kWh (200Ah) 48V Lithium Battery, 22 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "Ultra-high output 16kW Single-Phase 48V Complete Hybrid Solar System engineered for large residential estates, commercial lodges, and heavy single-phase industrial loads in Zambia. Includes a 16kW Deye Single-Phase 48V Low Voltage Hybrid Inverter, 2 x 10kWh (200Ah) 48V Lithium Batteries (20kWh total LiFePO4 storage), and 22 x 545W Haitai Monocrystalline Solar Panels (11.99kW Total Solar Array). Excl. Protection Accessories, Excl. Installation.",
+    price: "K 203,556.00",
+    features: [
+      "16kW Deye 1P 48V Inverter",
+      "2 x 10kWh (200Ah) 48V Lithium Battery",
+      "22 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 16kW Deye Single-Phase 48V Hybrid Inverter",
+      "2 x 10kWh (200Ah) 48V LiFePO4 High-Capacity Lithium Battery Banks",
+      "22 x 545W Haitai Tier-1 Monocrystalline Solar Panels (11.99kW Array)",
+      "Battery parallel connection links & CT sensors",
+      "User Manual & Single-Phase System Documentation",
+      "Note: Excl. Protection Accessories & Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Panel Performance Warranty.",
+    image: "/images/products/complete systems/16kw sys.png",
+    aiHint: "16kw single phase complete system",
+    inStock: true
+  },
+  {
+    name: "30kW Deye 3P Complete Solar System",
+    slug: "30kw-deye-3p-complete-solar-system",
+    category: "Complete Kits",
+    description: "30kW 3-Phase System: 30kW Deye 3P 48V Inverter, 2 x 10kWh (200Ah) 48V Lithium Battery, 36 x 545W Haitai Solar Panels. Excl. Protection Accessories, Excl. Installation.",
+    longDescription: "Commercial-grade 30kW 3-Phase 48V Complete Hybrid Solar System engineered for large agricultural operations, manufacturing hubs, mining offices, and high-demand commercial facilities in Zambia. Includes a 30kW Deye 3-Phase 48V Low Voltage Hybrid Inverter, 2 x 10kWh (200Ah) 48V Lithium Batteries (20kWh total LiFePO4 storage), and 36 x 545W Haitai Monocrystalline Solar Panels (19.62kW Total Solar Array). Excl. Protection Accessories, Excl. Installation.",
+    price: "K 242,756.00",
+    features: [
+      "30kW Deye 3P 48V Inverter",
+      "2 x 10kWh (200Ah) 48V Lithium Battery",
+      "36 x 545W Haitai Solar Panels",
+      "Excl. Protection Accessories",
+      "Excl. Installation"
+    ],
+    whatsInTheBox: [
+      "1 x 30kW Deye 3-Phase 48V Low Voltage Hybrid Inverter",
+      "2 x 10kWh (200Ah) 48V LiFePO4 High-Capacity Lithium Battery Banks",
+      "36 x 545W Haitai Tier-1 Monocrystalline Solar Panels (19.62kW Array)",
+      "Battery parallel connection links & CT sensors",
+      "User Manual & 3-Phase Commercial System Documentation",
+      "Note: Excl. Protection Accessories & Excl. Installation"
+    ],
+    warranty: "10-Year Battery Warranty, 5-Year Inverter Warranty, 25-Year Panel Performance Warranty.",
+    image: "/images/products/complete systems/30kw sys.png",
+    aiHint: "30kw 3-phase complete system",
     inStock: true
   },
   {
@@ -68,6 +228,30 @@ export const PRODUCTS: Product[] = [
     warranty: "30-Year Linear Power Warranty (Dual-Glass, ≤0.4% Annual Degradation), 12-Year Workmanship Guarantee.",
     image: "/images/products/panels.png",
     aiHint: "ja solar 605w bifacial panels",
+    inStock: true
+  },
+  {
+    name: "545W Haitai Solar Panels",
+    slug: "545w-haitai-solar-panels",
+    category: "Panels",
+    description: "Tier-1 Haitai 545W Monocrystalline Half-Cut solar panels offering high conversion efficiency and robust weather endurance.",
+    longDescription: "The Haitai 545W Monocrystalline Solar Panel is engineered for superior power density and long-term durability in southern African climates. Features half-cut cell technology that reduces resistance loss and minimizes shading impacts.",
+    price: "K 1,950.00",
+    features: [
+      "545W High-Efficiency Monocrystalline Module",
+      "Half-Cut Cell Architecture for Reduced Resistance",
+      "High Temperature Resilience for Tropical Zambian Conditions",
+      "Anti-PID & Salt Mist Certified",
+      "IP68 Weatherproof Junction Box"
+    ],
+    whatsInTheBox: [
+      "1 x 545W Haitai Tier-1 Monocrystalline Solar Panel",
+      "Pre-crimped MC4 Solar Leads",
+      "Installation & Safety Guide"
+    ],
+    warranty: "25-Year Linear Power Warranty, 12-Year Product Warranty.",
+    image: "/images/products/panels.png",
+    aiHint: "haitai solar panel",
     inStock: true
   },
   {
