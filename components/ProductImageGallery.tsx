@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Maximize2, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 
 export type GalleryImage = {
@@ -21,6 +22,12 @@ export default function ProductImageGallery({
   category,
   inStock = true,
 }: ProductImageGalleryProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Normalize images to GalleryImage[]
   const normalizedImages: GalleryImage[] = images.map((img, idx) => {
     if (typeof img === "string") {
@@ -187,32 +194,32 @@ export default function ProductImageGallery({
         </div>
       )}
 
-      {/* Fullscreen Lightbox Modal */}
-      {isFullscreen && (
+      {/* Fullscreen Lightbox Modal (Portaled directly to document.body to avoid sticky stacking context issues) */}
+      {mounted && isFullscreen && typeof document !== "undefined" && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-md flex flex-col justify-between p-3 sm:p-4 md:p-6 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pl-[calc(0.75rem+env(safe-area-inset-left,0px))] pr-[calc(0.75rem+env(safe-area-inset-right,0px))] animate-in fade-in duration-200"
           onClick={handleCloseFullscreen}
         >
           {/* Top Bar */}
           <div
-            className="flex items-center justify-between text-white pb-3 border-b border-white/10 z-20"
+            className="flex items-center justify-between text-white pb-3 border-b border-white/10 z-20 gap-2 w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              <h3 className="font-headline-md text-base md:text-lg font-semibold truncate max-w-md md:max-w-xl text-white">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-headline-md text-sm sm:text-base md:text-lg font-semibold truncate text-white leading-tight">
                 {productName}
               </h3>
-              <p className="font-technical-data text-xs text-neutral-400 mt-0.5">
+              <p className="font-technical-data text-[11px] sm:text-xs text-neutral-400 mt-0.5">
                 Image {currentIndex + 1} of {normalizedImages.length}
               </p>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button
                 onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 3))}
                 aria-label="Zoom in"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
                 title="Zoom In"
               >
                 <ZoomIn className="w-4 h-4" />
@@ -220,7 +227,7 @@ export default function ProductImageGallery({
               <button
                 onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 1))}
                 aria-label="Zoom out"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-4 h-4" />
@@ -229,7 +236,7 @@ export default function ProductImageGallery({
                 <button
                   onClick={() => setZoomLevel(1)}
                   aria-label="Reset zoom"
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                  className="p-1.5 sm:p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
                   title="Reset Zoom"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -238,30 +245,31 @@ export default function ProductImageGallery({
               <button
                 onClick={handleCloseFullscreen}
                 aria-label="Close fullscreen view"
-                className="p-2 rounded-lg bg-white/10 hover:bg-red-500/80 text-white transition-colors ml-2 cursor-pointer flex items-center gap-1 text-xs font-medium"
+                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-red-600 text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shrink-0 border border-white/20 shadow-md active:scale-95"
+                title="Close (Esc)"
               >
-                <X className="w-5 h-5" />
-                <span className="hidden sm:inline">Close (Esc)</span>
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Close (Esc)</span>
               </button>
             </div>
           </div>
 
           {/* Main Fullscreen Image Display */}
           <div
-            className="relative flex-grow flex items-center justify-center overflow-hidden my-4"
+            className="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden my-2 sm:my-4"
             onClick={(e) => e.stopPropagation()}
           >
             {normalizedImages.length > 1 && (
               <button
                 onClick={handlePrev}
                 aria-label="Previous fullscreen image"
-                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-3 md:p-4 rounded-full backdrop-blur-md transition-all cursor-pointer"
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 bg-white/15 hover:bg-white/30 text-white p-2.5 sm:p-3 md:p-4 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-lg"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             )}
 
-            <div className="w-full h-full flex items-center justify-center p-4">
+            <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={currentImage.url}
@@ -270,7 +278,7 @@ export default function ProductImageGallery({
                   transform: `scale(${zoomLevel})`,
                   transition: "transform 0.2s ease-out",
                 }}
-                className="max-h-[75vh] max-w-[85vw] object-contain select-none filter drop-shadow-2xl"
+                className="max-h-full max-w-full object-contain select-none filter drop-shadow-2xl"
               />
             </div>
 
@@ -278,9 +286,9 @@ export default function ProductImageGallery({
               <button
                 onClick={handleNext}
                 aria-label="Next fullscreen image"
-                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-3 md:p-4 rounded-full backdrop-blur-md transition-all cursor-pointer"
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 bg-white/15 hover:bg-white/30 text-white p-2.5 sm:p-3 md:p-4 rounded-full backdrop-blur-md transition-all cursor-pointer shadow-lg"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             )}
           </div>
@@ -315,7 +323,8 @@ export default function ProductImageGallery({
               ))}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -319,27 +319,30 @@ export default function Header() {
         </nav>
       </header>
 
-      {/* Slide-Out Mobile Navigation Drawer (Rendered outside header to guarantee 100vh full-screen height) */}
+      {/* Slide-Out Mobile Navigation Drawer */}
       <div
-        className={`md:hidden fixed inset-0 z-[100] h-screen h-[100dvh] w-screen transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
+        className={`md:hidden fixed inset-0 z-[100] h-[100dvh] w-full transition-opacity duration-300 ${
+          mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
         id="mobile-navigation-drawer"
         aria-hidden={!mobileMenuOpen}
       >
         {/* Heavily Blurred Backdrop Overlay OUTSIDE of the menu */}
         <div
           onClick={() => setMobileMenuOpen(false)}
-          className={`fixed inset-0 bg-black/60 backdrop-blur-xl transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100" : "opacity-0"
-            }`}
+          className={`fixed inset-0 bg-black/60 backdrop-blur-xl transition-opacity duration-300 ${
+            mobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
         />
 
         {/* Solid Opaque Drawer Menu Panel */}
         <div
-          className={`fixed left-0 top-0 bottom-0 h-screen h-[100dvh] w-[88%] max-w-[360px] bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out border-r border-border-light z-10 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
+          className={`fixed left-0 top-0 bottom-0 h-[100dvh] max-h-[100dvh] w-[88%] max-w-[360px] bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out border-r border-border-light z-10 ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
           {/* Drawer Header (Solid Opaque) */}
-          <div className="p-4 md:p-5 bg-surface-container-lowest border-b border-border-light flex items-center justify-between flex-shrink-0">
+          <div className="p-4 bg-surface-container-lowest border-b border-border-light flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -362,7 +365,7 @@ export default function Header() {
           </div>
 
           {/* Drawer Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {/* User Account Portal Card in Mobile Menu */}
             {isAuthenticated && user ? (
               <div className="p-3.5 rounded-2xl bg-surface-container-low border border-border-light">
@@ -588,19 +591,19 @@ export default function Header() {
           </div>
 
           {/* Drawer Footer Info (Solid Opaque) */}
-          <div className="p-4 bg-surface-container-low border-t border-border-light space-y-2.5 flex-shrink-0">
+          <div className="p-4 bg-surface-container-low border-t border-border-light space-y-2.5 flex-shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
             <div className="flex items-start gap-2 text-[11px] text-on-surface-variant font-body-sm">
               <span className="material-symbols-outlined text-[14px] text-secondary mt-0.5">location_on</span>
               <div>
-                <span className="font-bold text-primary block">{SHOWROOM_LOCATION}</span>
-                <span className="text-[10px]">{OPERATING_HOURS}</span>
+                <span className="font-bold text-primary block leading-tight">{SHOWROOM_LOCATION}</span>
+                <span className="text-[10px] text-on-surface-variant">{OPERATING_HOURS}</span>
               </div>
             </div>
 
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full py-3 px-4 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs uppercase tracking-wide flex items-center justify-center gap-2 font-bold shadow-sm transition-transform active:scale-95"
+              className="w-full py-2.5 px-4 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs uppercase tracking-wide flex items-center justify-center gap-2 font-bold shadow-sm transition-transform active:scale-95"
             >
               <span>REQUEST FORMAL QUOTE</span>
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

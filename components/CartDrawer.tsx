@@ -42,7 +42,7 @@ export default function CartDrawer() {
 
       {/* Drawer Panel */}
       <div
-        className={`absolute right-0 top-0 bottom-0 w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
+        className={`absolute right-0 top-0 bottom-0 h-[100dvh] max-h-[100dvh] w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -71,7 +71,7 @@ export default function CartDrawer() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 space-y-4">
           {items.length === 0 ? (
             <div className="py-16 text-center space-y-4">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">
@@ -232,9 +232,9 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Footer / Actions */}
+        {/* Footer */}
         {items.length > 0 && (
-          <div className="p-5 md:p-6 bg-surface-container-lowest border-t border-border-light space-y-4 shadow-lg">
+          <div className="p-5 md:p-6 bg-surface-container-low border-t border-border-light space-y-4 flex-shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
             <div className="space-y-1.5 font-technical-data text-xs">
               <div className="flex justify-between text-on-surface-variant">
                 <span>Hardware Subtotal</span>

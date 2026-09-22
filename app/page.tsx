@@ -348,7 +348,7 @@ export default function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                src="/images/products/ssre kit.jpeg"
+                src="/images/products/complete systems/5kw sys.png"
                 alt="Complete Solar Kits Zambia"
               />
             </Link>
