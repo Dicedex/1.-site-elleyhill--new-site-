@@ -103,7 +103,22 @@ interface AuthContextType {
   addSavedAddress: (address: Omit<SavedAddress, "id">) => void;
   deleteSavedAddress: (id: string) => void;
   setDefaultAddress: (id: string) => void;
-  addOrder: (order: Omit<UserOrder, "id" | "date" | "trackingNumber" | "status" | "estimatedDelivery">) => UserOrder;
+  addOrder: (order: {
+    id?: string;
+    customerName?: string;
+    customerEmail?: string;
+    items: OrderItemSummary[];
+    total: number;
+    subtotal: number;
+    deliveryFee: number;
+    deliveryAddress: string;
+    district: string;
+    province: string;
+    phone: string;
+    paymentMethod: string;
+    assignedEngineer?: string;
+    trackingNumber?: string;
+  }) => UserOrder;
   loginWithDemo: (type: "residential" | "commercial" | "admin") => void;
 
   // Admin Specific Controls
@@ -732,24 +747,100 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     saveUserSession(updated);
   };
 
-  const addOrder = (orderData: Omit<UserOrder, "id" | "date" | "trackingNumber" | "status" | "estimatedDelivery">): UserOrder => {
+  const addOrder = (orderData: {
+    id?: string;
+    customerName?: string;
+    customerEmail?: string;
+    items: OrderItemSummary[];
+    total: number;
+    subtotal: number;
+    deliveryFee: number;
+    deliveryAddress: string;
+    district: string;
+    province: string;
+    phone: string;
+    paymentMethod: string;
+    assignedEngineer?: string;
+    trackingNumber?: string;
+  }): UserOrder => {
     const orderNumber = Math.floor(1000 + Math.random() * 9000);
+    const orderId = orderData.id || `ORD-${new Date().getFullYear()}-${orderNumber}`;
+    const custName = orderData.customerName || (user ? user.fullName : "Online Client");
+    const custEmail = orderData.customerEmail || (user ? user.email : "procurement@enterprise.zm");
+
     const newOrder: UserOrder = {
       ...orderData,
-      customerName: user ? user.fullName : "Online Client",
-      customerEmail: user ? user.email : "procurement@enterprise.zm",
-      id: `ORD-${new Date().getFullYear()}-${orderNumber}`,
+      id: orderId,
+      customerName: custName,
+      customerEmail: custEmail,
       date: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date()),
       status: "Processing",
-      trackingNumber: `EHP-LUS-${orderNumber}`,
+      trackingNumber: orderData.trackingNumber || `EHP-LUS-${orderNumber}`,
       estimatedDelivery: "Estimated Dispatch within 24-48 Hours",
-      assignedEngineer: "Eng. Patrick Banda",
+      assignedEngineer: orderData.assignedEngineer || "Eng. Patrick Banda",
     };
+
+    // Auto-generate warranty records for the purchased equipment
+    const newWarranties: WarrantyRecord[] = [];
+    orderData.items.forEach((item, idx) => {
+      const isBattery = item.name.toLowerCase().includes("battery") || item.name.toLowerCase().includes("lithium");
+      const isInverter = item.name.toLowerCase().includes("inverter") || item.name.toLowerCase().includes("deye") || item.name.toLowerCase().includes("growatt");
+      const isPanel = item.name.toLowerCase().includes("panel") || item.name.toLowerCase().includes("solar");
+      const isSystem = item.name.toLowerCase().includes("system") || item.name.toLowerCase().includes("kit");
+
+      const category: WarrantyRecord["category"] = isSystem
+        ? "Complete System"
+        : isBattery
+        ? "Battery"
+        : isInverter
+        ? "Inverter"
+        : isPanel
+        ? "Solar Panels"
+        : "Complete System";
+
+      const years = category === "Battery" ? 10 : category === "Inverter" ? 5 : category === "Solar Panels" ? 12 : 10;
+      const expDate = new Date();
+      expDate.setFullYear(expDate.getFullYear() + years);
+
+      const warranty: WarrantyRecord = {
+        id: `war_${Date.now()}_${idx}`,
+        customerName: custName,
+        customerEmail: custEmail,
+        productName: item.name,
+        category,
+        serialNumber: `EHP-${category.substring(0, 3).toUpperCase()}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+        installationDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date()),
+        warrantyPeriodYears: years,
+        expiryDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(expDate),
+        status: "Active",
+        systemCapacity: item.name,
+        installerName: "Elleyhill Certified Tech Team (Eng. Banda)",
+        certificateNumber: `EHP-WAR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+      };
+      newWarranties.push(warranty);
+    });
 
     if (user) {
       const updatedOrders = [newOrder, ...user.orders];
-      const updated = { ...user, orders: updatedOrders };
-      saveUserSession(updated);
+      const updatedWarranties = [...newWarranties, ...(user.warranties || [])];
+      const updatedUser = { ...user, orders: updatedOrders, warranties: updatedWarranties };
+      saveUserSession(updatedUser);
+    } else {
+      // If guest user matches an existing user in DB by email, update their DB record too
+      try {
+        const rawDb = localStorage.getItem(STORAGE_KEY_USERS_DB);
+        if (rawDb) {
+          const usersDb: Record<string, UserProfile> = JSON.parse(rawDb);
+          const cleanEmail = custEmail.toLowerCase();
+          if (usersDb[cleanEmail]) {
+            usersDb[cleanEmail].orders = [newOrder, ...(usersDb[cleanEmail].orders || [])];
+            usersDb[cleanEmail].warranties = [...newWarranties, ...(usersDb[cleanEmail].warranties || [])];
+            localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDb));
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     // Also update Admin Master list
@@ -759,6 +850,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(STORAGE_KEY_ADMIN_ORDERS, JSON.stringify(updatedMasterOrders));
     } catch (e) {
       console.error(e);
+    }
+
+    if (newWarranties.length > 0) {
+      const updatedMasterWarranties = [...newWarranties, ...allWarranties];
+      setAllWarranties(updatedMasterWarranties);
+      try {
+        localStorage.setItem(STORAGE_KEY_ADMIN_WARRANTIES, JSON.stringify(updatedMasterWarranties));
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     return newOrder;

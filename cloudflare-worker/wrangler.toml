@@ -1,0 +1,16 @@
+name = "elleyhill-pawapay-gateway"
+main = "src/index.ts"
+compatibility_date = "2024-09-22"
+
+# Worker Environment Variables
+[vars]
+PAWAPAY_ENV = "sandbox" # Set to "production" when launching live
+ALLOWED_ORIGIN = "*"
+
+# Production Environment
+[env.production]
+vars = { PAWAPAY_ENV = "production", ALLOWED_ORIGIN = "https://elleyhillzm.com" }
+
+# Notes for Secrets:
+# Run the following command to store your pawaPay API Token securely in Cloudflare:
+#   wrangler secret put PAWAPAY_API_TOKEN

@@ -1,0 +1,17 @@
+{
+  "name": "elleyhill-pawapay-gateway",
+  "version": "1.0.0",
+  "description": "pawaPay Edge Payment Gateway Middleware for Elleyhill Power Zambia on Cloudflare Workers",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "secret": "wrangler secret put PAWAPAY_API_TOKEN"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "typescript": "^5.5.4",
+    "wrangler": "^3.78.2"
+  }
+}

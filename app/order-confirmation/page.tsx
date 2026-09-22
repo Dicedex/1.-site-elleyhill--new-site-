@@ -447,66 +447,65 @@ export default function OrderConfirmationPage() {
                 </div>
 
                 {/* Digital Warranty Vault */}
-                <div className="bg-primary text-on-primary rounded-3xl p-8 shadow-md relative overflow-hidden space-y-6">
-                  <div className="absolute -right-8 -bottom-8 w-44 h-44 bg-surface-tint/20 rounded-full blur-2xl pointer-events-none"></div>
-                  <div className="flex items-center justify-between">
+                <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-sm space-y-6 border border-border-light relative overflow-hidden">
+                  <div className="flex items-center justify-between pb-2 border-b border-border-light">
                     <div>
-                      <span className="font-technical-data text-technical-data uppercase text-tertiary-fixed tracking-wider font-semibold">
+                      <span className="font-technical-data text-technical-data uppercase text-secondary tracking-wider font-semibold">
                         Digital Protection Vault
                       </span>
-                      <div className="font-headline-md text-headline-md text-on-primary font-bold">
+                      <div className="font-headline-md text-headline-md text-primary font-bold">
                         Active Warranties
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-primary-container text-tertiary-fixed flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-secondary-container text-secondary flex items-center justify-center">
                       <span className="material-symbols-outlined text-[20px]">verified</span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-primary-container text-on-primary flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-surface-tint/30 text-tertiary-fixed flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="material-symbols-outlined text-[18px]">battery_charging_full</span>
+                    <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-secondary-container text-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-[20px]">battery_charging_full</span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between items-center">
-                          <span className="font-headline-md text-[15px] text-on-primary font-bold">
+                          <span className="font-headline-md text-[16px] text-on-surface font-bold">
                             10-Year Battery Warranty
                           </span>
-                          <span className="font-technical-data text-[12px] text-tertiary-fixed font-bold">
+                          <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-secondary font-technical-data text-[12px] font-bold">
                             Active
                           </span>
                         </div>
-                        <p className="font-body-sm text-[13px] text-on-primary-container mt-0.5">
+                        <p className="font-body-sm text-[13px] text-on-surface-variant mt-1">
                           LiFePO4 cell integrity guarantee &gt; 6,000 cycles at 80% DoD.
                         </p>
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-primary-container text-on-primary flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-surface-tint/30 text-tertiary-fixed flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="material-symbols-outlined text-[18px]">bolt</span>
+                    <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-secondary-container text-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-[20px]">bolt</span>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between items-center">
-                          <span className="font-headline-md text-[15px] text-on-primary font-bold">
+                          <span className="font-headline-md text-[16px] text-on-surface font-bold">
                             5-Year Inverter Protection
                           </span>
-                          <span className="font-technical-data text-[12px] text-tertiary-fixed font-bold">
+                          <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-secondary font-technical-data text-[12px] font-bold">
                             Active
                           </span>
                         </div>
-                        <p className="font-body-sm text-[13px] text-on-primary-container mt-0.5">
+                        <p className="font-body-sm text-[13px] text-on-surface-variant mt-1">
                           Full swap replacement on motherboard and pure sine wave transformer components.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between text-body-sm text-on-primary-container border-t border-neutral-700">
-                    <span className="font-technical-data text-[12px]">Cert: #WZ-8842-2026-ZM</span>
+                  <div className="pt-2 flex items-center justify-between text-body-sm text-on-surface-variant border-t border-border-light">
+                    <span className="font-technical-data text-[12px] font-medium text-on-surface">Cert: #WZ-8842-2026-ZM</span>
                     <Link
-                      className="text-tertiary-fixed hover:underline font-technical-data text-[12px] flex items-center gap-1"
+                      className="text-secondary hover:text-primary font-technical-data text-[12px] font-bold flex items-center gap-1 transition-colors"
                       href="/warranty"
                     >
                       View Terms <span className="material-symbols-outlined text-[14px]">arrow_forward</span>

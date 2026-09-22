@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useCart, WHATSAPP_PHONE_NUMBER, WHATSAPP_PHONE_DISPLAY, PlacedOrder } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
+import { initiatePawaPayPayment } from "@/lib/pawapay";
+
 type Step = 1 | 2 | 3;
 type PaymentMethod = "momo" | "card" | "staged" | "layby" | "wire";
 type MomoProvider = "mtn" | "airtel" | "zamtel";
@@ -23,11 +25,15 @@ export default function CheckoutPage() {
     grandTotal,
     totalItemsCount,
     saveOrder,
+    clearCart,
   } = useCart();
 
   const { user, isAuthenticated, addOrder } = useAuth();
 
   const [currentStep, setCurrentStep] = useState<Step>(1);
+  const [placedOrderSnapshot, setPlacedOrderSnapshot] = useState<PlacedOrder | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentStatusText, setPaymentStatusText] = useState("");
 
   // Step 1: Site & Contact Form State
   const [email, setEmail] = useState("mwape@gmail.com");
@@ -89,10 +95,37 @@ export default function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleStep2Submit = (e: React.FormEvent) => {
+  const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsProcessingPayment(true);
+    setPaymentStatusText("Connecting to pawaPay Cloudflare Gateway...");
+
     const generatedRef = `EHP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     setActiveOrderRef(generatedRef);
+
+    const checkoutItems = items.length > 0 ? items : [];
+
+    // Trigger Cloudflare Worker Edge request to pawaPay if Mobile Money or Card
+    if (paymentMethod === "momo" || paymentMethod === "card") {
+      setPaymentStatusText(
+        paymentMethod === "momo"
+          ? `Initiating ${momoProvider.toUpperCase()} MoMo STK Push (+260 ${momoPhone})...`
+          : "Authorizing 3D-Secure Card via pawaPay..."
+      );
+
+      try {
+        await initiatePawaPayPayment({
+          orderRef: generatedRef,
+          amount: grandTotal,
+          phone: momoPhone,
+          provider: paymentMethod === "momo" ? momoProvider : "card",
+          customerName: fullName,
+          customerEmail: email,
+        });
+      } catch (pawaErr) {
+        console.warn("pawaPay gateway dispatch:", pawaErr);
+      }
+    }
 
     const orderData: PlacedOrder = {
       orderRef: generatedRef,
@@ -111,10 +144,10 @@ export default function CheckoutPage() {
         method: paymentMethod,
         momoProvider,
         momoPhone,
-        gateway: "pawaPay",
+        gateway: "pawaPay (Cloudflare Edge)",
         status: "authorized",
       },
-      items: items.length > 0 ? items : [],
+      items: checkoutItems,
       deliveryZone,
       deliveryCost,
       hardwareSubtotal,
@@ -122,12 +155,16 @@ export default function CheckoutPage() {
       grandTotal,
     };
 
+    setPlacedOrderSnapshot(orderData);
     saveOrder(orderData);
 
-    // Save into authenticated user profile history if available
+    // Save into authenticated user profile history and admin dashboard
     try {
       addOrder({
-        items: items.map((i) => ({
+        id: generatedRef,
+        customerName: fullName,
+        customerEmail: email,
+        items: checkoutItems.map((i) => ({
           id: i.id,
           name: i.name,
           quantity: i.qty,
@@ -143,9 +180,9 @@ export default function CheckoutPage() {
         phone: phone,
         paymentMethod:
           paymentMethod === "momo"
-            ? `Mobile Money (${momoProvider.toUpperCase()})`
+            ? `Mobile Money (${momoProvider.toUpperCase()} via pawaPay)`
             : paymentMethod === "card"
-            ? "Card (3D Secure)"
+            ? "Card (3D Secure via pawaPay)"
             : paymentMethod === "staged"
             ? "70/30 Staged Financing"
             : paymentMethod === "layby"
@@ -153,17 +190,28 @@ export default function CheckoutPage() {
             : "Bank Transfer",
       });
     } catch (e) {
-      console.error("Failed to add order to auth profile", e);
+      console.error("Failed to add order to auth profile and admin ledger", e);
     }
 
+    // EMPTY CART UPON ORDER COMPLETION
+    clearCart();
+
+    setIsProcessingPayment(false);
+    setPaymentStatusText("");
     setCurrentStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Dynamic calculations for staged and lay-by
-  const stage1Amount = Math.round(grandTotal * 0.7);
-  const stage2Amount = grandTotal - stage1Amount;
-  const laybyMonthlyAmount = Math.round(grandTotal / 3);
+  const confirmedGrandTotal = placedOrderSnapshot ? placedOrderSnapshot.grandTotal : grandTotal;
+  const stage1Amount = Math.round(confirmedGrandTotal * 0.7);
+  const stage2Amount = confirmedGrandTotal - stage1Amount;
+  const laybyMonthlyAmount = Math.round(confirmedGrandTotal / 3);
+
+  const displayOrderItems = placedOrderSnapshot?.items && placedOrderSnapshot.items.length > 0 ? placedOrderSnapshot.items : items;
+  const displayHardware = placedOrderSnapshot ? placedOrderSnapshot.hardwareSubtotal : hardwareSubtotal;
+  const displayInstall = placedOrderSnapshot ? placedOrderSnapshot.installationSubtotal : installationSubtotal;
+  const displayDeliveryCost = placedOrderSnapshot ? placedOrderSnapshot.deliveryCost : deliveryCost;
 
   const whatsappConfirmationLink = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
     `Hello Elleyhill Power Dispatch Desk, I have authorized my order:\n` +
@@ -181,9 +229,9 @@ export default function CheckoutPage() {
       }\n` +
       `Financing Gateway: ${
         paymentMethod === "momo"
-          ? `Mobile Money (${momoProvider.toUpperCase()})`
+          ? `Mobile Money (${momoProvider.toUpperCase()} via pawaPay)`
           : paymentMethod === "card"
-          ? "Credit/Debit Card (3D Secure)"
+          ? "Credit/Debit Card (3D Secure via pawaPay)"
           : paymentMethod === "staged"
           ? `70/30 Staged Plan (ZMW ${stage1Amount.toLocaleString()} today)`
           : paymentMethod === "layby"
@@ -191,8 +239,8 @@ export default function CheckoutPage() {
           : "Bank EFT Wire Proforma"
       }\n` +
       `Items:\n` +
-      items.map((i) => `• ${i.qty}x ${i.name}`).join("\n") +
-      `\nTotal Authorized: ZMW ${grandTotal.toLocaleString()}\n` +
+      displayOrderItems.map((i) => `• ${i.qty}x ${i.name}`).join("\n") +
+      `\nTotal Authorized: ZMW ${confirmedGrandTotal.toLocaleString()}\n` +
       `Please confirm technician dispatch team staging.`
   )}`;
 
@@ -1364,12 +1412,33 @@ export default function CheckoutPage() {
 
                   {/* Action Section */}
                   <div className="mt-6 flex flex-col gap-4">
+                    {paymentStatusText && (
+                      <div className="p-3 rounded-xl bg-secondary-container text-on-secondary-container font-technical-data text-xs flex items-center gap-2 animate-pulse border border-secondary/20">
+                        <span className="material-symbols-outlined text-secondary text-base">cloud_sync</span>
+                        <span>{paymentStatusText}</span>
+                      </div>
+                    )}
+
                     <button
                       onClick={handleStep2Submit}
-                      className="w-full py-4 px-6 rounded-full bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-cta text-label-cta tracking-wide transition-all duration-200 transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-2 font-bold cursor-pointer"
+                      disabled={isProcessingPayment}
+                      className={`w-full py-4 px-6 rounded-full font-label-cta text-label-cta tracking-wide transition-all duration-200 transform shadow-md flex items-center justify-center gap-2 font-bold ${
+                        isProcessingPayment
+                          ? "bg-neutral-300 text-neutral-600 cursor-wait"
+                          : "bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed hover:-translate-y-0.5 cursor-pointer"
+                      }`}
                     >
-                      <span>AUTHORIZE PAYMENT &amp; COMPLETE ORDER</span>
-                      <span className="material-symbols-outlined text-[20px]">bolt</span>
+                      {isProcessingPayment ? (
+                        <>
+                          <span className="inline-block w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                          <span>PROCESSING WITH PAWAPAY...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>AUTHORIZE PAYMENT &amp; COMPLETE ORDER</span>
+                          <span className="material-symbols-outlined text-[20px]">bolt</span>
+                        </>
+                      )}
                     </button>
 
                     {/* Guarantee Badge */}
@@ -1584,7 +1653,7 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {items.map((item) => (
+                  {displayOrderItems.map((item) => (
                     <div
                       key={item.id}
                       className="p-4 rounded-2xl bg-surface-container-low flex items-center justify-between gap-4 border border-border-light"
@@ -1623,14 +1692,14 @@ export default function CheckoutPage() {
                   <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
                     <span>Equipment Subtotal</span>
                     <span className="font-technical-data text-technical-data font-medium text-primary">
-                      ZMW {hardwareSubtotal.toLocaleString()}
+                      ZMW {displayHardware.toLocaleString()}
                     </span>
                   </div>
-                  {installationSubtotal > 0 && (
+                  {displayInstall > 0 && (
                     <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
                       <span>Certified Installation &amp; Commissioning</span>
                       <span className="font-technical-data text-technical-data font-medium text-secondary">
-                        + ZMW {installationSubtotal.toLocaleString()}
+                        + ZMW {displayInstall.toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -1638,7 +1707,7 @@ export default function CheckoutPage() {
                     <span>Logistics &amp; Delivery</span>
                     <span className="text-status-success font-technical-data text-technical-data font-bold uppercase">
                       {province === "lusaka"
-                        ? deliveryCost === 0
+                        ? displayDeliveryCost === 0
                           ? "Included Free (> K78k)"
                           : "ZMW 750"
                         : "ZMW 2,500"}
@@ -1654,7 +1723,7 @@ export default function CheckoutPage() {
                       </span>
                     </div>
                     <div className="font-headline-lg text-[28px] text-primary font-bold tracking-tight">
-                      ZMW {grandTotal.toLocaleString()}
+                      ZMW {confirmedGrandTotal.toLocaleString()}
                     </div>
                   </div>
                 </div>
