@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, SavedAddress } from "@/context/AuthContext";
+import { useAuth, SavedAddress, UserOrder, WarrantyRecord } from "@/context/AuthContext";
 import {
   User,
   ShieldCheck,
@@ -28,6 +28,22 @@ import {
   AlertCircle,
   FileText,
   BadgeCheck,
+  Printer,
+  X,
+  Search,
+  Filter,
+  Copy,
+  Check,
+  Battery,
+  BatteryCharging,
+  Sun,
+  Activity,
+  ArrowUpRight,
+  Sparkles,
+  RefreshCw,
+  Wrench,
+  Leaf,
+  Share2,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -41,9 +57,23 @@ export default function ProfilePage() {
     deleteSavedAddress,
     setDefaultAddress,
     loginWithDemo,
+    sendEmailVerificationCode,
+    verifyEmailCode,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "warranties" | "addresses" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "warranties" | "settings">("overview");
+
+  // Certificate and Invoice Modals
+  const [selectedWarrantyForModal, setSelectedWarrantyForModal] = useState<WarrantyRecord | null>(null);
+  const [selectedOrderForInvoiceModal, setSelectedOrderForInvoiceModal] = useState<UserOrder | null>(null);
+
+  // Email Verification Modal State
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [verifyOtp, setVerifyOtp] = useState("");
+  const [verifyStep, setVerifyStep] = useState<"idle" | "sent" | "verifying" | "success" | "error">("idle");
+  const [verifyError, setVerifyError] = useState("");
+  const [verifyInfo, setVerifyInfo] = useState("");
+  const [isSendingCode, setIsSendingCode] = useState(false);
 
   // Address Modal State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -60,6 +90,19 @@ export default function ProfilePage() {
   const [editCompany, setEditCompany] = useState("");
   const [editTpin, setEditTpin] = useState("");
   const [settingsSuccess, setSettingsSuccess] = useState(false);
+
+  // Search, Filters & Clipboard copy state
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [warrantySearch, setWarrantySearch] = useState("");
+  const [warrantyCategoryFilter, setWarrantyCategoryFilter] = useState<string>("all");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   // Sync settings inputs with user state
   React.useEffect(() => {
@@ -108,7 +151,7 @@ export default function ProfilePage() {
                 className="p-3 rounded-xl bg-surface-container-low border border-border-light hover:border-primary text-left text-xs transition-colors cursor-pointer"
               >
                 <div className="font-bold text-charcoal">Mwape (6kW)</div>
-                <div className="text-[10px] text-on-surface-variant">Residential Client</div>
+                <div className="text-[10px] text-on-surface-variant">Residential Home</div>
               </button>
               <button
                 onClick={() => loginWithDemo("commercial")}
@@ -127,6 +170,52 @@ export default function ProfilePage() {
   const handleLogout = () => {
     logout();
     router.push("/");
+  };
+
+  const handleSendVerificationCode = async () => {
+    if (!user?.email) return;
+    setIsSendingCode(true);
+    setVerifyError("");
+    try {
+      const res = await sendEmailVerificationCode(user.email);
+      if (res.success) {
+        setVerifyStep("sent");
+        setVerifyInfo(res.message || `A 6-digit verification code was generated for ${user.email}.`);
+        if (res.simulatedCode) {
+          setVerifyInfo(`Verification code dispatched to ${user.email} (Demo Sandbox Code: ${res.simulatedCode})`);
+        }
+      } else {
+        setVerifyError(res.error || "Failed to send verification code. Please try again.");
+      }
+    } catch (err: unknown) {
+      setVerifyError("Error connecting to verification service.");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyOtp.trim()) return;
+    setVerifyStep("verifying");
+    setVerifyError("");
+    try {
+      const res = await verifyEmailCode(verifyOtp.trim(), user?.email);
+      if (res.success) {
+        setVerifyStep("success");
+        setTimeout(() => {
+          setIsVerifyModalOpen(false);
+          setVerifyStep("idle");
+          setVerifyOtp("");
+        }, 1600);
+      } else {
+        setVerifyStep("error");
+        setVerifyError(res.error || "Invalid or expired 6-digit code. Please try again.");
+      }
+    } catch (err: unknown) {
+      setVerifyStep("error");
+      setVerifyError("Verification failed. Please try again.");
+    }
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -178,12 +267,7 @@ export default function ProfilePage() {
           </span>
         );
       default:
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-light text-primary border border-primary/20">
-            <Home className="w-3.5 h-3.5" />
-            Residential Client
-          </span>
-        );
+        return null;
     }
   };
 
@@ -205,9 +289,27 @@ export default function ProfilePage() {
                   {renderAccountBadge()}
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-on-surface-variant">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-secondary" />
-                    <span>{user.email}</span>
+                    <span className="font-medium text-charcoal">{user.email}</span>
+                    {user.emailVerified ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <BadgeCheck className="w-3 h-3 text-emerald-600" />
+                        Verified
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsVerifyModalOpen(true);
+                          handleSendVerificationCode();
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-colors cursor-pointer"
+                        title="Click to verify your email"
+                      >
+                        <AlertCircle className="w-3 h-3 text-amber-600" />
+                        <span>Unverified - Verify Now</span>
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Phone className="w-3.5 h-3.5 text-primary" />
@@ -240,25 +342,80 @@ export default function ProfilePage() {
           </div>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-border-light">
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-border-light">
-              <div className="text-[11px] text-on-surface-variant uppercase font-bold">Active Warranties</div>
-              <div className="text-xl font-bold text-charcoal mt-0.5">{user.warranties.length} Units</div>
-            </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-border-light">
-              <div className="text-[11px] text-on-surface-variant uppercase font-bold">Orders &amp; Dispatch</div>
-              <div className="text-xl font-bold text-primary mt-0.5">{user.orders.length} Records</div>
-            </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-border-light">
-              <div className="text-[11px] text-on-surface-variant uppercase font-bold">Saved Sites</div>
-              <div className="text-xl font-bold text-secondary mt-0.5">{user.savedAddresses.length} Addresses</div>
-            </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-border-light">
-              <div className="text-[11px] text-on-surface-variant uppercase font-bold">Client Status</div>
-              <div className="text-xl font-bold text-secondary mt-0.5 flex items-center gap-1.5">
-                <BadgeCheck className="w-5 h-5 text-secondary" />
-                <span>Verified</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border-light">
+            <div
+              onClick={() => setActiveTab("warranties")}
+              className="p-4 rounded-2xl bg-surface-container-low border border-border-light hover:border-primary/40 transition-all cursor-pointer group shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Active Warranties</span>
+                <ShieldCheck className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
               </div>
+              <div className="text-2xl font-bold text-charcoal mt-1 font-headline">{user.warranties.length} Units</div>
+              <div className="text-[11px] text-secondary font-medium mt-0.5 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> 100% Factory Guaranteed
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab("orders")}
+              className="p-4 rounded-2xl bg-surface-container-low border border-border-light hover:border-primary/40 transition-all cursor-pointer group shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Orders &amp; Dispatch</span>
+                <Truck className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="text-2xl font-bold text-primary mt-1 font-headline">{user.orders.length} Records</div>
+              <div className="text-[11px] text-on-surface-variant mt-0.5">
+                Lusaka Hub Verified
+              </div>
+            </div>
+
+            <div
+              onClick={() => setActiveTab("settings")}
+              className="p-4 rounded-2xl bg-surface-container-low border border-border-light hover:border-secondary/40 transition-all cursor-pointer group shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Saved Sites</span>
+                <MapPin className="w-4 h-4 text-secondary group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="text-2xl font-bold text-secondary mt-1 font-headline">{user.savedAddresses.length} Addresses</div>
+              <div className="text-[11px] text-on-surface-variant mt-0.5">
+                Primary: {user.primaryDistrict}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Client Status</span>
+                <BadgeCheck className="w-4 h-4 text-secondary" />
+              </div>
+              {user.emailVerified ? (
+                <div className="mt-1">
+                  <div className="text-2xl font-bold text-secondary font-headline flex items-center gap-1.5">
+                    <span>Verified</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-700 font-medium mt-0.5">
+                    Cloudflare Edge Secured
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-1">
+                  <div className="text-lg font-bold text-amber-700 flex items-center gap-1 font-headline">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>Unverified</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsVerifyModalOpen(true);
+                      handleSendVerificationCode();
+                    }}
+                    className="text-[11px] text-primary hover:underline font-bold mt-0.5 block cursor-pointer"
+                  >
+                    Verify Email via OTP →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -276,8 +433,8 @@ export default function ProfilePage() {
                 : "border-transparent text-on-surface-variant hover:text-charcoal"
             }`}
           >
-            <Zap className="w-4 h-4" />
-            <span>System Overview</span>
+            <Activity className="w-4 h-4" />
+            <span>System Overview &amp; Telemetry</span>
           </button>
 
           <button
@@ -305,18 +462,6 @@ export default function ProfilePage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("addresses")}
-            className={`flex items-center gap-2 py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === "addresses"
-                ? "border-primary text-primary"
-                : "border-transparent text-on-surface-variant hover:text-charcoal"
-            }`}
-          >
-            <MapPin className="w-4 h-4" />
-            <span>Site Addresses ({user.savedAddresses.length})</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab("settings")}
             className={`flex items-center gap-2 py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "settings"
@@ -325,35 +470,117 @@ export default function ProfilePage() {
             }`}
           >
             <Settings className="w-4 h-4" />
-            <span>Account Settings</span>
+            <span>Account &amp; Site Settings</span>
           </button>
         </div>
 
-        {/* TAB 1: OVERVIEW */}
+        {/* TAB 1: OVERVIEW & TELEMETRY */}
         {activeTab === "overview" && (
           <div className="mt-8 space-y-8 animate-fadeIn">
-            {/* Warranty Status Banner */}
-            <div className="bg-white rounded-2xl border border-border-light p-6 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-light border border-secondary/20 text-secondary text-xs font-bold mb-3">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Hardware Warranty Active</span>
+            {/* Live System Telemetry & Power Flow Simulation Card */}
+            <div className="bg-gradient-to-br from-charcoal to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-white/10">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-emerald-400 mb-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Live Hybrid Solar Energy Telemetry</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold font-headline text-white">
+                      Solar Yield &amp; Load Shedding Autonomy
+                    </h2>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Real-time simulation based on Lusaka irradiance (5.6 Peak Sun Hours) and registered inverter profile.
+                    </p>
                   </div>
-                  <h2 className="text-xl font-bold text-charcoal font-headline">
-                    Tier-1 Equipment Protected under Factory Guarantee
-                  </h2>
-                  <p className="text-xs text-on-surface-variant mt-1 max-w-xl">
-                    All Greenrich Lithium storage units and Deye Hybrid inverters registered under your profile carry full manufacturer warranty and local technical support in Zambia.
-                  </p>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="px-3.5 py-2 rounded-xl bg-white/10 border border-white/10 text-xs text-slate-200 flex items-center gap-2">
+                      <Sun className="w-4 h-4 text-amber-400" />
+                      <span>Lusaka Weather: <strong>Sunny 28°C</strong></span>
+                    </div>
+                    <Link
+                      href="/calculator"
+                      className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/25"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-white" />
+                      <span>Optimize System</span>
+                    </Link>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setActiveTab("warranties")}
-                  className="px-5 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal text-xs font-bold flex items-center gap-2 self-start md:self-auto transition-all cursor-pointer"
-                >
-                  <span>View All Certificates</span>
-                  <ChevronRight className="w-4 h-4 text-primary" />
-                </button>
+
+                {/* 4 Power Flow Telemetry Nodes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                  {/* Solar PV Node */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-400/40 transition-all">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <Sun className="w-4 h-4 text-amber-400" />
+                        <span>PV Generation</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300">Peak Yield</span>
+                    </div>
+                    <div className="text-2xl font-bold font-headline text-white mt-2">4.85 kW</div>
+                    <div className="text-[11px] text-slate-400 mt-1">Daily Yield: ~26.4 kWh</div>
+                  </div>
+
+                  {/* Battery Storage SoC Node */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-all">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <BatteryCharging className="w-4 h-4 text-emerald-400" />
+                        <span>Lithium Storage</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300">Charging (+2.2kW)</span>
+                    </div>
+                    <div className="text-2xl font-bold font-headline text-white mt-2">92% SoC</div>
+                    <div className="text-[11px] text-slate-400 mt-1">Autonomy: <strong>14.5 Hours</strong></div>
+                  </div>
+
+                  {/* Home Consumption Load Node */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-400/40 transition-all">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <Home className="w-4 h-4 text-sky-400" />
+                        <span>Active Home Load</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300">Normal</span>
+                    </div>
+                    <div className="text-2xl font-bold font-headline text-white mt-2">1.82 kW</div>
+                    <div className="text-[11px] text-slate-400 mt-1">100% Solar Powered</div>
+                  </div>
+
+                  {/* Grid / Zero-Export Mode Node */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-secondary/40 transition-all">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                      <span className="flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-secondary" />
+                        <span>ZESCO Grid Status</span>
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-secondary/20 text-secondary">Island Mode</span>
+                    </div>
+                    <div className="text-2xl font-bold font-headline text-white mt-2">0.0 kW Import</div>
+                    <div className="text-[11px] text-emerald-400 font-medium mt-1">Zero Load-Shedding Impact</div>
+                  </div>
+                </div>
+
+                {/* Impact Banner */}
+                <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-300">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-emerald-400" />
+                      <span><strong>420 kg</strong> CO₂ Emissions Offset</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span><strong>ZMW 3,650</strong> Estimated Monthly Grid Savings</span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-slate-400">Greenrich BMS &amp; Deye Inverter Connected</span>
+                </div>
               </div>
             </div>
 
@@ -362,15 +589,15 @@ export default function ProfilePage() {
               {/* Registered Hardware Quick List */}
               <div className="bg-white rounded-2xl border border-border-light p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-charcoal flex items-center gap-2">
+                  <h3 className="text-base font-bold text-charcoal flex items-center gap-2 font-headline">
                     <ShieldCheck className="w-4 h-4 text-primary" />
-                    <span>Registered Solar Equipment</span>
+                    <span>Registered Solar Equipment ({user.warranties.length})</span>
                   </h3>
                   <button
                     onClick={() => setActiveTab("warranties")}
                     className="text-xs text-primary hover:underline font-bold"
                   >
-                    View details
+                    View all vault →
                   </button>
                 </div>
 
@@ -383,35 +610,49 @@ export default function ProfilePage() {
                     {user.warranties.slice(0, 3).map((w) => (
                       <div
                         key={w.id}
-                        className="p-3.5 rounded-xl bg-surface-container-low border border-border-light flex items-start justify-between gap-3"
+                        onClick={() => setSelectedWarrantyForModal(w)}
+                        className="p-4 rounded-xl bg-surface-container-low border border-border-light flex items-start justify-between gap-3 hover:border-primary/40 transition-all cursor-pointer group"
                       >
                         <div className="min-w-0">
-                          <div className="font-bold text-sm text-charcoal truncate">{w.productName}</div>
-                          <div className="text-xs text-on-surface-variant mt-0.5">
-                            SN: <span className="text-charcoal font-mono">{w.serialNumber}</span> • {w.warrantyPeriodYears}-Year Coverage
+                          <div className="font-bold text-sm text-charcoal group-hover:text-primary transition-colors truncate">
+                            {w.productName}
+                          </div>
+                          <div className="text-xs text-on-surface-variant mt-1 flex items-center gap-2">
+                            <span>SN:</span>
+                            <span className="font-mono text-charcoal font-bold bg-white px-1.5 py-0.5 rounded border border-border-light text-[11px]">
+                              {w.serialNumber}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-secondary font-medium mt-1">
+                            {w.warrantyPeriodYears}-Year Coverage • Valid to {w.expiryDate}
                           </div>
                         </div>
-                        <span className="shrink-0 text-[10px] font-bold px-2 py-1 rounded bg-secondary-light text-secondary border border-secondary/20">
-                          {w.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary-light text-secondary border border-secondary/20">
+                            {w.status}
+                          </span>
+                          <span className="text-xs text-primary group-hover:translate-x-0.5 transition-transform flex items-center font-bold">
+                            View <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Recent Orders / Dispatch Quick List */}
+              {/* Recent Orders / Dispatch Quick List with Progress Stepper */}
               <div className="bg-white rounded-2xl border border-border-light p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-charcoal flex items-center gap-2">
+                  <h3 className="text-base font-bold text-charcoal flex items-center gap-2 font-headline">
                     <ShoppingBag className="w-4 h-4 text-secondary" />
-                    <span>Recent Equipment Orders</span>
+                    <span>Recent Orders &amp; Dispatch ({user.orders.length})</span>
                   </h3>
                   <button
                     onClick={() => setActiveTab("orders")}
                     className="text-xs text-secondary hover:underline font-bold"
                   >
-                    View history
+                    View all orders →
                   </button>
                 </div>
 
@@ -423,24 +664,57 @@ export default function ProfilePage() {
                     </Link>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {user.orders.slice(0, 3).map((ord) => (
+                  <div className="space-y-4">
+                    {user.orders.slice(0, 2).map((ord) => (
                       <div
                         key={ord.id}
-                        className="p-3.5 rounded-xl bg-surface-container-low border border-border-light flex items-start justify-between gap-3"
+                        className="p-4 rounded-xl bg-surface-container-low border border-border-light space-y-3"
                       >
-                        <div>
-                          <div className="font-bold text-sm text-charcoal">{ord.id}</div>
-                          <div className="text-xs text-on-surface-variant mt-0.5">
-                            {ord.date} • K{ord.total.toLocaleString()}
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-bold text-sm text-charcoal font-mono">{ord.id}</div>
+                            <div className="text-xs text-on-surface-variant mt-0.5">
+                              {ord.date} • {ord.items.length} item(s) • K{ord.total.toLocaleString()}
+                            </div>
                           </div>
-                          <div className="text-[11px] text-on-surface-variant mt-1">
-                            {ord.items.length} item(s) • Tracking: <span className="font-mono text-secondary font-bold">{ord.trackingNumber}</span>
+                          <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary-light text-primary border border-primary/20">
+                            {ord.status}
+                          </span>
+                        </div>
+
+                        {/* Visual 4-Step Stepper */}
+                        <div className="pt-2 border-t border-border-light">
+                          <div className="flex items-center justify-between text-[10px] font-bold text-on-surface-variant mb-1.5">
+                            <span className="text-primary font-bold">1. Confirmed</span>
+                            <span className="text-primary font-bold">2. Allocated</span>
+                            <span className={ord.status.includes("Transit") || ord.status.includes("Delivered") ? "text-primary font-bold" : "text-slate-400"}>3. Dispatched</span>
+                            <span className={ord.status.includes("Delivered") ? "text-secondary font-bold" : "text-slate-400"}>4. Installed</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-primary to-secondary transition-all"
+                              style={{
+                                width: ord.status.includes("Delivered")
+                                  ? "100%"
+                                  : ord.status.includes("Transit")
+                                  ? "75%"
+                                  : "50%",
+                              }}
+                            />
                           </div>
                         </div>
-                        <span className="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary-light text-primary border border-primary/20">
-                          {ord.status}
-                        </span>
+
+                        <div className="flex items-center justify-between text-xs pt-1">
+                          <span className="text-[11px] text-on-surface-variant">
+                            Tracking: <strong className="font-mono text-secondary">{ord.trackingNumber}</strong>
+                          </span>
+                          <button
+                            onClick={() => setSelectedOrderForInvoiceModal(ord)}
+                            className="text-xs text-primary font-bold hover:underline cursor-pointer"
+                          >
+                            View Invoice
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -448,23 +722,38 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Quick Actions Support Banner */}
-            <div className="p-6 rounded-2xl bg-white border border-border-light shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-secondary-light text-secondary flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5" />
+            {/* Hardware Expansion Recommendation Card */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-surface-container to-surface-container-high border border-border-light shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="max-w-xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-light text-primary border border-primary/20 text-xs font-bold mb-2">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>System Expansion Recommendation</span>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-charcoal">Need an On-Site Engineering Assessment?</h4>
-                  <p className="text-xs text-on-surface-variant">Our Lusaka certified technicians can inspect your distribution board or calculate peak load.</p>
-                </div>
+                <h3 className="text-lg font-bold text-charcoal font-headline">
+                  Extend Load-Shedding Autonomy to 48 Hours
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                  Add a second parallel Greenrich Lithium module or an array of Tier-1 Bi-Facial Solar Panels with plug-and-play installation from our certified technicians.
+                </p>
               </div>
-              <Link
-                href="/calculator"
-                className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal text-xs font-bold whitespace-nowrap transition-colors"
-              >
-                Run Solar Calculator
-              </Link>
+
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <Link
+                  href="/shop"
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all shadow-md shadow-primary/20"
+                >
+                  Explore Batteries &amp; Panels
+                </Link>
+                <a
+                  href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Engineering,%20I%20would%20like%20to%20inquire%20about%20adding%20storage%20capacity%20or%20solar%20panels%20to%20my%20existing%20setup.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-surface-container-low border border-border-light text-charcoal text-xs font-bold flex items-center gap-1.5 transition-colors"
+                >
+                  <Phone className="w-3.5 h-3.5 text-secondary" />
+                  <span>Ask Engineer</span>
+                </a>
+              </div>
             </div>
           </div>
         )}
@@ -487,6 +776,44 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Search and Category Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-border-light shadow-sm">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-on-surface-variant absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by hardware name, serial number (SN), or certificate ID..."
+                  value={warrantySearch}
+                  onChange={(e) => setWarrantySearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-surface-container-low border border-border-light focus:bg-white focus:outline-none focus:border-primary text-charcoal"
+                />
+                {warrantySearch && (
+                  <button
+                    onClick={() => setWarrantySearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant hover:text-charcoal cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                {["all", "Inverter", "Battery", "Panel", "Kit"].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setWarrantyCategoryFilter(cat)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      warrantyCategoryFilter === cat
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-surface-container-low hover:bg-surface-container border border-border-light text-charcoal"
+                    }`}
+                  >
+                    {cat === "all" ? "All Categories" : cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {user.warranties.length === 0 ? (
               <div className="bg-white rounded-2xl border border-border-light p-12 text-center shadow-sm">
                 <ShieldCheck className="w-12 h-12 text-outline mx-auto mb-3" />
@@ -503,64 +830,101 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {user.warranties.map((w) => (
-                  <div
-                    key={w.id}
-                    className="bg-white rounded-2xl border border-border-light p-5 flex flex-col justify-between shadow-sm hover:border-primary/40 transition-all group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-surface-container text-secondary border border-border-light">
-                          {w.category}
-                        </span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary-light text-secondary border border-secondary/20 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          {w.status}
-                        </span>
+                {user.warranties
+                  .filter((w) => {
+                    const matchesSearch =
+                      w.productName.toLowerCase().includes(warrantySearch.toLowerCase()) ||
+                      w.serialNumber.toLowerCase().includes(warrantySearch.toLowerCase()) ||
+                      w.certificateNumber.toLowerCase().includes(warrantySearch.toLowerCase());
+                    const matchesCat =
+                      warrantyCategoryFilter === "all" ||
+                      w.category.toLowerCase().includes(warrantyCategoryFilter.toLowerCase());
+                    return matchesSearch && matchesCat;
+                  })
+                  .map((w) => (
+                    <div
+                      key={w.id}
+                      className="bg-white rounded-2xl border border-border-light p-5 flex flex-col justify-between shadow-sm hover:border-primary/40 transition-all group"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-surface-container text-secondary border border-border-light">
+                            {w.category}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary-light text-secondary border border-secondary/20 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {w.status}
+                          </span>
+                        </div>
+
+                        <h3 className="font-bold text-sm text-charcoal group-hover:text-primary transition-colors">
+                          {w.productName}
+                        </h3>
+
+                        {w.systemCapacity && (
+                          <div className="text-xs text-on-surface-variant font-medium mt-1">
+                            Capacity: <span className="text-charcoal font-semibold">{w.systemCapacity}</span>
+                          </div>
+                        )}
+
+                        <div className="mt-4 space-y-2.5 pt-3 border-t border-border-light text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-on-surface-variant">Serial Number:</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-charcoal font-bold text-[11px] bg-surface-container-low px-1.5 py-0.5 rounded border border-border-light">
+                                {w.serialNumber}
+                              </span>
+                              <button
+                                onClick={() => handleCopy(w.serialNumber, `sn-${w.id}`)}
+                                className="text-on-surface-variant hover:text-primary p-0.5 transition-colors cursor-pointer"
+                                title="Copy Serial Number"
+                              >
+                                {copiedKey === `sn-${w.id}` ? (
+                                  <Check className="w-3.5 h-3.5 text-secondary" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-on-surface-variant">Installed:</span>
+                            <span className="text-charcoal font-medium">{w.installationDate}</span>
+                          </div>
+
+                          <div className="flex justify-between">
+                            <span className="text-on-surface-variant">Coverage Term:</span>
+                            <span className="text-secondary font-bold">{w.warrantyPeriodYears} Years (Expires {w.expiryDate})</span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-on-surface-variant">Certificate:</span>
+                            <span className="font-mono text-secondary font-bold text-[11px]">{w.certificateNumber}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <h3 className="font-bold text-sm text-charcoal group-hover:text-primary transition-colors">
-                        {w.productName}
-                      </h3>
-
-                      {w.systemCapacity && (
-                        <div className="text-xs text-on-surface-variant font-medium mt-1">
-                          Capacity: <span className="text-charcoal font-semibold">{w.systemCapacity}</span>
-                        </div>
-                      )}
-
-                      <div className="mt-4 space-y-2 pt-3 border-t border-border-light text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Serial Number:</span>
-                          <span className="font-mono text-charcoal font-bold text-[11px]">{w.serialNumber}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Installed:</span>
-                          <span className="text-charcoal font-medium">{w.installationDate}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Coverage Term:</span>
-                          <span className="text-secondary font-bold">{w.warrantyPeriodYears} Years (Expires {w.expiryDate})</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-on-surface-variant">Certificate:</span>
-                          <span className="font-mono text-secondary font-bold text-[11px]">{w.certificateNumber}</span>
-                        </div>
+                      <div className="mt-5 pt-3 border-t border-border-light flex items-center justify-between gap-2">
+                        <button
+                          onClick={() => setSelectedWarrantyForModal(w)}
+                          className="text-xs text-primary hover:underline font-bold flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>View Certificate</span>
+                        </button>
+                        <a
+                          href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20requesting%20technical%20service%20for%20my%20${encodeURIComponent(w.productName)}%20(SN:%20${encodeURIComponent(w.serialNumber)}).`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-secondary hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Wrench className="w-3.5 h-3.5" />
+                          <span>Request Audit</span>
+                        </a>
                       </div>
                     </div>
-
-                    <div className="mt-5 pt-3 border-t border-border-light flex items-center justify-between">
-                      <button
-                        onClick={() => alert(`Warranty Certificate ${w.certificateNumber} for ${w.productName} is verified in Elleyhill Zambia Registry.`)}
-                        className="text-xs text-primary hover:underline font-bold flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>Download Certificate</span>
-                      </button>
-                      <span className="text-[10px] text-on-surface-variant">Lusaka Registry</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
@@ -584,6 +948,44 @@ export default function ProfilePage() {
               </Link>
             </div>
 
+            {/* Order Search and Status Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-2xl border border-border-light shadow-sm">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-on-surface-variant absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by Order ID, tracking number, or hardware name..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-surface-container-low border border-border-light focus:bg-white focus:outline-none focus:border-primary text-charcoal"
+                />
+                {orderSearch && (
+                  <button
+                    onClick={() => setOrderSearch("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant hover:text-charcoal cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                {["all", "In Transit", "Delivered", "Processing"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setOrderStatusFilter(status)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      orderStatusFilter === status
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-surface-container-low hover:bg-surface-container border border-border-light text-charcoal"
+                    }`}
+                  >
+                    {status === "all" ? "All Orders" : status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {user.orders.length === 0 ? (
               <div className="bg-white rounded-2xl border border-border-light p-12 text-center shadow-sm">
                 <ShoppingBag className="w-12 h-12 text-outline mx-auto mb-3" />
@@ -600,263 +1002,363 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {user.orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="bg-white rounded-2xl border border-border-light p-6 shadow-sm"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-border-light gap-4">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-base font-bold text-charcoal font-mono">{order.id}</span>
-                          <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary-light text-primary border border-primary/20 font-bold">
-                            {order.status}
-                          </span>
+                {user.orders
+                  .filter((order) => {
+                    const matchesSearch =
+                      order.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
+                      order.trackingNumber.toLowerCase().includes(orderSearch.toLowerCase()) ||
+                      order.items.some((it) => it.name.toLowerCase().includes(orderSearch.toLowerCase()));
+                    const matchesStatus =
+                      orderStatusFilter === "all" ||
+                      order.status.toLowerCase().includes(orderStatusFilter.toLowerCase());
+                    return matchesSearch && matchesStatus;
+                  })
+                  .map((order) => (
+                    <div
+                      key={order.id}
+                      className="bg-white rounded-2xl border border-border-light p-6 shadow-sm space-y-4"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-border-light gap-4">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-base font-bold text-charcoal font-mono">{order.id}</span>
+                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary-light text-primary border border-primary/20 font-bold">
+                              {order.status}
+                            </span>
+                          </div>
+                          <div className="text-xs text-on-surface-variant mt-1">
+                            Placed on <span className="text-charcoal font-medium">{order.date}</span> • Payment via <span className="text-charcoal font-medium">{order.paymentMethod}</span>
+                          </div>
                         </div>
-                        <div className="text-xs text-on-surface-variant mt-1">
-                          Placed on <span className="text-charcoal font-medium">{order.date}</span> • Payment via <span className="text-charcoal font-medium">{order.paymentMethod}</span>
+
+                        <div className="flex items-center gap-4 text-right">
+                          <div>
+                            <div className="text-xs text-on-surface-variant">Total Value</div>
+                            <div className="text-lg font-bold text-primary font-headline">K{order.total.toLocaleString()}</div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 text-right">
-                        <div>
-                          <div className="text-xs text-on-surface-variant">Total Value</div>
-                          <div className="text-lg font-bold text-primary">K{order.total.toLocaleString()}</div>
+                      {/* Visual Dispatch Stepper */}
+                      <div className="p-4 rounded-xl bg-surface-container-low border border-border-light">
+                        <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                          <div className="text-primary flex flex-col items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                            <span>1. Confirmed</span>
+                          </div>
+                          <div className="text-primary flex flex-col items-center gap-1">
+                            <CheckCircle2 className="w-4 h-4 text-primary" />
+                            <span>2. QA &amp; Packaging</span>
+                          </div>
+                          <div className={order.status.includes("Transit") || order.status.includes("Delivered") ? "text-primary flex flex-col items-center gap-1" : "text-slate-400 flex flex-col items-center gap-1"}>
+                            <Truck className="w-4 h-4" />
+                            <span>3. Lusaka Dispatch</span>
+                          </div>
+                          <div className={order.status.includes("Delivered") ? "text-secondary flex flex-col items-center gap-1" : "text-slate-400 flex flex-col items-center gap-1"}>
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>4. Delivered / Setup</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Order Items */}
+                      <div className="py-2 space-y-2.5">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2.5 max-w-xl">
+                              <span className="w-6 h-6 rounded-lg bg-surface-container flex items-center justify-center font-bold text-primary text-xs">
+                                {item.quantity}x
+                              </span>
+                              <span className="text-charcoal font-medium">{item.name}</span>
+                            </div>
+                            <div className="font-bold text-charcoal font-mono">
+                              K{(item.price * item.quantity).toLocaleString()}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Dispatch & Delivery SLA & Actions */}
+                      <div className="pt-4 border-t border-border-light bg-surface-container-low -mx-6 -mb-6 p-6 rounded-b-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                          <div>
+                            <div className="text-on-surface-variant uppercase text-[10px] font-bold">Tracking Number</div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="font-mono text-secondary font-bold">{order.trackingNumber}</span>
+                              <button
+                                onClick={() => handleCopy(order.trackingNumber, `track-${order.id}`)}
+                                className="text-on-surface-variant hover:text-primary p-0.5 cursor-pointer"
+                                title="Copy Tracking Number"
+                              >
+                                {copiedKey === `track-${order.id}` ? (
+                                  <Check className="w-3 h-3 text-secondary" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-on-surface-variant uppercase text-[10px] font-bold">Delivery Point</div>
+                            <div className="text-charcoal font-medium mt-0.5 truncate">{order.deliveryAddress} ({order.district})</div>
+                          </div>
+                          <div>
+                            <div className="text-on-surface-variant uppercase text-[10px] font-bold">Estimated SLA</div>
+                            <div className="text-secondary font-bold mt-0.5 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{order.estimatedDelivery}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border-light">
+                          <button
+                            onClick={() => setSelectedOrderForInvoiceModal(order)}
+                            className="px-3.5 py-2 rounded-xl bg-white hover:bg-surface-container border border-border-light text-charcoal text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-primary" />
+                            <span>View Invoice</span>
+                          </button>
+                          <a
+                            href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20inquiring%20about%20my%20order%20${encodeURIComponent(order.id)}%20(Tracking:%20${encodeURIComponent(order.trackingNumber)}).`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 rounded-xl bg-status-success/10 hover:bg-status-success/20 border border-status-success/30 text-status-success text-xs font-bold flex items-center gap-1.5 transition-all"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>Lead Engineer</span>
+                          </a>
                         </div>
                       </div>
                     </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
-                    {/* Order Items */}
-                    <div className="py-4 space-y-3">
-                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2 max-w-xl">
-                            <span className="w-6 h-6 rounded bg-surface-container flex items-center justify-center font-bold text-primary">
-                              {item.quantity}x
-                            </span>
-                            <span className="text-charcoal font-medium">{item.name}</span>
+        {/* TAB 4: ACCOUNT & SITE SETTINGS */}
+        {activeTab === "settings" && (
+          <div className="mt-8 space-y-8 animate-fadeIn">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Account Credentials Form */}
+              <div className="lg:col-span-5 bg-white rounded-2xl border border-border-light p-6 sm:p-8 shadow-sm h-fit">
+                <h2 className="text-lg font-bold text-charcoal font-headline mb-1">Account &amp; Profile Info</h2>
+                <p className="text-xs text-on-surface-variant mb-6">
+                  Update your contact credentials, company details, or tax identifiers.
+                </p>
+
+                {settingsSuccess && (
+                  <div className="mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-secondary text-xs animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>Profile updated successfully!</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSaveSettings} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-charcoal uppercase tracking-wider">
+                        Email Address (Login ID)
+                      </label>
+                      {user.emailVerified ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <BadgeCheck className="w-3 h-3 text-emerald-600" />
+                          Verified
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsVerifyModalOpen(true);
+                            handleSendVerificationCode();
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-colors cursor-pointer"
+                        >
+                          <AlertCircle className="w-3 h-3 text-amber-600" />
+                          Verify
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="email"
+                      value={user.email}
+                      disabled
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container border border-border-medium text-sm text-on-surface-variant cursor-not-allowed font-sans"
+                    />
+                    <span className="text-[10px] text-on-surface-variant mt-1 block">
+                      {user.emailVerified
+                        ? "Verified with Cloudflare Gateway for order dispatches & warranty vault."
+                        : "Unverified. Verify email for official dispatch tracking and certificates."}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
+                      Contact Phone / WhatsApp
+                    </label>
+                    <input
+                      type="text"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
+                    />
+                  </div>
+
+                  {user.accountType !== "residential" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
+                          Company Name
+                        </label>
+                        <input
+                          type="text"
+                          value={editCompany}
+                          onChange={(e) => setEditCompany(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
+                          ZRA TPIN
+                        </label>
+                        <input
+                          type="text"
+                          value={editTpin}
+                          onChange={(e) => setEditTpin(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-3">
+                    <button
+                      type="submit"
+                      className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-primary/20 cursor-pointer"
+                    >
+                      Save Profile Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Site Addresses Manager */}
+              <div className="lg:col-span-7 space-y-6">
+                <div className="bg-white rounded-2xl border border-border-light p-6 sm:p-8 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border-light">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-primary" />
+                        <h2 className="text-lg font-bold text-charcoal font-headline">Saved Installation Sites</h2>
+                      </div>
+                      <p className="text-xs text-on-surface-variant mt-1">
+                        Physical sites and delivery destinations for hardware dispatch &amp; engineering visits.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsAddressModalOpen(true)}
+                      className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-2 self-start sm:self-auto transition-all cursor-pointer shadow-sm shadow-primary/20"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Site Address</span>
+                    </button>
+                  </div>
+
+                  {user.savedAddresses.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <MapPin className="w-10 h-10 text-outline mx-auto mb-3" />
+                      <h3 className="text-sm font-bold text-charcoal">No Installation Sites Registered</h3>
+                      <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
+                        Save your residential roof, commercial warehouse, or agricultural pump site for fast 1-click order dispatch.
+                      </p>
+                      <button
+                        onClick={() => setIsAddressModalOpen(true)}
+                        className="mt-4 px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal font-bold text-xs cursor-pointer transition-colors"
+                      >
+                        Add Your First Site
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                      {user.savedAddresses.map((addr) => (
+                        <div
+                          key={addr.id}
+                          className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                            addr.isDefault
+                              ? "bg-surface-container-low border-primary/60 ring-1 ring-primary/20"
+                              : "bg-surface-container-low border-border-light hover:border-border-medium"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <h4 className="font-bold text-charcoal text-sm">{addr.label}</h4>
+                                {addr.isDefault && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary-light text-primary border border-primary/20">
+                                    Default
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => deleteSavedAddress(addr.id)}
+                                className="text-on-surface-variant hover:text-error p-1 transition-colors cursor-pointer"
+                                title="Delete Site"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            <div className="text-xs text-on-surface-variant space-y-1">
+                              <div className="text-charcoal font-medium line-clamp-2">{addr.fullAddress}</div>
+                              <div className="text-[11px]">
+                                {addr.district}, {addr.province}
+                              </div>
+                              <div className="text-on-surface-variant flex items-center gap-1 pt-1 text-[11px]">
+                                <Phone className="w-3 h-3 text-primary" />
+                                <span className="text-charcoal">{addr.contactPhone}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="font-bold text-charcoal font-mono">
-                            K{(item.price * item.quantity).toLocaleString()}
+
+                          <div className="mt-4 pt-3 border-t border-border-light flex items-center justify-between text-xs">
+                            {!addr.isDefault ? (
+                              <button
+                                onClick={() => setDefaultAddress(addr.id)}
+                                className="text-[11px] text-primary hover:underline font-bold cursor-pointer"
+                              >
+                                Set Default
+                              </button>
+                            ) : (
+                              <span className="text-[11px] text-secondary flex items-center gap-1 font-bold">
+                                <CheckCircle2 className="w-3 h-3" /> Active Default
+                              </span>
+                            )}
+                            <span className="text-[10px] text-outline">Verified</span>
                           </div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Dispatch & Delivery SLA */}
-                    <div className="pt-4 border-t border-border-light bg-surface-container-low -mx-6 -mb-6 p-6 rounded-b-2xl grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <div className="text-on-surface-variant uppercase text-[10px] font-bold">Tracking Number</div>
-                        <div className="font-mono text-secondary font-bold mt-0.5">{order.trackingNumber}</div>
-                      </div>
-                      <div>
-                        <div className="text-on-surface-variant uppercase text-[10px] font-bold">Delivery Point</div>
-                        <div className="text-charcoal font-medium mt-0.5 truncate">{order.deliveryAddress} ({order.district})</div>
-                      </div>
-                      <div>
-                        <div className="text-on-surface-variant uppercase text-[10px] font-bold">Estimated SLA</div>
-                        <div className="text-secondary font-bold mt-0.5 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          <span>{order.estimatedDelivery}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: SITE ADDRESSES */}
-        {activeTab === "addresses" && (
-          <div className="mt-8 space-y-6 animate-fadeIn">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-charcoal font-headline">Saved Installation Sites</h2>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  Manage multiple residential properties, farm pump stations, or commercial branch locations for delivery &amp; installation.
-                </p>
-              </div>
-              <button
-                onClick={() => setIsAddressModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-2 self-start sm:self-auto transition-all cursor-pointer shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Installation Site</span>
-              </button>
-            </div>
-
-            {user.savedAddresses.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-border-light p-12 text-center shadow-sm">
-                <MapPin className="w-12 h-12 text-outline mx-auto mb-3" />
-                <h3 className="text-base font-bold text-charcoal">No Sites Saved</h3>
-                <p className="text-xs text-on-surface-variant mt-1 max-w-sm mx-auto">
-                  Save your home, business or farm address for fast 1-click checkout and Lusaka delivery routing.
-                </p>
-                <button
-                  onClick={() => setIsAddressModalOpen(true)}
-                  className="mt-4 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs cursor-pointer"
-                >
-                  Add Your First Site
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {user.savedAddresses.map((addr) => (
-                  <div
-                    key={addr.id}
-                    className={`p-6 rounded-2xl border transition-all flex flex-col justify-between shadow-sm ${
-                      addr.isDefault
-                        ? "bg-white border-primary ring-1 ring-primary/20"
-                        : "bg-white border-border-light hover:border-border-medium"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-charcoal text-base">{addr.label}</h3>
-                          {addr.isDefault && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-light text-primary border border-primary/20">
-                              Primary Default Site
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => deleteSavedAddress(addr.id)}
-                          className="text-on-surface-variant hover:text-error p-1 transition-colors cursor-pointer"
-                          title="Delete Site"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      <div className="text-xs text-on-surface-variant space-y-1.5">
-                        <div className="text-charcoal font-medium">{addr.fullAddress}</div>
-                        <div>
-                          {addr.district}, {addr.province}
-                        </div>
-                        <div className="text-on-surface-variant flex items-center gap-1.5 pt-1">
-                          <Phone className="w-3.5 h-3.5 text-primary" />
-                          <span className="text-charcoal font-medium">{addr.contactPhone}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 pt-4 border-t border-border-light flex items-center justify-between">
-                      {!addr.isDefault ? (
-                        <button
-                          onClick={() => setDefaultAddress(addr.id)}
-                          className="text-xs text-primary hover:underline font-bold cursor-pointer"
-                        >
-                          Set as Primary Site
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-secondary flex items-center gap-1 font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Active Default
-                        </span>
-                      )}
-                      <span className="text-[10px] text-on-surface-variant">Zambia Dispatch Verified</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 5: ACCOUNT SETTINGS */}
-        {activeTab === "settings" && (
-          <div className="mt-8 max-w-2xl bg-white rounded-2xl border border-border-light p-6 sm:p-8 shadow-xl animate-fadeIn">
-            <h2 className="text-xl font-bold text-charcoal font-headline mb-1">Account &amp; Profile Settings</h2>
-            <p className="text-xs text-on-surface-variant mb-6">
-              Update your contact credentials, company details, or tax identifiers.
-            </p>
-
-            {settingsSuccess && (
-              <div className="mb-6 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-secondary text-xs animate-fadeIn">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Profile updated successfully!</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSettings} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Email Address (Login ID)
-                </label>
-                <input
-                  type="email"
-                  value={user.email}
-                  disabled
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container border border-border-medium text-sm text-on-surface-variant cursor-not-allowed font-sans"
-                />
-                <span className="text-[10px] text-on-surface-variant mt-1 block">Contact support if you need to change your primary login email.</span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Contact Phone / WhatsApp
-                </label>
-                <input
-                  type="text"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
-                />
-              </div>
-
-              {user.accountType !== "residential" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                      Company / Organization Name
-                    </label>
-                    <input
-                      type="text"
-                      value={editCompany}
-                      onChange={(e) => setEditCompany(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                      ZRA TPIN
-                    </label>
-                    <input
-                      type="text"
-                      value={editTpin}
-                      onChange={(e) => setEditTpin(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-mono"
-                    />
-                  </div>
+                  )}
                 </div>
-              )}
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-primary/20 cursor-pointer"
-                >
-                  Save Profile Changes
-                </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
       </div>
+
 
       {/* ADD SITE ADDRESS MODAL */}
       {isAddressModalOpen && (
@@ -965,6 +1467,268 @@ export default function ProfilePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* EMAIL VERIFICATION MODAL */}
+      {isVerifyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-border-light rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative">
+            <div className="w-12 h-12 rounded-2xl bg-secondary-light border border-secondary/20 flex items-center justify-center text-secondary mb-4 mx-auto">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-xl font-bold text-charcoal font-headline text-center mb-1">
+              Verify Your Email Address
+            </h3>
+            <p className="text-xs text-on-surface-variant text-center mb-5">
+              Securely verify <span className="font-semibold text-charcoal">{user.email}</span> via the Elleyhill Cloudflare Gateway.
+            </p>
+
+            {verifyStep === "success" ? (
+              <div className="text-center py-6 space-y-3 animate-fadeIn">
+                <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h4 className="text-base font-bold text-charcoal">Email Verified Successfully!</h4>
+                <p className="text-xs text-on-surface-variant">
+                  Your profile and warranty registry are now fully verified.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleVerifyCodeSubmit} className="space-y-4">
+                {verifyInfo && (
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-600 mt-0.5" />
+                    <span>{verifyInfo}</span>
+                  </div>
+                )}
+
+                {verifyError && (
+                  <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                    <span>{verifyError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-charcoal uppercase tracking-wider">
+                      6-Digit Security Code
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleSendVerificationCode}
+                      disabled={isSendingCode}
+                      className="text-xs text-primary hover:underline font-bold cursor-pointer disabled:opacity-50"
+                    >
+                      {isSendingCode ? "Sending..." : "Resend Code"}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="Enter 6-digit OTP code"
+                    value={verifyOtp}
+                    onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, ""))}
+                    autoFocus
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-border-medium text-center font-mono text-xl tracking-widest text-charcoal focus:bg-white focus:outline-none focus:border-primary"
+                  />
+                  <span className="text-[11px] text-on-surface-variant mt-1.5 block text-center">
+                    Enter the 6-digit OTP generated by the worker gateway.
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsVerifyModalOpen(false);
+                      setVerifyError("");
+                      setVerifyInfo("");
+                      setVerifyOtp("");
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-surface-container text-on-surface-variant hover:text-charcoal text-xs font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={verifyStep === "verifying" || verifyOtp.length < 4}
+                    className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs shadow-md shadow-primary/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {verifyStep === "verifying" ? "Verifying Code..." : "Confirm & Verify Email"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DIGITAL WARRANTY CERTIFICATE MODAL */}
+      {selectedWarrantyForModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border-2 border-secondary/30 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative text-center">
+            <div className="w-12 h-12 rounded-full bg-secondary-light text-secondary flex items-center justify-center mx-auto mb-3">
+              <ShieldCheck className="w-7 h-7" />
+            </div>
+
+            <div className="text-[11px] font-bold tracking-widest uppercase text-secondary">
+              REPUBLIC OF ZAMBIA ENERGY REGISTRY
+            </div>
+            <h3 className="text-xl font-bold text-charcoal font-headline mt-1">
+              Certificate of Hardware Warranty
+            </h3>
+            <div className="font-mono text-xs text-primary font-bold mt-1">
+              Certificate No: {selectedWarrantyForModal.certificateNumber}
+            </div>
+
+            <div className="mt-5 p-4 rounded-xl bg-surface-container-low border border-border-light text-left text-xs space-y-2.5">
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Registered Owner:</span>
+                <span className="text-charcoal font-bold">{selectedWarrantyForModal.customerName || user.fullName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Hardware Model:</span>
+                <span className="text-charcoal font-semibold truncate max-w-[220px]">{selectedWarrantyForModal.productName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Serial Number:</span>
+                <span className="font-mono text-secondary font-bold">{selectedWarrantyForModal.serialNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Installed Date:</span>
+                <span className="text-charcoal">{selectedWarrantyForModal.installationDate}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Guarantee Period:</span>
+                <span className="text-status-success font-bold">
+                  {selectedWarrantyForModal.warrantyPeriodYears} Years (Expires {selectedWarrantyForModal.expiryDate})
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Certified Installer:</span>
+                <span className="text-charcoal">{selectedWarrantyForModal.installerName || "Elleyhill Technical Support Team"}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between gap-3">
+              <button
+                onClick={() => setSelectedWarrantyForModal(null)}
+                className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Official Certificate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PROFORMA TAX INVOICE & DISPATCH MODAL */}
+      {selectedOrderForInvoiceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-border-medium rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between pb-6 border-b border-border-light">
+              <div>
+                <div className="text-xs font-bold text-primary tracking-widest uppercase">ELLEYHILL POWER ZAMBIA LTD</div>
+                <h3 className="text-xl font-bold text-charcoal font-headline mt-1">Official Proforma Tax Invoice</h3>
+                <div className="text-xs text-on-surface-variant font-mono mt-1">Ref: {selectedOrderForInvoiceModal.id}</div>
+              </div>
+              <div className="text-right text-xs text-on-surface-variant space-y-0.5">
+                <div>ZRA TPIN: <span className="text-charcoal font-mono font-bold">1003482910</span></div>
+                <div>Date: <span className="text-charcoal">{selectedOrderForInvoiceModal.date}</span></div>
+                <div>Status: <span className="text-status-success font-bold">{selectedOrderForInvoiceModal.status}</span></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 py-6 border-b border-border-light text-xs">
+              <div>
+                <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Billed & Delivered To:</div>
+                <div className="font-bold text-charcoal text-sm">{selectedOrderForInvoiceModal.customerName || user.fullName}</div>
+                <div className="text-on-surface-variant mt-0.5">{selectedOrderForInvoiceModal.deliveryAddress}</div>
+                <div className="text-on-surface-variant">{selectedOrderForInvoiceModal.district}, {selectedOrderForInvoiceModal.province}</div>
+                <div className="text-primary mt-1 font-semibold">{selectedOrderForInvoiceModal.phone}</div>
+              </div>
+
+              <div>
+                <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Dispatch Logistics:</div>
+                <div className="text-charcoal font-mono font-medium">Tracking: {selectedOrderForInvoiceModal.trackingNumber}</div>
+                <div className="text-on-surface-variant mt-0.5">Payment: {selectedOrderForInvoiceModal.paymentMethod}</div>
+                <div className="text-on-surface-variant">Lead Engineer: {selectedOrderForInvoiceModal.assignedEngineer || "Eng. Patrick Banda"}</div>
+              </div>
+            </div>
+
+            {/* Line items */}
+            <div className="py-6 border-b border-border-light">
+              <table className="w-full text-left text-xs">
+                <thead className="text-on-surface-variant uppercase font-bold text-[10px] pb-2 border-b border-border-light">
+                  <tr>
+                    <th className="pb-2">Description</th>
+                    <th className="pb-2 text-center">Qty</th>
+                    <th className="pb-2 text-right">Rate</th>
+                    <th className="pb-2 text-right">Amount (ZMW)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-light">
+                  {selectedOrderForInvoiceModal.items.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="py-3 text-charcoal font-medium">{item.name}</td>
+                      <td className="py-3 text-center text-on-surface-variant">{item.quantity}</td>
+                      <td className="py-3 text-right text-on-surface-variant font-mono">K{item.price.toLocaleString()}</td>
+                      <td className="py-3 text-right text-charcoal font-bold font-mono">K{(item.price * item.quantity).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Total Section */}
+            <div className="py-4 space-y-1.5 text-xs text-right">
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Subtotal:</span>
+                <span className="font-mono text-charcoal font-bold">ZMW {selectedOrderForInvoiceModal.subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">Logistics & Delivery:</span>
+                <span className="font-mono text-status-success font-bold">
+                  {selectedOrderForInvoiceModal.deliveryFee === 0 ? "FREE (Included)" : `ZMW ${selectedOrderForInvoiceModal.deliveryFee.toLocaleString()}`}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">16% ZRA Statutory VAT:</span>
+                <span className="font-mono text-status-success font-bold">0% (Clean Energy Zero-Rated)</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-border-light text-sm font-bold">
+                <span className="text-charcoal uppercase">Grand Total:</span>
+                <span className="text-primary text-base font-mono">ZMW {selectedOrderForInvoiceModal.total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-6 border-t border-border-light">
+              <button
+                onClick={() => setSelectedOrderForInvoiceModal(null)}
+                className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Official Invoice</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

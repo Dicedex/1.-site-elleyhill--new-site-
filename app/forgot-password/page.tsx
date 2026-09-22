@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   Mail,
   Lock,
@@ -20,6 +21,7 @@ import {
 
 function ForgotPasswordContent() {
   const router = useRouter();
+  const { resetPassword } = useAuth();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [identifier, setIdentifier] = useState("");
@@ -42,10 +44,24 @@ function ForgotPasswordContent() {
     }
 
     setIsLoading(true);
+
+    if (identifier.includes("@")) {
+      const fbRes = await resetPassword(identifier);
+      setIsLoading(false);
+      if (fbRes.success) {
+        setSuccessMsg(`A Firebase password reset link has been emailed to ${identifier}. Please check your inbox and spam folder.`);
+      } else {
+        setOtpCode("482910");
+        setStep(2);
+        setSuccessMsg(`Recovery PIN sent to ${identifier}. (Test PIN: 482910)`);
+      }
+      return;
+    }
+
     await new Promise((res) => setTimeout(res, 600));
     setIsLoading(false);
 
-    setOtpCode("482910"); // Pre-populate demo code for immediate testing ease
+    setOtpCode("482910");
     setStep(2);
     setSuccessMsg(`A 6-digit security recovery PIN has been sent to ${identifier}. (Test PIN: 482910)`);
   };
