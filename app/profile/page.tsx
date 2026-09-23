@@ -119,7 +119,7 @@ export default function ProfilePage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal font-headline">My Account</h1>
           <p className="text-sm text-on-surface-variant">
-            Sign in to view your solar system warranties, tracking updates for Lusaka dispatch, and registered installation sites.
+            Sign in to view your solar system warranties, order updates for Lusaka dispatch, and registered installation sites.
           </p>
           <div className="flex flex-col gap-3 pt-2">
             <Link
@@ -414,7 +414,7 @@ export default function ProfilePage() {
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>My Orders &amp; Tracking ({user.orders.length})</span>
+            <span>My Orders ({user.orders.length})</span>
           </button>
 
           <button
@@ -609,7 +609,7 @@ export default function ProfilePage() {
               <div>
                 <h2 className="text-xl font-bold text-charcoal font-headline">Orders &amp; Dispatch History</h2>
                 <p className="text-xs text-on-surface-variant mt-1">
-                  Track dispatch status, carrier tracking numbers, and proforma invoices for your solar purchases.
+                  Track dispatch status, order reference numbers, and proforma invoices for your solar purchases.
                 </p>
               </div>
               <Link
@@ -626,7 +626,7 @@ export default function ProfilePage() {
                 <Search className="w-4 h-4 text-on-surface-variant absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search by Order ID, tracking number, or hardware name..."
+                  placeholder="Search by Order number or hardware name..."
                   value={orderSearch}
                   onChange={(e) => setOrderSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-surface-container-low border border-border-light focus:bg-white focus:outline-none focus:border-primary text-charcoal"
@@ -754,15 +754,15 @@ export default function ProfilePage() {
                       <div className="pt-4 border-t border-border-light bg-surface-container-low -mx-6 -mb-6 p-6 rounded-b-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
                           <div>
-                            <div className="text-on-surface-variant uppercase text-[10px] font-bold">Tracking Number</div>
+                            <div className="text-on-surface-variant uppercase text-[10px] font-bold">Order Number</div>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="font-mono text-secondary font-bold">{order.trackingNumber}</span>
+                              <span className="font-mono text-secondary font-bold">{order.id}</span>
                               <button
-                                onClick={() => handleCopy(order.trackingNumber, `track-${order.id}`)}
+                                onClick={() => handleCopy(order.id, `ord-${order.id}`)}
                                 className="text-on-surface-variant hover:text-primary p-0.5 cursor-pointer"
-                                title="Copy Tracking Number"
+                                title="Copy Order Number"
                               >
-                                {copiedKey === `track-${order.id}` ? (
+                                {copiedKey === `ord-${order.id}` ? (
                                   <Check className="w-3 h-3 text-secondary" />
                                 ) : (
                                   <Copy className="w-3 h-3" />
@@ -792,13 +792,13 @@ export default function ProfilePage() {
                             <span>View Invoice</span>
                           </button>
                           <a
-                            href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20inquiring%20about%20my%20order%20${encodeURIComponent(order.id)}%20(Tracking:%20${encodeURIComponent(order.trackingNumber)}).`}
+                            href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20inquiring%20about%20my%20order%20${encodeURIComponent(order.id)}.`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-3.5 py-2 rounded-xl bg-status-success/10 hover:bg-status-success/20 border border-status-success/30 text-status-success text-xs font-bold flex items-center gap-1.5 transition-all"
                           >
                             <Phone className="w-3.5 h-3.5" />
-                            <span>Lead Engineer</span>
+                            <span>Support</span>
                           </a>
                         </div>
                       </div>
@@ -873,7 +873,7 @@ export default function ProfilePage() {
                     <span className="text-[10px] text-on-surface-variant mt-1 block">
                       {user.emailVerified
                         ? "Verified for official order dispatches & warranty certificates."
-                        : "Unverified. Verify email for official dispatch tracking and certificates."}
+                        : "Unverified. Verify email for official order updates and certificates."}
                     </span>
                   </div>
 
@@ -1311,7 +1311,7 @@ export default function ProfilePage() {
 
               <div>
                 <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Dispatch Logistics:</div>
-                <div className="text-charcoal font-mono font-medium">Tracking: {selectedOrderForInvoiceModal.trackingNumber}</div>
+                <div className="text-charcoal font-mono font-medium">Order Number: {selectedOrderForInvoiceModal.id}</div>
                 <div className="text-on-surface-variant mt-0.5">Payment: {selectedOrderForInvoiceModal.paymentMethod}</div>
                 <div className="text-on-surface-variant">Lead Engineer: {selectedOrderForInvoiceModal.assignedEngineer || "Eng. Patrick Banda"}</div>
               </div>

@@ -31,10 +31,6 @@ export default function OrderConfirmationPage() {
     } in ${customerProvince.toUpperCase()}.`
   )}`;
 
-  const whatsappEngineerLink = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
-    `Hello Engineer Bwalya / Elleyhill Dispatch, reaching out regarding Order #${orderRef} scheduled for ${customerAddress}.`
-  )}`;
-
   return (
     <div className="bg-surface font-body-lg text-body-lg text-on-surface antialiased min-h-screen pt-[72px]">
       {/* Notification Toast */}
@@ -54,8 +50,10 @@ export default function OrderConfirmationPage() {
 
       <main className="w-full bg-surface min-h-[calc(100vh-72px)]">
         <div className="flex flex-col w-full">
-          {/* Breadcrumb / Stepper Progress Header */}
-          <section className="w-full bg-surface-container-low px-4 md:px-margin-desktop py-8 border-b border-border-light">
+          {/* SCREEN-ONLY UI: STRICTLY HIDDEN WHEN PRINTING PDF */}
+          <div className="screen-only print:hidden flex flex-col w-full">
+            {/* Breadcrumb / Stepper Progress Header */}
+            <section className="w-full bg-surface-container-low px-4 md:px-margin-desktop py-8 border-b border-border-light">
             <div className="max-w-[1200px] mx-auto">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6">
                 <div>
@@ -333,90 +331,10 @@ export default function OrderConfirmationPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Safety Guarantee */}
-                <div className="bg-surface-container-lowest rounded-3xl p-6 shadow-sm flex items-center gap-5 border border-border-light">
-                  <div className="w-14 h-14 rounded-2xl bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-[32px]">shield</span>
-                  </div>
-                  <div>
-                    <div className="font-headline-md text-[18px] text-primary font-bold">
-                      Zambian Grid Compliance Protected
-                    </div>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-                      Every system is installed in strict accordance with the Energy Regulation Board (ERB) Solar Energy Framework and verified by the Engineering Institution of Zambia (EIZ).
-                    </p>
-                  </div>
-                </div>
               </div>
 
-              {/* Right Column: Lead Engineer & Digital Warranty (5 Cols) */}
+              {/* Right Column: Digital Warranty Vault (5 Cols) */}
               <div className="lg:col-span-5 space-y-6">
-                {/* Lead Engineer Card */}
-                <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-sm space-y-6 border border-border-light">
-                  <div className="flex items-center justify-between pb-2 border-b border-border-light">
-                    <div>
-                      <span className="font-technical-data text-technical-data uppercase text-secondary tracking-wider font-semibold">
-                        Field Operations
-                      </span>
-                      <div className="font-headline-md text-headline-md text-primary font-bold">
-                        Assigned Lead Engineer
-                      </div>
-                    </div>
-                    <span className="material-symbols-outlined text-secondary text-[26px]">badge</span>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md text-headline-md flex-shrink-0 font-bold">
-                      BM
-                    </div>
-                    <div>
-                      <div className="font-headline-md text-[18px] text-primary font-bold">
-                        Bwalya Mwila
-                      </div>
-                      <div className="font-technical-data text-[12px] text-secondary font-semibold">
-                        Senior Photovoltaic Engineer
-                      </div>
-                      <div className="font-technical-data text-[12px] text-on-surface-variant">
-                        ERB Reg #8842 • EIZ Member #19044
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-surface-container-low space-y-2 border border-border-light">
-                    <div className="flex items-center justify-between text-body-sm text-on-surface-variant">
-                      <span className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px] text-status-success">
-                          radio_button_checked
-                        </span>
-                        Field Status
-                      </span>
-                      <span className="font-technical-data text-technical-data text-primary font-bold">
-                        En Route to Hub Depot
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-body-sm text-on-surface-variant">
-                      <span className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px]">pin_drop</span>
-                        Dispatch Vehicle
-                      </span>
-                      <span className="font-technical-data text-technical-data text-primary">
-                        Toyota Hilux (ALB 3291 ZM)
-                      </span>
-                    </div>
-                  </div>
-
-                  <a
-                    className="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-full bg-status-success hover:brightness-105 text-on-secondary font-label-cta text-label-cta uppercase transition-all shadow-md font-bold"
-                    href={whatsappEngineerLink}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">chat</span>
-                    <span>Direct WhatsApp Engineer</span>
-                  </a>
-                </div>
-
                 {/* Digital Warranty Vault */}
                 <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-sm space-y-6 border border-border-light relative overflow-hidden">
                   <div className="flex items-center justify-between pb-2 border-b border-border-light">
@@ -543,6 +461,13 @@ export default function OrderConfirmationPage() {
                   <span className="material-symbols-outlined text-[18px]">calculate</span>
                   <span>View Solar Calculator</span>
                 </Link>
+                <Link
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white hover:bg-primary-hover font-technical-data text-technical-data transition-colors shadow-sm"
+                  href="/profile"
+                >
+                  <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                  <span>View Saved Invoices in Profile</span>
+                </Link>
               </div>
               <div>
                 <Link
@@ -555,6 +480,7 @@ export default function OrderConfirmationPage() {
               </div>
             </div>
           </section>
+        </div>
 
           {/* =========================================================================
               SINGLE-SHEET OFFICIAL TAX INVOICE (Rendered strictly when printing/PDF)

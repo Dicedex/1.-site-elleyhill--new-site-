@@ -324,7 +324,7 @@ export default function AdminDashboardPage() {
   };
 
   const exportOrdersCsv = () => {
-    const headers = "Order ID,Date,Customer,Phone,Address,Province,Status,Total ZMW,Tracking\n";
+    const headers = "Order ID,Date,Customer,Phone,Address,Province,Status,Total ZMW,Order Number\n";
     const rows = allOrders
       .map(
         (o) =>
@@ -340,7 +340,7 @@ export default function AdminDashboardPage() {
   };
 
   const getWhatsAppDispatchMessage = (ord: UserOrder) => {
-    const text = `Hello ${ord.customerName || "Valued Client"}, this is Elleyhill Power Operations Desk.\nYour solar equipment order #${ord.id} status is: ${ord.status.toUpperCase()}.\nTracking ID: ${ord.trackingNumber}\nAssigned Engineer: ${ord.assignedEngineer || "Eng. Patrick Banda"}\nDelivery Destination: ${ord.deliveryAddress}.\nThank you for choosing Tier-1 Clean Energy!`;
+    const text = `Hello ${ord.customerName || "Valued Client"}, this is Elleyhill Power Operations Desk.\nYour solar equipment order #${ord.id} status is: ${ord.status.toUpperCase()}.\nOrder Number: ${ord.id}\nAssigned Engineer: ${ord.assignedEngineer || "Eng. Patrick Banda"}\nDelivery Destination: ${ord.deliveryAddress}.\nThank you for choosing Tier-1 Clean Energy!`;
     return `https://wa.me/260${ord.phone.replace(/[^0-9]/g, "").slice(-9)}?text=${encodeURIComponent(text)}`;
   };
 
@@ -587,7 +587,7 @@ export default function AdminDashboardPage() {
                           {ord.customerName} • {ord.deliveryAddress} ({ord.district}, {ord.province})
                         </div>
                         <div className="text-[11px] text-on-surface-variant mt-0.5">
-                          Engineer: <span className="text-primary font-medium">{ord.assignedEngineer || "Eng. Patrick Banda"}</span> • Tracking: <span className="font-mono text-secondary font-semibold">{ord.trackingNumber}</span>
+                          Engineer: <span className="text-primary font-medium">{ord.assignedEngineer || "Eng. Patrick Banda"}</span> • Order Number: <span className="font-mono text-secondary font-semibold">{ord.id}</span>
                         </div>
                       </div>
 
@@ -692,7 +692,7 @@ export default function AdminDashboardPage() {
               <div>
                 <h2 className="text-xl font-bold text-charcoal font-headline">Orders & Dispatch Registry</h2>
                 <p className="text-xs text-on-surface-variant mt-1">
-                  Nationwide Zambian order management, technician tracking, and proforma VAT invoice generation.
+                  Nationwide Zambian order management, technician assignment, and proforma VAT invoice generation.
                 </p>
               </div>
 
@@ -740,7 +740,7 @@ export default function AdminDashboardPage() {
                       <th className="py-3.5 px-4">Delivery Site</th>
                       <th className="py-3.5 px-4">Items / Capacity</th>
                       <th className="py-3.5 px-4">Total Value</th>
-                      <th className="py-3.5 px-4">Tracking & Status</th>
+                      <th className="py-3.5 px-4">Order Number & Status</th>
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -788,7 +788,7 @@ export default function AdminDashboardPage() {
                             >
                               {ord.status}
                             </span>
-                            <div className="font-mono text-[10px] text-on-surface-variant">{ord.trackingNumber}</div>
+                            <div className="font-mono text-[10px] text-on-surface-variant">{ord.id}</div>
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
@@ -1174,7 +1174,7 @@ export default function AdminDashboardPage() {
 
               <div>
                 <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase">
-                  Carrier / Vehicle Tracking Code
+                  Order Reference / Tracking Code
                 </label>
                 <input
                   type="text"
@@ -1246,7 +1246,7 @@ export default function AdminDashboardPage() {
 
               <div>
                 <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Dispatch Logistics:</div>
-                <div className="text-charcoal font-mono font-medium">Tracking: {selectedOrderForInvoice.trackingNumber}</div>
+                <div className="text-charcoal font-mono font-medium">Order Number: {selectedOrderForInvoice.id}</div>
                 <div className="text-on-surface-variant mt-0.5">Payment: {selectedOrderForInvoice.paymentMethod}</div>
                 <div className="text-on-surface-variant">Lead Engineer: {selectedOrderForInvoice.assignedEngineer || "Eng. Patrick Banda"}</div>
               </div>

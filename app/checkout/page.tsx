@@ -119,12 +119,20 @@ export default function CheckoutPage() {
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (items.length === 0) {
+      router.push("/cart");
+      return;
+    }
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (items.length === 0) {
+      router.push("/cart");
+      return;
+    }
     setIsProcessingPayment(true);
     setPaymentStatusText("Connecting to Secure Payment Gateway...");
 
@@ -341,8 +349,41 @@ export default function CheckoutPage() {
             </div>
           </header>
 
-          {/* STEP 1: Site & Customer Information */}
-          {currentStep === 1 && !isAuthenticated ? (
+          {/* EMPTY CART GUARD: Do not proceed if cart is empty */}
+          {items.length === 0 ? (
+            <div className="bg-surface-container-lowest p-8 md:p-12 rounded-2xl shadow-sm border border-border-light text-center max-w-2xl mx-auto my-8 space-y-6">
+              <div className="w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-[36px]">remove_shopping_cart</span>
+              </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-secondary font-technical-data text-xs font-bold uppercase tracking-wider mb-1">
+                  Cart Empty
+                </div>
+                <h2 className="font-headline-md text-2xl font-bold text-primary">
+                  Your Cart is Currently Empty
+                </h2>
+                <p className="font-body-sm text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                  You cannot proceed to checkout without items in your cart. Please select a hybrid solar inverter, lithium battery, or complete package from our store to begin.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/shop"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs uppercase font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">solar_power</span>
+                  <span>Browse Solar Catalog</span>
+                </Link>
+                <Link
+                  href="/calculator"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary border border-border-light font-label-cta text-xs uppercase font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">calculate</span>
+                  <span>Solar Sizing Calculator</span>
+                </Link>
+              </div>
+            </div>
+          ) : currentStep === 1 && !isAuthenticated ? (
             <div className="bg-surface-container-lowest p-8 md:p-12 rounded-2xl shadow-sm border border-border-light text-center max-w-2xl mx-auto my-8 space-y-6">
               <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-[32px]">account_circle</span>
@@ -889,9 +930,14 @@ export default function CheckoutPage() {
                   {/* Primary CTA */}
                   <div className="pt-2">
                     <button
-                      className="w-full py-4 px-6 rounded-full bg-tertiary-fixed text-primary font-label-cta text-label-cta tracking-wider shadow-sm hover:shadow-md hover:bg-tertiary-fixed-dim active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer font-bold"
+                      className={`w-full py-4 px-6 rounded-full font-label-cta text-label-cta tracking-wider shadow-sm transition-all flex items-center justify-center gap-2 group font-bold ${
+                        items.length === 0
+                          ? "bg-surface-container-high text-on-surface-variant cursor-not-allowed opacity-50"
+                          : "bg-tertiary-fixed text-primary hover:shadow-md hover:bg-tertiary-fixed-dim active:scale-[0.99] cursor-pointer"
+                      }`}
                       form="step1-form"
                       type="submit"
+                      disabled={items.length === 0}
                     >
                       <span>CONTINUE TO PAYMENT METHOD</span>
                       <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">
@@ -1552,10 +1598,10 @@ export default function CheckoutPage() {
 
                     <button
                       onClick={handleStep2Submit}
-                      disabled={isProcessingPayment}
+                      disabled={isProcessingPayment || items.length === 0}
                       className={`w-full py-4 px-6 rounded-full font-label-cta text-label-cta tracking-wide transition-all duration-200 transform shadow-md flex items-center justify-center gap-2 font-bold ${
-                        isProcessingPayment
-                          ? "bg-neutral-300 text-neutral-600 cursor-wait"
+                        isProcessingPayment || items.length === 0
+                          ? "bg-neutral-300 text-neutral-600 cursor-not-allowed opacity-60"
                           : "bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed hover:-translate-y-0.5 cursor-pointer"
                       }`}
                     >
