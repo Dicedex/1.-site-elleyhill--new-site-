@@ -26,6 +26,14 @@ import {
   collection,
   onSnapshot,
 } from "firebase/firestore";
+import {
+  syncUserToD1,
+  syncOrderToD1,
+  syncWarrantyToD1,
+  syncAddressToD1,
+  deleteAddressFromD1,
+  getD1AdminSummary,
+} from "@/lib/cloudflare-d1";
 
 export type AccountType = "residential" | "commercial" | "agricultural";
 export type UserRole = "admin" | "customer";
@@ -317,7 +325,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [allWarranties, setAllWarranties] = useState<WarrantyRecord[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
 
-  // Helper to persist user profile to state + LocalStorage + Firestore
+  // Helper to persist user profile to state + LocalStorage + Firestore + Cloudflare D1
   const syncUserProfile = async (profile: UserProfile | null) => {
     setUser(profile);
     if (profile) {
@@ -330,6 +338,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {
           console.warn("Firestore user sync error:", e);
         }
+      }
+
+      // Automatically sync to Cloudflare D1 Database
+      try {
+        syncUserToD1({
+          id: profile.id || profile.firebaseUid,
+          email: profile.email,
+          fullName: profile.fullName,
+          phone: profile.phone,
+          accountType: profile.accountType,
+          companyName: profile.companyName,
+          tpin: profile.tpin,
+          emailVerified: profile.emailVerified,
+          primaryDistrict: profile.primaryDistrict,
+          primaryProvince: profile.primaryProvince,
+        }).catch(console.warn);
+      } catch (e) {
+        console.warn("Cloudflare D1 user sync error:", e);
       }
     } else {
       localStorage.removeItem(STORAGE_KEY_CURRENT);
@@ -837,6 +863,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = { ...user, savedAddresses: updatedAddresses };
     syncUserProfile(updated);
+
+    // Sync to Cloudflare D1
+    syncAddressToD1({
+      id: newAddr.id,
+      userEmail: user.email,
+      label: newAddr.label,
+      fullAddress: newAddr.fullAddress,
+      district: newAddr.district,
+      province: newAddr.province,
+      contactPhone: newAddr.contactPhone,
+      isDefault: newAddr.isDefault,
+    }).catch(console.warn);
   };
 
   const deleteSavedAddress = (id: string) => {
@@ -847,6 +885,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     const updated = { ...user, savedAddresses: updatedAddresses };
     syncUserProfile(updated);
+
+    // Delete from Cloudflare D1
+    deleteAddressFromD1(id).catch(console.warn);
   };
 
   const setDefaultAddress = (id: string) => {
@@ -950,15 +991,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn("Firestore sync order error:", e);
     }
 
-    // 2. Sync with Cloudflare D1 via API endpoint
+    // 2. Sync with Cloudflare D1 Database
     try {
-      fetch("/api/orders/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newOrder),
-      }).catch(console.warn);
+      syncOrderToD1(newOrder).catch(console.warn);
+      newWarranties.forEach((war) => {
+        syncWarrantyToD1(war).catch(console.warn);
+      });
     } catch (e) {
-      console.warn("D1 sync trigger error:", e);
+      console.warn("D1 sync order error:", e);
     }
 
     // 3. Update current user session
@@ -1039,6 +1079,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn(e);
     }
 
+    const targetOrder = updatedMaster.find((o) => o.id === orderId);
+    if (targetOrder) {
+      syncOrderToD1(targetOrder).catch(console.warn);
+    }
+
     if (user && user.orders.some((o) => o.id === orderId)) {
       const updatedUserOrders = user.orders.map((ord) => {
         if (ord.id === orderId) {
@@ -1070,6 +1115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAllOrders(updated);
     localStorage.setItem(STORAGE_KEY_ADMIN_ORDERS, JSON.stringify(updated));
     setDoc(doc(db, "orders", newOrder.id), newOrder).catch(console.warn);
+    syncOrderToD1(newOrder).catch(console.warn);
     return newOrder;
   };
 
@@ -1093,6 +1139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAllWarranties(updatedWarranties);
     localStorage.setItem(STORAGE_KEY_ADMIN_WARRANTIES, JSON.stringify(updatedWarranties));
     setDoc(doc(db, "warranties", newWarranty.id), newWarranty).catch(console.warn);
+    syncWarrantyToD1(newWarranty).catch(console.warn);
 
     return newWarranty;
   };
