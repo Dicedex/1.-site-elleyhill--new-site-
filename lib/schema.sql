@@ -9,8 +9,6 @@ CREATE TABLE IF NOT EXISTS customers (
   phone TEXT NOT NULL,
   role TEXT DEFAULT 'customer',
   account_type TEXT DEFAULT 'residential',
-  company_name TEXT,
-  tpin TEXT,
   primary_province TEXT,
   primary_district TEXT,
   primary_address TEXT,

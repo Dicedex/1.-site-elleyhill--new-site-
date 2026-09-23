@@ -8,14 +8,14 @@ export default function OrderConfirmationPage() {
   const { lastOrder, items, grandTotal, hardwareSubtotal, installationSubtotal } = useCart();
   const [toastVisible, setToastVisible] = useState(false);
 
-  const orderRef = lastOrder ? lastOrder.orderRef : "EHP-2026-8842";
+  const orderRef = lastOrder ? lastOrder.orderRef : "EHP-PENDING";
   const displayItems = lastOrder && lastOrder.items.length > 0 ? lastOrder.items : items;
-  const displayGrandTotal = lastOrder ? lastOrder.grandTotal : grandTotal || 90000;
-  const displayHardware = lastOrder ? lastOrder.hardwareSubtotal : hardwareSubtotal || 85500;
-  const displayInstallation = lastOrder ? lastOrder.installationSubtotal : installationSubtotal || 4500;
-  const customerAddress = lastOrder?.customer?.address || "Plot 18/B Leopard's Hill Access Road, Kabulonga";
+  const displayGrandTotal = lastOrder ? lastOrder.grandTotal : grandTotal || 0;
+  const displayHardware = lastOrder ? lastOrder.hardwareSubtotal : hardwareSubtotal || 0;
+  const displayInstallation = lastOrder ? lastOrder.installationSubtotal : installationSubtotal || 0;
+  const customerAddress = lastOrder?.customer?.address || "Delivery Site Address, Zambia";
   const customerProvince = lastOrder?.customer?.province || "lusaka";
-  const paymentMethodName = lastOrder?.payment?.method ? lastOrder.payment.method.toUpperCase() : "MTN MOMO";
+  const paymentMethodName = lastOrder?.payment?.method ? lastOrder.payment.method.toUpperCase() : "CONFIRMED";
 
   const copyOrderRef = () => {
     navigator.clipboard.writeText(orderRef);
@@ -27,7 +27,7 @@ export default function OrderConfirmationPage() {
 
   const whatsappTrackingLink = `https://wa.me/${WHATSAPP_PHONE_NUMBER}?text=${encodeURIComponent(
     `Hello Elleyhill Power Dispatch Desk, I am inquiring about tracking for order #${orderRef} for ${
-      lastOrder?.customer?.fullName || "Mwape Chilufya"
+      lastOrder?.customer?.fullName || "Valued Customer"
     } in ${customerProvince.toUpperCase()}.`
   )}`;
 
@@ -198,49 +198,20 @@ export default function OrderConfirmationPage() {
                     </a>
                   </div>
                 </div>
-
-                {/* Big Hero Visual Icon & Live Dispatch Badge */}
-                <div className="flex flex-col items-center justify-center gap-4 flex-shrink-0 bg-surface-container-low p-8 rounded-2xl md:w-72 text-center shadow-inner border border-border-light">
-                  <div className="w-24 h-24 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shadow-md">
-                    <span className="material-symbols-outlined text-[54px]">check</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="font-technical-data text-[12px] uppercase tracking-widest text-secondary font-bold">
-                      Estimated Arrival
-                    </div>
-                    <div className="font-headline-md text-headline-md text-primary font-bold">
-                      Tomorrow, 08:30
-                    </div>
-                    <div className="font-body-sm text-body-sm text-on-surface-variant">
-                      {customerProvince === "lusaka" ? "Kabulonga, Lusaka Sector 4" : "Regional Priority Dispatch"}
-                    </div>
-                  </div>
-                  <div className="w-full bg-surface-container-lowest py-2 px-3 rounded-lg text-left flex items-center justify-between border border-border-light">
-                    <span className="font-technical-data text-[12px] text-on-surface-variant">
-                      Live Dispatch SLA
-                    </span>
-                    <span className="font-technical-data text-[12px] text-status-success font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-status-success"></span> Active
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </section>
 
-          {/* Bento Grid: Order Manifest, Lead Engineer & Warranty Vault */}
-          <section className="w-full px-4 md:px-margin-desktop py-8 bg-surface">
+          {/* Bento Grid: Ordered Equipment, Lead Engineer & Warranty Vault */}
+          <section className="w-full px-4 md:px-margin-desktop py-8 bg-surface screen-only">
             <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Manifest & Financials (7 Cols) */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-sm space-y-6 border border-border-light">
                   <div className="flex items-center justify-between pb-4 border-b border-border-light">
                     <div>
-                      <span className="font-technical-data text-technical-data uppercase text-secondary tracking-wider font-semibold">
-                        Statement of Equipment
-                      </span>
                       <div className="font-headline-md text-headline-md text-primary font-bold">
-                        Order Manifest
+                        Ordered Equipment
                       </div>
                     </div>
                     <span className="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-technical-data font-bold">
@@ -451,7 +422,7 @@ export default function OrderConfirmationPage() {
                   <div className="flex items-center justify-between pb-2 border-b border-border-light">
                     <div>
                       <span className="font-technical-data text-technical-data uppercase text-secondary tracking-wider font-semibold">
-                        Digital Protection Vault
+                        Equipment Warranty Protection
                       </span>
                       <div className="font-headline-md text-headline-md text-primary font-bold">
                         Active Warranties
@@ -503,7 +474,9 @@ export default function OrderConfirmationPage() {
                   </div>
 
                   <div className="pt-2 flex items-center justify-between text-body-sm text-on-surface-variant border-t border-border-light">
-                    <span className="font-technical-data text-[12px] font-medium text-on-surface">Cert: #WZ-8842-2026-ZM</span>
+                    <span className="font-technical-data text-[12px] font-medium text-on-surface">
+                      Cert: #{orderRef !== "EHP-PENDING" ? orderRef.replace("ORD-", "WAR-").replace("EHP-", "EHP-WAR-") : "EHP-WAR-2026-0001"}
+                    </span>
                     <Link
                       className="text-secondary hover:text-primary font-technical-data text-[12px] font-bold flex items-center gap-1 transition-colors"
                       href="/warranty"
@@ -553,7 +526,7 @@ export default function OrderConfirmationPage() {
           </section>
 
           {/* Bottom Navigation Actions Section */}
-          <section className="w-full px-4 md:px-margin-desktop py-12 bg-surface">
+          <section className="w-full px-4 md:px-margin-desktop py-12 bg-surface screen-only">
             <div className="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex flex-wrap items-center gap-4">
                 <Link
@@ -582,6 +555,134 @@ export default function OrderConfirmationPage() {
               </div>
             </div>
           </section>
+
+          {/* =========================================================================
+              SINGLE-SHEET OFFICIAL TAX INVOICE (Rendered strictly when printing/PDF)
+              ========================================================================= */}
+          <div className="hidden print:block printable-invoice-sheet font-sans text-charcoal bg-white p-6 max-w-full text-xs">
+            {/* Header with Company Logo / Title & Tax Invoice Meta */}
+            <div className="flex justify-between items-start pb-4 border-b-2 border-primary">
+              <div>
+                <div className="text-xl font-bold text-primary tracking-tight">
+                  ELLEYHILL POWER SOLUTIONS LTD
+                </div>
+                <div className="text-[11px] text-on-surface-variant leading-tight mt-0.5">
+                  Industrial &amp; Commercial Solar Engineering Zambia<br />
+                  East Park Mall, Great East Road, Lusaka • support@elleyhill.co.zm • +260 971 838 038
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-base font-bold text-primary uppercase tracking-wider">
+                  OFFICIAL TAX INVOICE
+                </div>
+                <div className="text-[11px] font-mono mt-0.5">
+                  <div><strong>Invoice Ref:</strong> #{orderRef}</div>
+                  <div><strong>Date:</strong> {new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date())}</div>
+                  <div><strong>ZRA TPIN:</strong> 1003482910</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Client & Dispatch Details */}
+            <div className="grid grid-cols-2 gap-6 py-4 border-b border-border-light text-[11px]">
+              <div>
+                <div className="text-[10px] font-bold text-secondary uppercase tracking-wider mb-1">
+                  BILLED &amp; DELIVERED TO:
+                </div>
+                <div className="font-bold text-sm text-charcoal">{lastOrder?.customer?.fullName || "Valued Client"}</div>
+                <div className="text-on-surface-variant mt-0.5">{customerAddress}</div>
+                <div className="text-on-surface-variant">{customerProvince.toUpperCase()} PROVINCE, ZAMBIA</div>
+                {lastOrder?.customer?.phone && (
+                  <div className="text-primary font-semibold mt-0.5">+260 {lastOrder.customer.phone}</div>
+                )}
+                {lastOrder?.customer?.email && (
+                  <div className="text-on-surface-variant">{lastOrder.customer.email}</div>
+                )}
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-secondary uppercase tracking-wider mb-1">
+                  PAYMENT &amp; DISPATCH STATUS:
+                </div>
+                <div><strong>Payment Status:</strong> <span className="text-status-success font-bold">PAID &amp; AUTHORIZED</span></div>
+                <div><strong>Payment Method:</strong> {paymentMethodName}</div>
+                <div><strong>Delivery Zone:</strong> {customerProvince === "lusaka" ? "Lusaka Rapid Logistics" : "Regional Priority Dispatch"}</div>
+                <div><strong>Warranty Terms:</strong> 10-Year Comprehensive Hardware Guarantee</div>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div className="py-4 border-b border-border-light">
+              <table className="w-full text-left text-[11px]">
+                <thead>
+                  <tr className="border-b border-border-medium text-[10px] uppercase font-bold text-on-surface-variant">
+                    <th className="py-1.5">Item Description</th>
+                    <th className="py-1.5 text-center">Qty</th>
+                    <th className="py-1.5 text-right">Unit Price (ZMW)</th>
+                    <th className="py-1.5 text-right">Total (ZMW)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-light">
+                  {displayItems.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="py-2">
+                        <div className="font-bold text-charcoal">{item.name}</div>
+                        {item.installationIncluded && (
+                          <div className="text-[10px] text-secondary font-medium">+ Certified Professional Installation &amp; Audit</div>
+                        )}
+                      </td>
+                      <td className="py-2 text-center">{item.qty}</td>
+                      <td className="py-2 text-right font-mono">
+                        {(item.price + (item.installationIncluded && item.installationPrice ? item.installationPrice : 0)).toLocaleString()}
+                      </td>
+                      <td className="py-2 text-right font-mono font-bold">
+                        {((item.price + (item.installationIncluded && item.installationPrice ? item.installationPrice : 0)) * item.qty).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Totals Breakdown */}
+            <div className="py-3 flex justify-end">
+              <div className="w-64 space-y-1 text-[11px] text-right">
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">Equipment Subtotal:</span>
+                  <span className="font-mono font-medium">ZMW {displayHardware.toLocaleString()}</span>
+                </div>
+                {displayInstallation > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-on-surface-variant">Installation &amp; Mounting:</span>
+                    <span className="font-mono font-medium text-secondary">+ ZMW {displayInstallation.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">Logistics &amp; Delivery:</span>
+                  <span className="font-mono font-medium">
+                    {lastOrder?.deliveryCost === 0 ? "FREE (Included)" : `ZMW ${(lastOrder?.deliveryCost || 0).toLocaleString()}`}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">Clean Tech Statutory VAT (0%):</span>
+                  <span className="font-mono font-medium text-status-success">ZMW 0.00 (Zero-Rated)</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t-2 border-primary text-sm font-bold">
+                  <span className="text-primary uppercase">Total Settled:</span>
+                  <span className="text-primary font-mono text-base">ZMW {displayGrandTotal.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Security / Terms */}
+            <div className="pt-4 border-t border-border-light text-[10px] text-on-surface-variant flex justify-between items-center">
+              <div>
+                Official Electronic Receipt &amp; Tax Document. Certified under ERB &amp; EIZ Engineering Standards.
+              </div>
+              <div className="font-mono font-bold text-secondary">
+                ELLEYHILL POWER ZAMBIA
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

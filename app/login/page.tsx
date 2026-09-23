@@ -33,7 +33,6 @@ function LoginFormContent() {
     setupRecaptcha,
     sendPhoneOtp,
     confirmPhoneOtp,
-    loginWithDemo,
     user,
   } = useAuth();
 
@@ -178,15 +177,6 @@ function LoginFormContent() {
     }
   };
 
-  const handleDemoClick = (type: "residential" | "commercial" | "admin") => {
-    loginWithDemo(type);
-    if (type === "admin") {
-      router.push("/admin");
-    } else {
-      router.push(redirectUrl);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-surface-container-low text-on-surface pt-28 md:pt-32 pb-16 px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative overflow-hidden">
       {/* Invisible reCAPTCHA container for Phone Auth */}
@@ -204,7 +194,7 @@ function LoginFormContent() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-border-light text-xs font-semibold text-secondary mb-4 hover:border-primary/40 shadow-sm transition-all"
           >
             <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
-            <span>ELLEYHILL CLIENT &amp; ADMIN PORTAL</span>
+            <span>ELLEYHILL ACCOUNT LOGIN</span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-charcoal font-headline">
             Sign In to Your Account
@@ -212,68 +202,6 @@ function LoginFormContent() {
           <p className="mt-2 text-sm text-on-surface-variant">
             Access warranty certificates, Lusaka dispatch tracking, or admin operations.
           </p>
-        </div>
-
-        {/* 1-Click Demo Accounts Banner */}
-        <div className="mb-6 p-4 rounded-2xl bg-white border border-border-light shadow-sm">
-          <div className="flex items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-secondary">
-              <CheckCircle2 className="w-4 h-4 text-secondary" />
-              <span>Quick Test Demo Profiles</span>
-            </div>
-            <span className="text-[10px] text-on-surface-variant uppercase font-semibold">1-Click Sign In</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-            <button
-              type="button"
-              onClick={() => handleDemoClick("residential")}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-low border border-border-light hover:border-primary text-left text-xs font-medium transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-primary-light flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
-                <Home className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-bold text-charcoal truncate">Mwape Chilufya</div>
-                <div className="text-[10px] text-on-surface-variant">6kW Woodlands System</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleDemoClick("commercial")}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-surface-container-low border border-border-light hover:border-secondary text-left text-xs font-medium transition-all group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-md bg-secondary-light flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-bold text-charcoal truncate">Kafue Agri-Holdings</div>
-                <div className="text-[10px] text-on-surface-variant">50kW Commercial Array</div>
-              </div>
-            </button>
-          </div>
-
-          {/* Admin Demo Button */}
-          <button
-            type="button"
-            onClick={() => handleDemoClick("admin")}
-            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-primary-light border border-primary/20 hover:bg-primary/20 text-left text-xs font-medium transition-all group cursor-pointer"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-md bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-bold text-charcoal flex items-center gap-1.5 truncate">
-                  <span>Elleyhill Operations Admin</span>
-                  <span className="px-1.5 py-0.2 rounded bg-primary text-white text-[9px] font-extrabold uppercase">ADMIN</span>
-                </div>
-                <div className="text-[10px] text-primary">HQ Operations, Dispatch &amp; Inventory Console</div>
-              </div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 transition-transform" />
-          </button>
         </div>
 
         {/* Main Card */}
@@ -384,9 +312,13 @@ function LoginFormContent() {
                   </div>
                   <input
                     type="email"
+                    name="email"
+                    id="login-email"
+                    autoComplete="email"
+                    inputMode="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. mwape@gmail.com"
+                    placeholder="e.g. you@example.com"
                     required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
                   />
@@ -476,6 +408,10 @@ function LoginFormContent() {
                       </div>
                       <input
                         type="tel"
+                        name="tel"
+                        id="login-phone"
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="e.g. 0977 123 456"
@@ -580,7 +516,7 @@ function LoginFormContent() {
               href={`/signup${redirectUrl !== "/profile" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
               className="w-full py-2.5 px-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2"
             >
-              <span>Create a New Client Account</span>
+              <span>Create a New Account</span>
             </Link>
           </div>
         </div>
@@ -589,7 +525,7 @@ function LoginFormContent() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-[11px] text-on-surface-variant">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-secondary" />
-            <span>256-Bit SSL Encrypted Portal</span>
+            <span>256-Bit SSL Secure Connection</span>
           </div>
           <span>•</span>
           <div className="flex items-center gap-1.5">

@@ -2,16 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart, WHATSAPP_PHONE_NUMBER, WHATSAPP_PHONE_DISPLAY, PlacedOrder } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getNextSequenceNumber } from "@/context/AuthContext";
 
 import { initiatePawaPayPayment } from "@/lib/pawapay";
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2;
 type PaymentMethod = "momo" | "card" | "staged" | "layby" | "wire";
 type MomoProvider = "mtn" | "airtel" | "zamtel";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const {
     items,
     hardwareSubtotal,
@@ -30,20 +32,36 @@ export default function CheckoutPage() {
 
   const { user, isAuthenticated, addOrder } = useAuth();
 
+  const defaultAddress =
+    user?.savedAddresses?.find((a) => a.isDefault) ||
+    (user?.savedAddresses && user.savedAddresses.length > 0
+      ? user.savedAddresses[0]
+      : null);
+  const primaryAddressText = defaultAddress?.fullAddress || user?.primaryAddress || "";
+  const districtText = defaultAddress?.district || user?.primaryDistrict || "";
+  const provinceText = defaultAddress?.province || user?.primaryProvince || "";
+  const hasSavedAddress = Boolean(
+    primaryAddressText.trim() || districtText.trim() || provinceText.trim()
+  );
+  const hasInstallation =
+    installationSubtotal > 0 ||
+    items.some(
+      (item) => item.installationIncluded || item.installationOption === "professional"
+    );
+
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [placedOrderSnapshot, setPlacedOrderSnapshot] = useState<PlacedOrder | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentStatusText, setPaymentStatusText] = useState("");
 
   // Step 1: Site & Contact Form State
-  const [email, setEmail] = useState("mwape@gmail.com");
-  const [phone, setPhone] = useState("97 183 8038");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [whatsappAlerts, setWhatsappAlerts] = useState(true);
-  const [fullName, setFullName] = useState("Mwape Chilufya");
-  const [address, setAddress] = useState("Plot 4812, Independence Avenue, Woodlands");
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
   const [province, setProvince] = useState("lusaka");
   const [roofType, setRoofType] = useState("ibr");
-  const [accessNotes, setAccessNotes] = useState("Heavy-duty boom gate clearance. Inverter wall in garage.");
   const [scheduleOption, setScheduleOption] = useState<"fastest" | "scheduled" | "staged">("fastest");
 
   // Sync with logged in user profile
@@ -52,10 +70,20 @@ export default function CheckoutPage() {
       if (user.fullName) setFullName(user.fullName);
       if (user.email) setEmail(user.email);
       if (user.phone) setPhone(user.phone.replace("+260", "").trim());
-      if (user.primaryAddress) setAddress(user.primaryAddress);
-      if (user.primaryProvince && user.primaryProvince.toLowerCase().includes("lusaka")) {
+      const defaultAddr =
+        user.savedAddresses?.find((a) => a.isDefault) ||
+        (user.savedAddresses && user.savedAddresses.length > 0
+          ? user.savedAddresses[0]
+          : null);
+      const addr = defaultAddr?.fullAddress || user.primaryAddress || "";
+      if (addr) setAddress(addr);
+      const prov = defaultAddr?.province || user.primaryProvince || "lusaka";
+      if (prov.toLowerCase().includes("lusaka")) {
         setProvince("lusaka");
         setDeliveryZone("lusaka");
+      } else {
+        setProvince(prov);
+        setDeliveryZone("copperbelt");
       }
     }
   }, [user, setDeliveryZone]);
@@ -63,14 +91,14 @@ export default function CheckoutPage() {
   // Step 2: Payment Gateway Form State
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
   const [momoProvider, setMomoProvider] = useState<MomoProvider>("mtn");
-  const [momoPhone, setMomoPhone] = useState("97 183 8038");
+  const [momoPhone, setMomoPhone] = useState("");
   const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("MWAPE CHILUFYA");
+  const [cardHolder, setCardHolder] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [acceptStagedAgreement, setAcceptStagedAgreement] = useState(true);
   const [toastVisible, setToastVisible] = useState(false);
-  const [activeOrderRef, setActiveOrderRef] = useState("EHP-2026-8842");
+  const [activeOrderRef, setActiveOrderRef] = useState("");
 
   const copyOrderRef = () => {
     navigator.clipboard.writeText(activeOrderRef);
@@ -98,19 +126,20 @@ export default function CheckoutPage() {
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessingPayment(true);
-    setPaymentStatusText("Connecting to pawaPay Cloudflare Gateway...");
+    setPaymentStatusText("Connecting to Secure Payment Gateway...");
 
-    const generatedRef = `EHP-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const seq = getNextSequenceNumber("ehp_order_sequence", 4);
+    const generatedRef = `EHP-${new Date().getFullYear()}-${seq}`;
     setActiveOrderRef(generatedRef);
 
     const checkoutItems = items.length > 0 ? items : [];
 
-    // Trigger Cloudflare Worker Edge request to pawaPay if Mobile Money or Card
+    // Trigger Cloudflare Worker Edge request to payment switch if Mobile Money or Card
     if (paymentMethod === "momo" || paymentMethod === "card") {
       setPaymentStatusText(
         paymentMethod === "momo"
           ? `Initiating ${momoProvider.toUpperCase()} MoMo STK Push (+260 ${momoPhone})...`
-          : "Authorizing 3D-Secure Card via pawaPay..."
+          : "Authorizing 3D-Secure Card..."
       );
 
       try {
@@ -137,7 +166,6 @@ export default function CheckoutPage() {
         address,
         province,
         roofType,
-        accessNotes,
         scheduleOption,
       },
       payment: {
@@ -180,9 +208,9 @@ export default function CheckoutPage() {
         phone: phone,
         paymentMethod:
           paymentMethod === "momo"
-            ? `Mobile Money (${momoProvider.toUpperCase()} via pawaPay)`
+            ? `Mobile Money (${momoProvider.toUpperCase()})`
             : paymentMethod === "card"
-            ? "Card (3D Secure via pawaPay)"
+            ? "Card (3D Secure)"
             : paymentMethod === "staged"
             ? "70/30 Staged Financing"
             : paymentMethod === "layby"
@@ -198,8 +226,7 @@ export default function CheckoutPage() {
 
     setIsProcessingPayment(false);
     setPaymentStatusText("");
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    router.push("/order-confirmation");
   };
 
   // Dynamic calculations for staged and lay-by
@@ -229,9 +256,9 @@ export default function CheckoutPage() {
       }\n` +
       `Financing Gateway: ${
         paymentMethod === "momo"
-          ? `Mobile Money (${momoProvider.toUpperCase()} via pawaPay)`
+          ? `Mobile Money (${momoProvider.toUpperCase()})`
           : paymentMethod === "card"
-          ? "Credit/Debit Card (3D Secure via pawaPay)"
+          ? "Credit/Debit Card (3D Secure)"
           : paymentMethod === "staged"
           ? `70/30 Staged Plan (ZMW ${stage1Amount.toLocaleString()} today)`
           : paymentMethod === "layby"
@@ -273,7 +300,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-technical-data text-[11px] uppercase tracking-wider text-outline">
-                    Step 01 / 03
+                    Step 01 / 02
                   </span>
                   <span className="font-headline-md text-[15px] font-semibold text-on-surface truncate">
                     Site &amp; Delivery Details
@@ -282,74 +309,32 @@ export default function CheckoutPage() {
               </div>
 
               <div
-                className={`hidden sm:block w-12 h-0.5 ${
-                  currentStep >= 2 ? "bg-secondary-container" : "bg-surface-container-highest"
+                className={`hidden sm:block w-16 h-0.5 ${
+                  currentStep >= 2 ? "bg-secondary" : "bg-surface-container-highest"
                 }`}
               ></div>
 
               {/* Step 2 Indicator */}
               <div
-                onClick={() => currentStep > 2 && setCurrentStep(2)}
                 className={`flex-1 flex items-center gap-3 ${
-                  currentStep === 2
-                    ? ""
-                    : currentStep > 2
-                    ? "cursor-pointer"
-                    : "opacity-40"
+                  currentStep === 2 ? "" : "opacity-40"
                 }`}
               >
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center font-technical-data text-technical-data font-bold shadow-sm ${
                     currentStep === 2
                       ? "bg-tertiary-fixed text-on-tertiary-fixed"
-                      : currentStep > 2
-                      ? "bg-secondary text-on-secondary"
                       : "bg-surface-container-high text-on-surface"
                   }`}
                 >
-                  {currentStep > 2 ? (
-                    <span className="material-symbols-outlined text-[18px]">check</span>
-                  ) : (
-                    "2"
-                  )}
+                  2
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-technical-data text-[11px] uppercase tracking-wider text-secondary font-bold">
-                    {currentStep === 2 ? "Step 02 / Active" : "Step 02 / 03"}
+                    {currentStep === 2 ? "Step 02 / Active" : "Step 02 / 02"}
                   </span>
                   <span className="font-headline-md text-[15px] font-bold text-on-surface truncate">
-                    Payment &amp; Financing
-                  </span>
-                </div>
-              </div>
-
-              <div
-                className={`hidden sm:block w-12 h-0.5 ${
-                  currentStep >= 3 ? "bg-secondary-container" : "bg-surface-container-highest"
-                }`}
-              ></div>
-
-              {/* Step 3 Indicator */}
-              <div
-                className={`flex-1 flex items-center gap-3 ${
-                  currentStep === 3 ? "" : "opacity-40"
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center font-technical-data text-technical-data font-bold ${
-                    currentStep === 3
-                      ? "bg-secondary text-on-secondary shadow-sm"
-                      : "bg-surface-container-high text-on-surface"
-                  }`}
-                >
-                  3
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-technical-data text-[11px] uppercase tracking-wider text-outline">
-                    Step 03 / Next
-                  </span>
-                  <span className="font-headline-md text-[15px] font-semibold text-on-surface truncate">
-                    Commissioning Order
+                    Payment &amp; Authorization
                   </span>
                 </div>
               </div>
@@ -357,48 +342,157 @@ export default function CheckoutPage() {
           </header>
 
           {/* STEP 1: Site & Customer Information */}
-          {currentStep === 1 && (
+          {currentStep === 1 && !isAuthenticated ? (
+            <div className="bg-surface-container-lowest p-8 md:p-12 rounded-2xl shadow-sm border border-border-light text-center max-w-2xl mx-auto my-8 space-y-6">
+              <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-[32px]">account_circle</span>
+              </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-light text-primary font-technical-data text-xs font-bold uppercase tracking-wider mb-1">
+                  Authentication Required
+                </div>
+                <h2 className="font-headline-md text-2xl font-bold text-primary">
+                  Sign In to Access Site &amp; Delivery Details
+                </h2>
+                <p className="font-body-sm text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                  You must be signed in with a verified account to access Step 1 (Site &amp; Delivery Details) and schedule engineering staging in Zambia.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/login?redirect=/checkout"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs uppercase font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">login</span>
+                  <span>Sign In to Account</span>
+                </Link>
+                <Link
+                  href="/signup?redirect=/checkout"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary border border-border-light font-label-cta text-xs uppercase font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">person_add</span>
+                  <span>Create Free Account</span>
+                </Link>
+              </div>
+              <div className="pt-2">
+                <Link
+                  href="/cart"
+                  className="inline-flex items-center gap-1.5 font-technical-data text-xs text-on-surface-variant hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                  <span>Return to Shopping Cart</span>
+                </Link>
+              </div>
+            </div>
+          ) : currentStep === 1 && !hasSavedAddress ? (
+            <div className="bg-surface-container-lowest p-8 md:p-12 rounded-2xl shadow-sm border border-amber-200 text-center max-w-2xl mx-auto my-8 space-y-6">
+              <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-[32px]">add_location_alt</span>
+              </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-technical-data text-xs font-bold uppercase tracking-wider mb-1">
+                  Delivery Address Required
+                </div>
+                <h2 className="font-headline-md text-2xl font-bold text-primary">
+                  Add Installation Address to Proceed
+                </h2>
+                <p className="font-body-sm text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
+                  You are signed in as <strong className="text-primary">{user?.fullName || user?.email}</strong>, but haven&apos;t added an installation or delivery address to your account profile yet. Please configure your address to proceed with Step 1 (Site &amp; Delivery Details).
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/profile"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs uppercase font-bold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_location</span>
+                  <span>Add Address in Profile</span>
+                </Link>
+                <Link
+                  href="/cart"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-surface-container hover:bg-surface-container-high text-primary border border-border-light font-label-cta text-xs uppercase font-bold tracking-wide transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">shopping_cart</span>
+                  <span>Back to Cart</span>
+                </Link>
+              </div>
+            </div>
+          ) : currentStep === 1 ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-              <form id="step1-form" onSubmit={handleStep1Submit} className="lg:col-span-7 flex flex-col gap-8">
-                {/* 1. Contact Information */}
-                <section className="bg-surface-container-lowest p-6 md:p-8 rounded-xl shadow-sm border border-border-light">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-technical-data font-bold text-sm">
-                      1
+              <form id="step1-form" onSubmit={handleStep1Submit} className="lg:col-span-7 flex flex-col gap-6">
+                {/* Confirmation Intro Alert */}
+                <div className="p-4 rounded-2xl bg-secondary-container/30 border border-secondary/30 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[18px]">verified</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <h3 className="font-technical-data text-xs uppercase font-bold text-secondary">
+                      Profile &amp; Site Final Confirmation
+                    </h3>
+                    <p className="font-body-sm text-xs text-on-surface leading-relaxed">
+                      Please confirm your verified contact credentials and installation destination loaded from your Elleyhill account profile before selecting your payment method.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 1. Verified Customer & Contact Information */}
+                <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-sm border border-border-light space-y-5">
+                  <div className="flex items-center justify-between border-b border-border-light pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-technical-data font-bold text-sm shadow-sm">
+                        1
+                      </div>
+                      <div>
+                        <h2 className="font-headline-md text-base md:text-lg text-on-surface font-bold">
+                          Verified Contact Credentials
+                        </h2>
+                        <p className="font-body-sm text-xs text-on-surface-variant">
+                          Official recipient details for VAT invoices, dispatch tracking &amp; warranty certificate.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
-                        Contact Information
-                      </h2>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        For engineering dispatch, warranty registration, and delivery status.
-                      </p>
+                    <Link
+                      href="/profile"
+                      className="inline-flex items-center gap-1 text-xs font-technical-data text-primary hover:underline font-bold"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">edit</span>
+                      <span>Edit Profile</span>
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-surface-container-low border border-border-light space-y-1">
+                      <span className="font-technical-data text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+                        Full Name / Account Entity
+                      </span>
+                      <div className="font-technical-data text-sm font-bold text-primary truncate">
+                        {user?.fullName || fullName || "Registered User"}
+                      </div>
+                      <div className="text-[11px] text-secondary font-medium uppercase tracking-wider">
+                        {user?.role === "admin"
+                          ? "Administrator"
+                          : user?.accountType && user.accountType !== "residential"
+                          ? `${user.accountType} Account`
+                          : "Verified Account"}
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-surface-container-low border border-border-light space-y-1">
+                      <span className="font-technical-data text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+                        Official Billing Email
+                      </span>
+                      <div className="font-technical-data text-sm font-bold text-primary truncate">
+                        {user?.email || email}
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-status-success font-medium">
+                        <span className="material-symbols-outlined text-[13px]">verified</span>
+                        <span>{user?.emailVerified ? "Verified Email" : "Linked Login ID"}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-5">
-                    <div>
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Email Address <span className="text-secondary">*</span>
-                      </label>
-                      <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-lg pointer-events-none">
-                          mail
-                        </span>
-                        <input
-                          className="w-full pl-11 pr-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg placeholder:text-outline/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all border border-border-light"
-                          placeholder="engineering-procurement@domain.zm"
-                          required
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
-                      <p className="font-body-sm text-xs text-on-surface-variant mt-1.5">
-                        Official VAT invoice and warranty card will be dispatched here.
-                      </p>
-                    </div>
-
+                  {/* Dispatch Contact Phone Input & WhatsApp Alerts */}
+                  <div className="space-y-3 pt-2">
                     <div>
                       <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
                         Technician &amp; SMS Dispatch Phone <span className="text-secondary">*</span>
@@ -410,221 +504,264 @@ export default function CheckoutPage() {
                         </div>
                         <div className="relative flex-1">
                           <input
+                            type="tel"
+                            name="tel"
+                            id="checkout-phone"
+                            autoComplete="tel"
+                            inputMode="tel"
                             className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg placeholder:text-outline/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all border border-border-light"
                             pattern="[0-9 ]{9,12}"
                             placeholder="97 183 8038"
                             required
-                            type="tel"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                           />
                         </div>
                       </div>
-                      <p className="font-body-sm text-xs text-on-surface-variant mt-1.5">
-                        Used by our logistics team 60 mins before arrival on installation day.
+                      <p className="font-body-sm text-[11px] text-on-surface-variant mt-1.5">
+                        Logistics drivers will contact this number 60 minutes prior to staging arrival.
                       </p>
                     </div>
 
-                    <div className="pt-2">
-                      <label className="flex items-start gap-3.5 p-4 rounded-xl bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors group border border-border-light">
-                        <input
-                          checked={whatsappAlerts}
-                          onChange={(e) => setWhatsappAlerts(e.target.checked)}
-                          className="mt-1 w-4 h-4 rounded text-secondary focus:ring-secondary accent-secondary"
-                          type="checkbox"
-                        />
-                        <div className="text-xs font-body-sm text-on-surface">
-                          <span className="font-semibold block text-on-surface">
-                            Opt-in to real-time WhatsApp logistics alerts
-                          </span>
-                          Receive live GPS tracking of the solar array delivery truck, digital commissioning reports, and scheduled inverter maintenance pings.
+                    <label className="flex items-start gap-3.5 p-4 rounded-xl bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors group border border-border-light">
+                      <input
+                        checked={whatsappAlerts}
+                        onChange={(e) => setWhatsappAlerts(e.target.checked)}
+                        className="mt-1 w-4 h-4 rounded text-secondary focus:ring-secondary accent-secondary"
+                        type="checkbox"
+                      />
+                      <div className="text-xs font-body-sm text-on-surface">
+                        <span className="font-semibold block text-on-surface">
+                          Opt-in to real-time WhatsApp logistics alerts (+260 {phone || "Phone"})
+                        </span>
+                        Receive live GPS tracking of the solar delivery truck, digital commissioning reports, and warranty certificates.
+                      </div>
+                    </label>
+                  </div>
+                </section>
+
+                {/* 2. Verified Installation & Delivery Site */}
+                <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-sm border border-border-light space-y-5">
+                  <div className="flex items-center justify-between border-b border-border-light pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-technical-data font-bold text-sm shadow-sm">
+                        2
+                      </div>
+                      <div>
+                        <h2 className="font-headline-md text-base md:text-lg text-on-surface font-bold">
+                          Verified Installation Destination
+                        </h2>
+                        <p className="font-body-sm text-xs text-on-surface-variant">
+                          Confirmed destination for heavy equipment unloading &amp; technician staging.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/profile"
+                      className="inline-flex items-center gap-1 text-xs font-technical-data text-primary hover:underline font-bold"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">add_location</span>
+                      <span>Manage Sites</span>
+                    </Link>
+                  </div>
+
+                  {/* Multiple saved address selector if available */}
+                  {user?.savedAddresses && user.savedAddresses.length > 1 && (
+                    <div className="space-y-2">
+                      <span className="font-technical-data text-xs text-on-surface-variant uppercase font-bold tracking-wider">
+                        Select from your Saved Sites:
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {user.savedAddresses.map((addr) => {
+                          const isSelected = address === addr.fullAddress;
+                          return (
+                            <div
+                              key={addr.id}
+                              onClick={() => {
+                                setAddress(addr.fullAddress);
+                                const prov = addr.province || "Lusaka Province";
+                                setProvince(prov.toLowerCase().includes("lusaka") ? "lusaka" : "copperbelt");
+                                setDeliveryZone(prov.toLowerCase().includes("lusaka") ? "lusaka" : "copperbelt");
+                              }}
+                              className={`p-3.5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between ${
+                                isSelected
+                                  ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20 shadow-xs"
+                                  : "bg-surface-container-low border-border-light hover:bg-surface-container"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <span className="font-technical-data text-xs font-bold text-primary">
+                                  {addr.label}
+                                </span>
+                                {isSelected && (
+                                  <span className="text-secondary material-symbols-outlined text-[16px]">
+                                    check_circle
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-on-surface-variant line-clamp-1">{addr.fullAddress}</p>
+                              <p className="text-[11px] text-on-surface-variant font-medium mt-1">
+                                {addr.district}, {addr.province}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Active Verified Address Card */}
+                  <div className="p-5 rounded-2xl bg-surface-container-low border border-secondary/40 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0 text-secondary">
+                          <span className="material-symbols-outlined text-[22px]">location_on</span>
                         </div>
-                      </label>
-                    </div>
-                  </div>
-                </section>
-
-                {/* 2. Site Location */}
-                <section className="bg-surface-container-lowest p-6 md:p-8 rounded-xl shadow-sm border border-border-light">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-technical-data font-bold text-sm">
-                      2
-                    </div>
-                    <div>
-                      <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
-                        Site &amp; Installation Location
-                      </h2>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        Zambia site specifics for crane unloading and engineering crew staging.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Full Name / Registered Entity Name <span className="text-secondary">*</span>
-                      </label>
-                      <input
-                        className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg placeholder:text-outline/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all border border-border-light"
-                        placeholder="e.g., Mwape Chilufya or Kafue Agri Holdings Ltd."
-                        required
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                      />
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary-container text-secondary border border-secondary/20">
+                              {defaultAddress?.label || "Primary Verified Site"}
+                            </span>
+                            <span className="text-xs font-bold text-status-success flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">verified</span>
+                              Site Confirmed
+                            </span>
+                          </div>
+                          <p className="font-technical-data text-base font-bold text-primary pt-0.5">
+                            {address || primaryAddressText}
+                          </p>
+                          <p className="font-body-sm text-xs text-on-surface-variant">
+                            {[districtText, province.toUpperCase() + " PROVINCE"].filter(Boolean).join(" • ")}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Site / Street Address <span className="text-secondary">*</span>
-                      </label>
-                      <input
-                        className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg placeholder:text-outline/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all border border-border-light"
-                        placeholder="Plot No., Street Name, Area (e.g. Plot 104 Leopard’s Hill Rd, Kabulonga)"
-                        required
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Province / Territory <span className="text-secondary">*</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          className="w-full appearance-none px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all pr-10 border border-border-light"
-                          required
-                          value={province}
-                          onChange={(e) => handleProvinceChange(e.target.value)}
-                        >
-                          <option value="lusaka">
-                            Lusaka Province ({hardwareSubtotal >= 78000 ? "FREE Dispatch > K78,000" : "ZMW 750 - FREE > K78,000"})
-                          </option>
-                          <option value="copperbelt">Copperbelt Province (+ZMW 2,500)</option>
-                          <option value="central">Central Province (+ZMW 2,500)</option>
-                          <option value="southern">Southern Province (+ZMW 2,500)</option>
-                          <option value="eastern">Eastern Province (+ZMW 2,500)</option>
-                          <option value="north-western">North-Western Province (+ZMW 2,500)</option>
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                          expand_more
+                    <div className="pt-3 border-t border-border-light flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 font-technical-data text-xs font-bold text-primary">
+                        <span className="material-symbols-outlined text-secondary text-[16px]">local_shipping</span>
+                        <span>
+                          {province === "lusaka"
+                            ? "Lusaka Central Hub Staging (Within 48h)"
+                            : "Regional Convoy Logistics Staging"}
                         </span>
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Mounting Surface / Roof Material <span className="text-secondary">*</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          className="w-full appearance-none px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all pr-10 border border-border-light"
-                          required
-                          value={roofType}
-                          onChange={(e) => setRoofType(e.target.value)}
-                        >
-                          <option value="ibr">IBR Profile Sheet Iron</option>
-                          <option value="corrugated">Standard Corrugated Iron</option>
-                          <option value="tile">Concrete / Clay Roof Tile</option>
-                          <option value="ground">Ground Mount / Open Yard Steel Rig</option>
-                          <option value="flat">Concrete Flat Roof Deck</option>
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                          expand_more
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
-                        Gate Access &amp; Rigging Instructions (Optional)
-                      </label>
-                      <textarea
-                        className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg placeholder:text-outline/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all resize-none border border-border-light"
-                        placeholder="e.g., Heavy duty boom gate security clearance needed. Inverter wall is inside the garage, dual 3-phase DB board located at rear entrance."
-                        rows={3}
-                        value={accessNotes}
-                        onChange={(e) => setAccessNotes(e.target.value)}
-                      ></textarea>
+                      <span className="font-technical-data text-xs font-bold text-secondary">
+                        {province === "lusaka"
+                          ? hardwareSubtotal >= 78000
+                            ? "100% FREE Dispatch Unlocked"
+                            : "ZMW 750 Standard Dispatch"
+                          : "ZMW 2,500 Regional Dispatch"}
+                      </span>
                     </div>
                   </div>
                 </section>
 
-                {/* 3. Schedule Preference */}
-                <section className="bg-surface-container-lowest p-6 md:p-8 rounded-xl shadow-sm border border-border-light">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary font-technical-data font-bold text-sm">
-                      3
+                {/* 3. Installation Details (Only if user opted for installation) */}
+                {hasInstallation && (
+                  <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-sm border border-border-light space-y-5">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-technical-data font-bold text-sm shadow-sm">
+                        3
+                      </div>
+                      <div>
+                        <h2 className="font-headline-md text-base md:text-lg text-on-surface font-bold">
+                          Installation Details
+                        </h2>
+                        <p className="font-body-sm text-xs text-on-surface-variant">
+                          Structural specifics for solar mounting brackets and engineering safety equipment.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
-                        Installation Schedule Window
-                      </h2>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        Select how soon our certified PV engineers should deploy to the site.
-                      </p>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
+                          Mounting Surface / Roof Material <span className="text-secondary">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            className="w-full appearance-none px-4 py-3 bg-surface-container-low rounded-xl text-on-surface font-body-lg focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary transition-all pr-10 border border-border-light"
+                            required
+                            value={roofType}
+                            onChange={(e) => setRoofType(e.target.value)}
+                          >
+                            <option value="ibr">IBR Profile Sheet Iron (Standard Clamps)</option>
+                            <option value="corrugated">Standard Corrugated Iron (Hanger Bolts)</option>
+                            <option value="tile">Concrete / Clay Roof Tile (Stainless Hooks)</option>
+                            <option value="ground">Ground Mount / Open Yard Rigging</option>
+                            <option value="flat">Concrete Flat Roof Deck (Ballasted Mounts)</option>
+                          </select>
+                          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
+                            expand_more
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Schedule Preference */}
+                      <div>
+                        <label className="block font-technical-data text-xs uppercase text-on-surface tracking-wider font-semibold mb-2">
+                          Installation Schedule Window Preference
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <label
+                            onClick={() => setScheduleOption("fastest")}
+                            className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
+                              scheduleOption === "fastest"
+                                ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
+                                : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-label-cta text-xs text-on-surface font-bold">Fastest Window</span>
+                              <span className="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                            </div>
+                            <div className="font-headline-md text-base text-secondary font-bold mb-1">Within 48h</div>
+                            <p className="font-body-sm text-[11px] text-on-surface-variant">
+                              Engineers arrive in priority batch from Lusaka Hub.
+                            </p>
+                          </label>
+
+                          <label
+                            onClick={() => setScheduleOption("scheduled")}
+                            className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
+                              scheduleOption === "scheduled"
+                                ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
+                                : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-label-cta text-xs text-on-surface font-bold">Custom Date</span>
+                              <span className="material-symbols-outlined text-outline text-sm">calendar_today</span>
+                            </div>
+                            <div className="font-headline-md text-base text-on-surface font-bold mb-1">Select Day</div>
+                            <p className="font-body-sm text-[11px] text-on-surface-variant">
+                              Coordinate with your ongoing architectural works.
+                            </p>
+                          </label>
+
+                          <label
+                            onClick={() => setScheduleOption("staged")}
+                            className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
+                              scheduleOption === "staged"
+                                ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
+                                : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-label-cta text-xs text-on-surface font-bold">Staged Setup</span>
+                              <span className="material-symbols-outlined text-outline text-sm">inventory_2</span>
+                            </div>
+                            <div className="font-headline-md text-base text-on-surface font-bold mb-1">Delivery First</div>
+                            <p className="font-body-sm text-[11px] text-on-surface-variant">
+                              Store equipment on-site now; commission later on notice.
+                            </p>
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <label
-                      onClick={() => setScheduleOption("fastest")}
-                      className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
-                        scheduleOption === "fastest"
-                          ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
-                          : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-label-cta text-sm text-on-surface font-bold">Fastest Window</span>
-                        <span className="w-2.5 h-2.5 rounded-full bg-secondary"></span>
-                      </div>
-                      <div className="font-headline-md text-lg text-secondary font-bold mb-1">Within 48h</div>
-                      <p className="font-body-sm text-xs text-on-surface-variant">
-                        Engineers arrive in priority batch. High-readiness team.
-                      </p>
-                    </label>
-
-                    <label
-                      onClick={() => setScheduleOption("scheduled")}
-                      className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
-                        scheduleOption === "scheduled"
-                          ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
-                          : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-label-cta text-sm text-on-surface font-bold">Custom Date</span>
-                        <span className="material-symbols-outlined text-outline text-sm">calendar_today</span>
-                      </div>
-                      <div className="font-headline-md text-lg text-on-surface font-bold mb-1">Select Day</div>
-                      <p className="font-body-sm text-xs text-on-surface-variant">
-                        Coordinate with your ongoing architectural works.
-                      </p>
-                    </label>
-
-                    <label
-                      onClick={() => setScheduleOption("staged")}
-                      className={`relative flex flex-col p-4 rounded-xl cursor-pointer transition-all border ${
-                        scheduleOption === "staged"
-                          ? "bg-secondary-container/30 border-secondary ring-2 ring-secondary/20"
-                          : "bg-surface-container-low border-border-light hover:bg-secondary-container/20"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-label-cta text-sm text-on-surface font-bold">Staged Setup</span>
-                        <span className="material-symbols-outlined text-outline text-sm">inventory_2</span>
-                      </div>
-                      <div className="font-headline-md text-lg text-on-surface font-bold mb-1">Delivery First</div>
-                      <p className="font-body-sm text-xs text-on-surface-variant">
-                        Store equipment on-site now; commission later on notice.
-                      </p>
-                    </label>
-                  </div>
-                </section>
+                  </section>
+                )}
               </form>
 
               {/* Order Summary Sidebar for Step 1 */}
@@ -783,7 +920,7 @@ export default function CheckoutPage() {
                 </div>
               </aside>
             </div>
-          )}
+          ) : null}
 
           {/* STEP 2: Payment & Financing Gateway */}
           {currentStep === 2 && (
@@ -797,14 +934,14 @@ export default function CheckoutPage() {
                         OFFICIAL PAYMENT SWITCH
                       </span>
                       <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-technical-data text-[10px] font-bold uppercase border border-primary/20">
-                        pawaPay Gateway
+                        Instant &amp; Secure
                       </span>
                     </div>
                     <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
                       Select Payment Gateway
                     </h1>
                     <p className="font-body-sm text-body-sm text-text-secondary mt-1">
-                      Secure, instant multi-channel settlements powered by <strong className="text-primary font-bold">pawaPay</strong> under Bank of Zambia oversight.
+                      Secure, instant multi-channel settlements under Bank of Zambia compliance oversight.
                     </p>
                   </div>
                   <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-[12px] font-semibold">
@@ -835,7 +972,7 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <div className="flex items-center gap-3">
-                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Mobile Money (pawaPay)</span>
+                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Mobile Money</span>
                           <span className="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-[11px] font-bold">
                             Instant STK Push
                           </span>
@@ -865,7 +1002,7 @@ export default function CheckoutPage() {
                           Select Mobile Money Carrier
                         </span>
                         <span className="text-[11px] font-technical-data text-secondary font-bold">
-                          Powered by pawaPay
+                          Instant Push PIN
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
@@ -946,7 +1083,7 @@ export default function CheckoutPage() {
                           phonelink_ring
                         </span>
                         <p className="font-body-sm text-[13px] leading-snug">
-                          pawaPay will trigger an instant push notification on your handset to authorize{" "}
+                          An instant push notification will be sent to your handset to authorize{" "}
                           <strong className="font-technical-data font-bold">ZMW {grandTotal.toLocaleString()}</strong> with your secure MoMo PIN.
                         </p>
                       </div>
@@ -976,13 +1113,13 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <div className="flex items-center gap-3">
-                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Credit / Debit Card (pawaPay)</span>
+                          <span className="font-headline-md text-headline-md text-on-surface font-bold">Credit / Debit Card</span>
                           <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-outline font-technical-data text-[11px] font-bold">
                             3D-Secure
                           </span>
                         </div>
                         <p className="font-body-sm text-body-sm text-text-secondary mt-0.5">
-                          Visa, Mastercard, &amp; dual-currency cards processed via pawaPay secure encryption.
+                          Visa, Mastercard, &amp; dual-currency cards processed via bank-grade 3D-Secure encryption.
                         </p>
                       </div>
                     </div>
@@ -1023,7 +1160,7 @@ export default function CheckoutPage() {
                             </label>
                             <input
                               className="w-full px-4 py-3 rounded-lg bg-surface-container-lowest font-technical-data uppercase text-on-surface text-body-sm focus:outline-none shadow-sm border border-border-light"
-                              placeholder="MWAPE CHILUFYA"
+                              placeholder="FULL NAME ON CARD"
                               type="text"
                               value={cardHolder}
                               onChange={(e) => setCardHolder(e.target.value)}
@@ -1279,7 +1416,7 @@ export default function CheckoutPage() {
                         <div className="flex justify-between items-center text-[13px]">
                           <span className="text-text-secondary">Reference Code:</span>
                           <span className="font-technical-data font-bold text-secondary">
-                            ELH-ORD-9942
+                            {activeOrderRef || `EHP-${new Date().getFullYear()}-0001`}
                           </span>
                         </div>
                       </div>
@@ -1384,12 +1521,6 @@ export default function CheckoutPage() {
                             : "+ ZMW 2,500"}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center text-text-secondary">
-                        <span>Engineering Commissioning SLA</span>
-                        <span className="font-technical-data font-bold text-status-success uppercase text-[12px]">
-                          Included
-                        </span>
-                      </div>
                     </div>
 
                     {/* Total Calculation */}
@@ -1431,7 +1562,7 @@ export default function CheckoutPage() {
                       {isProcessingPayment ? (
                         <>
                           <span className="inline-block w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
-                          <span>PROCESSING WITH PAWAPAY...</span>
+                          <span>PROCESSING PAYMENT...</span>
                         </>
                       ) : (
                         <>
@@ -1452,299 +1583,6 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Order Confirmed & Commissioning Order */}
-          {currentStep === 3 && (
-            <div className="flex flex-col w-full space-y-10">
-              {/* Notification Toast */}
-              {toastVisible && (
-                <div className="fixed top-24 right-8 z-50 bg-primary text-on-primary px-5 py-3 rounded-full shadow-xl flex items-center gap-3">
-                  <span className="material-symbols-outlined text-secondary-fixed text-[20px]">
-                    check_circle
-                  </span>
-                  <span className="font-technical-data text-technical-data">
-                    Order reference copied to clipboard!
-                  </span>
-                </div>
-              )}
-
-              {/* Breadcrumb / Stepper Progress Header */}
-              <div className="bg-surface-container-low p-6 md:p-8 rounded-2xl border border-border-light">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border-light">
-                  <div>
-                    <span className="font-technical-data text-technical-data text-secondary uppercase tracking-widest flex items-center gap-2 font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-status-success animate-ping"></span>
-                      Transaction Authorized &amp; Verified
-                    </span>
-                    <div className="font-headline-md text-2xl md:text-3xl text-primary mt-1 tracking-tight font-bold">
-                      Checkout Sequence Complete
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 bg-surface-container-lowest px-4 py-2 rounded-full shadow-sm border border-border-light">
-                    <span className="font-technical-data text-technical-data text-on-surface-variant uppercase">
-                      Order Ref:
-                    </span>
-                    <span className="font-headline-md text-headline-md text-primary tracking-wider font-bold">
-                      #{activeOrderRef}
-                    </span>
-                    <button
-                      className="text-on-surface-variant hover:text-primary transition-colors flex items-center cursor-pointer"
-                      onClick={copyOrderRef}
-                      title="Copy Reference"
-                      type="button"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">content_copy</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-                  <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-4 border border-border-light">
-                    <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">check</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-technical-data text-[11px] uppercase tracking-wider text-secondary font-bold">
-                        Step 01 • Completed
-                      </div>
-                      <div className="font-headline-md text-[15px] text-primary truncate font-semibold">
-                        Customer &amp; Site Details
-                      </div>
-                      <div className="font-body-sm text-xs text-on-surface-variant truncate">
-                        {address || "Lusaka Residential Grid"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm flex items-center gap-4 border border-border-light">
-                    <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container flex-shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">check</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-technical-data text-[11px] uppercase tracking-wider text-secondary font-bold">
-                        Step 02 • Completed
-                      </div>
-                      <div className="font-headline-md text-[15px] text-primary truncate font-semibold">
-                        Payment Clearance
-                      </div>
-                      <div className="font-body-sm text-xs text-on-surface-variant truncate">
-                        {paymentMethod === "momo" ? `pawaPay Verified (${momoProvider.toUpperCase()} MoMo)` : `pawaPay ${paymentMethod.toUpperCase()} Settled`}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-primary text-on-primary p-4 rounded-xl shadow-md flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center flex-shrink-0 font-bold">
-                      <span className="material-symbols-outlined text-[20px]">bolt</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-technical-data text-[11px] uppercase tracking-wider text-tertiary-fixed font-bold">
-                        Step 03 • Confirmed
-                      </div>
-                      <div className="font-headline-md text-[15px] text-on-primary truncate font-semibold">
-                        Dispatch &amp; Deployment
-                      </div>
-                      <div className="font-body-sm text-xs text-on-primary-container truncate">
-                        Field Engineers Scheduled
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hero Success Banner */}
-              <div className="bg-surface-container-lowest rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden border border-border-light">
-                <div className="absolute -right-24 -top-24 w-96 h-96 bg-secondary-fixed/40 rounded-full blur-3xl pointer-events-none"></div>
-                <div className="absolute -left-12 -bottom-12 w-80 h-80 bg-tertiary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
-                  <div className="max-w-2xl space-y-5">
-                    <div className="inline-flex items-center gap-3 bg-secondary-container px-4 py-2 rounded-full text-on-secondary-container">
-                      <div className="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[16px]">verified</span>
-                      </div>
-                      <span className="font-technical-data text-technical-data uppercase font-bold tracking-wider">
-                        Industrial Commission Scheduled
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h1 className="font-display-hero text-[34px] md:text-[50px] leading-[1.08] text-primary tracking-tight font-bold">
-                        Order Confirmed &amp; Engineering Scheduled!
-                      </h1>
-                      <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
-                        Order reference{" "}
-                        <span className="font-headline-md text-primary text-[17px] font-semibold">
-                          #{activeOrderRef}
-                        </span>
-                        . Thank you for partnering with Elleyhill Power Zambia for your clean energy independence.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-4 pt-2">
-                      <button
-                        onClick={() => {
-                          if (typeof window !== "undefined") {
-                            window.print();
-                          }
-                        }}
-                        className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-tertiary-fixed hover:bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-cta text-label-cta tracking-wide uppercase transition-all shadow-sm font-bold cursor-pointer"
-                        type="button"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">receipt_long</span>
-                        <span>Download PDF Tax Invoice</span>
-                      </button>
-                      <a
-                        className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-secondary text-on-secondary hover:bg-secondary/90 font-label-cta text-label-cta tracking-wide uppercase transition-all shadow-sm font-bold"
-                        href={whatsappConfirmationLink}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">chat</span>
-                        <span>Track Dispatch on WhatsApp</span>
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center gap-4 flex-shrink-0 bg-surface-container-low p-8 rounded-2xl md:w-72 text-center shadow-inner border border-border-light">
-                    <div className="w-20 h-20 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shadow-md">
-                      <span className="material-symbols-outlined text-[48px]">check</span>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="font-technical-data text-[12px] uppercase tracking-widest text-secondary font-bold">
-                        Estimated Arrival
-                      </div>
-                      <div className="font-headline-md text-headline-md text-primary font-bold">
-                        Tomorrow, 08:30 CAT
-                      </div>
-                      <div className="font-body-sm text-xs text-on-surface-variant">
-                        {province === "lusaka" ? "Lusaka Rapid Sector" : `${province.toUpperCase()} Regional Convoy`}
-                      </div>
-                    </div>
-                    <div className="w-full bg-surface-container-lowest py-2 px-3 rounded-lg text-left flex items-center justify-between border border-border-light">
-                      <span className="font-technical-data text-xs text-on-surface-variant">
-                        Live Dispatch SLA
-                      </span>
-                      <span className="font-technical-data text-xs text-status-success font-bold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-status-success"></span> Active
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Manifest Section */}
-              <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-sm space-y-6 border border-border-light">
-                <div className="flex items-center justify-between pb-4 border-b border-border-light">
-                  <div>
-                    <span className="font-technical-data text-technical-data uppercase text-secondary tracking-wider font-semibold">
-                      Statement of Equipment
-                    </span>
-                    <div className="font-headline-md text-headline-md text-primary font-bold">
-                      Order Manifest
-                    </div>
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-technical-data font-bold">
-                    PAID &amp; AUTHORIZED
-                  </span>
-                </div>
-
-                <div className="space-y-4">
-                  {displayOrderItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-4 rounded-2xl bg-surface-container-low flex items-center justify-between gap-4 border border-border-light"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-surface-container-lowest flex items-center justify-center flex-shrink-0 border border-border-light p-1">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <div>
-                          <div className="font-headline-md text-[16px] text-primary font-bold">
-                            {item.name}
-                          </div>
-                          <div className="font-body-sm text-body-sm text-on-surface-variant">
-                            {item.description || item.tag} {item.installationIncluded ? "• Full Pro Installation" : ""}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-headline-md text-[16px] text-primary font-bold">
-                          ZMW {(item.price * item.qty + (item.installationIncluded && item.installationPrice ? item.installationPrice * item.qty : 0)).toLocaleString()}
-                        </div>
-                        <div className="font-technical-data text-[12px] text-on-surface-variant">
-                          Qty: {item.qty}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="p-5 rounded-2xl bg-surface-container space-y-3 border border-border-light">
-                  <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                    <span>Equipment Subtotal</span>
-                    <span className="font-technical-data text-technical-data font-medium text-primary">
-                      ZMW {displayHardware.toLocaleString()}
-                    </span>
-                  </div>
-                  {displayInstall > 0 && (
-                    <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                      <span>Certified Installation &amp; Commissioning</span>
-                      <span className="font-technical-data text-technical-data font-medium text-secondary">
-                        + ZMW {displayInstall.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                    <span>Logistics &amp; Delivery</span>
-                    <span className="text-status-success font-technical-data text-technical-data font-bold uppercase">
-                      {province === "lusaka"
-                        ? displayDeliveryCost === 0
-                          ? "Included Free (> K78k)"
-                          : "ZMW 750"
-                        : "ZMW 2,500"}
-                    </span>
-                  </div>
-                  <div className="pt-3 border-t border-border-light flex justify-between items-baseline">
-                    <div>
-                      <span className="font-headline-md text-[18px] text-primary font-bold">
-                        Total Amount Settled
-                      </span>
-                      <span className="block font-technical-data text-[12px] text-secondary">
-                        Authorized via {paymentMethod.toUpperCase()} (Ref: #{activeOrderRef})
-                      </span>
-                    </div>
-                    <div className="font-headline-lg text-[28px] text-primary font-bold tracking-tight">
-                      ZMW {confirmedGrandTotal.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Navigation */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
-                <Link
-                  href="/shop"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container-lowest hover:bg-surface-container text-primary font-technical-data text-xs font-bold transition-colors shadow-sm border border-border-light"
-                >
-                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                  <span>Return to Catalog</span>
-                </Link>
-                <Link
-                  href="/order-confirmation"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-technical-data text-xs font-bold hover:bg-primary-hover transition-colors shadow-sm"
-                >
-                  <span>View Dedicated Order Confirmation Page</span>
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                </Link>
               </div>
             </div>
           )}

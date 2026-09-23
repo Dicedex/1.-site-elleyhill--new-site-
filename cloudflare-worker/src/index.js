@@ -223,14 +223,12 @@ export default {
 
           await db
             .prepare(
-              `INSERT INTO users (id, email, full_name, phone, account_type, company_name, tpin, email_verified, primary_district, primary_province, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `INSERT INTO users (id, email, full_name, phone, account_type, email_verified, primary_district, primary_province, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT(email) DO UPDATE SET
                  full_name = excluded.full_name,
                  phone = excluded.phone,
                  account_type = excluded.account_type,
-                 company_name = excluded.company_name,
-                 tpin = excluded.tpin,
                  email_verified = COALESCE(excluded.email_verified, email_verified),
                  primary_district = excluded.primary_district,
                  primary_province = excluded.primary_province,
@@ -242,8 +240,6 @@ export default {
               u.fullName || u.full_name || "Valued Client",
               u.phone || "",
               u.accountType || u.account_type || "residential",
-              u.companyName || u.company_name || null,
-              u.tpin || null,
               u.emailVerified ? 1 : 0,
               u.primaryDistrict || u.primary_district || "Lusaka",
               u.primaryProvince || u.primary_province || "Lusaka Province",

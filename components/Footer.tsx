@@ -227,7 +227,7 @@ export default function Footer() {
             <span className="material-symbols-outlined text-secondary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
               verified_user
             </span>
-            <span>Secured by <strong className="text-primary font-bold">pawaPay</strong> Payment Switch</span>
+            <span>Secured Multi-Carrier Payment Switch</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-technical-data font-semibold">
             <span className="px-2.5 py-1 rounded-md bg-surface-container-lowest border border-border-light text-[#FFCC00] bg-black/5 font-bold">

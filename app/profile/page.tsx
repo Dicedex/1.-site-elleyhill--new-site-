@@ -56,7 +56,6 @@ export default function ProfilePage() {
     addSavedAddress,
     deleteSavedAddress,
     setDefaultAddress,
-    loginWithDemo,
     sendEmailVerificationCode,
     verifyEmailCode,
   } = useAuth();
@@ -87,8 +86,6 @@ export default function ProfilePage() {
   // Settings Edit State
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
-  const [editCompany, setEditCompany] = useState("");
-  const [editTpin, setEditTpin] = useState("");
   const [settingsSuccess, setSettingsSuccess] = useState(false);
 
   // Search, Filters & Clipboard copy state
@@ -109,8 +106,6 @@ export default function ProfilePage() {
     if (user) {
       setEditName(user.fullName || "");
       setEditPhone(user.phone || "");
-      setEditCompany(user.companyName || "");
-      setEditTpin(user.tpin || "");
     }
   }, [user]);
 
@@ -122,7 +117,7 @@ export default function ProfilePage() {
           <div className="w-16 h-16 rounded-2xl bg-primary-light border border-primary/20 flex items-center justify-center mx-auto text-primary">
             <User className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-charcoal font-headline">Client Portal</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-charcoal font-headline">My Account</h1>
           <p className="text-sm text-on-surface-variant">
             Sign in to view your solar system warranties, tracking updates for Lusaka dispatch, and registered installation sites.
           </p>
@@ -139,28 +134,6 @@ export default function ProfilePage() {
             >
               Create New Account
             </Link>
-          </div>
-
-          <div className="pt-6 border-t border-border-light text-left">
-            <div className="text-xs font-bold uppercase tracking-wider text-secondary mb-3">
-              Or Preview with a 1-Click Demo Profile:
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => loginWithDemo("residential")}
-                className="p-3 rounded-xl bg-surface-container-low border border-border-light hover:border-primary text-left text-xs transition-colors cursor-pointer"
-              >
-                <div className="font-bold text-charcoal">Mwape (6kW)</div>
-                <div className="text-[10px] text-on-surface-variant">Residential Home</div>
-              </button>
-              <button
-                onClick={() => loginWithDemo("commercial")}
-                className="p-3 rounded-xl bg-surface-container-low border border-border-light hover:border-secondary text-left text-xs transition-colors cursor-pointer"
-              >
-                <div className="font-bold text-charcoal">Kafue Agri (50kW)</div>
-                <div className="text-[10px] text-on-surface-variant">Commercial Farm</div>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -180,10 +153,7 @@ export default function ProfilePage() {
       const res = await sendEmailVerificationCode(user.email);
       if (res.success) {
         setVerifyStep("sent");
-        setVerifyInfo(res.message || `A 6-digit verification code was generated for ${user.email}.`);
-        if (res.simulatedCode) {
-          setVerifyInfo(`Verification code dispatched to ${user.email} (Demo Sandbox Code: ${res.simulatedCode})`);
-        }
+        setVerifyInfo(res.message || `A 6-digit verification code was sent to ${user.email}.`);
       } else {
         setVerifyError(res.error || "Failed to send verification code. Please try again.");
       }
@@ -223,8 +193,6 @@ export default function ProfilePage() {
     await updateProfile({
       fullName: editName,
       phone: editPhone,
-      companyName: editCompany,
-      tpin: editTpin,
     });
     setSettingsSuccess(true);
     setTimeout(() => setSettingsSuccess(false), 3000);
@@ -387,7 +355,7 @@ export default function ProfilePage() {
 
             <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Client Status</span>
+                <span className="text-[11px] text-on-surface-variant uppercase font-bold tracking-wider">Account Status</span>
                 <BadgeCheck className="w-4 h-4 text-secondary" />
               </div>
               {user.emailVerified ? (
@@ -434,7 +402,7 @@ export default function ProfilePage() {
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Digital Warranty Vault ({user.warranties.length})</span>
+            <span>My Warranties ({user.warranties.length})</span>
           </button>
 
           <button
@@ -446,7 +414,7 @@ export default function ProfilePage() {
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>Orders &amp; Dispatch ({user.orders.length})</span>
+            <span>My Orders &amp; Tracking ({user.orders.length})</span>
           </button>
 
           <button
@@ -467,7 +435,7 @@ export default function ProfilePage() {
           <div className="mt-8 space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-charcoal font-headline">Digital Warranty Vault</h2>
+                <h2 className="text-xl font-bold text-charcoal font-headline">My Warranty Certificates</h2>
                 <p className="text-xs text-on-surface-variant mt-1">
                   Official manufacturer warranty certificates for all installed hardware with serial number registration.
                 </p>
@@ -904,7 +872,7 @@ export default function ProfilePage() {
                     />
                     <span className="text-[10px] text-on-surface-variant mt-1 block">
                       {user.emailVerified
-                        ? "Verified with Cloudflare Gateway for order dispatches & warranty vault."
+                        ? "Verified for official order dispatches & warranty certificates."
                         : "Unverified. Verify email for official dispatch tracking and certificates."}
                     </span>
                   </div>
@@ -914,39 +882,16 @@ export default function ProfilePage() {
                       Contact Phone / WhatsApp
                     </label>
                     <input
-                      type="text"
+                      type="tel"
+                      name="tel"
+                      id="profile-phone"
+                      autoComplete="tel"
+                      inputMode="tel"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
                     />
                   </div>
-
-                  {user.accountType !== "residential" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                          Company Name
-                        </label>
-                        <input
-                          type="text"
-                          value={editCompany}
-                          onChange={(e) => setEditCompany(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-sans"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                          ZRA TPIN
-                        </label>
-                        <input
-                          type="text"
-                          value={editTpin}
-                          onChange={(e) => setEditTpin(e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary font-mono"
-                        />
-                      </div>
-                    </div>
-                  )}
 
                   <div className="pt-3">
                     <button

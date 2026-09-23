@@ -46,8 +46,8 @@ export default function ShopSolarPage() {
       description: product.description,
       slug: product.slug,
       installationPrice: isKit ? 4500 : undefined,
-      installationIncluded: isKit,
-      installationOption: isKit ? "professional" : "kit-only",
+      installationIncluded: false,
+      installationOption: "kit-only",
       qty: 1,
     });
 

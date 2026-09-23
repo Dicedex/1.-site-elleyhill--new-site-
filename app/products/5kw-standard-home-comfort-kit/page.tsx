@@ -31,7 +31,7 @@ const galleryImages = [
 
 export default function ProductDetailPage() {
   const { openDrawer, addItem } = useCart();
-  const [installationOption, setInstallationOption] = useState<"professional" | "kit-only">("professional");
+  const [installationOption, setInstallationOption] = useState<"professional" | "kit-only">("kit-only");
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
 
   const handleAddToCart = () => {

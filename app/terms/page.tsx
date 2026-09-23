@@ -39,7 +39,7 @@ export default function TermsPage() {
                 These Terms and Conditions govern all purchases of solar photovoltaic modules, hybrid inverters, energy storage systems, and turnkey EPC installations supplied by Elleyhill Power Zambia (&ldquo;Company&rdquo;, &ldquo;we&rdquo;, &ldquo;our&rdquo;), registered in the Republic of Zambia.
               </p>
               <p className="text-body-sm text-on-surface-variant leading-relaxed">
-                By purchasing through our online portal, issuing a purchase order, or approving an engineering quotation, you agree to be bound by these provisions.
+                By purchasing through our website or online platform, issuing a purchase order, or approving an engineering quotation, you agree to be bound by these provisions.
               </p>
             </section>
 

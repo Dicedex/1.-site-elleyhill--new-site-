@@ -21,9 +21,6 @@ export interface D1UserPayload {
   phone?: string;
   accountType?: string;
   account_type?: string;
-  companyName?: string;
-  company_name?: string;
-  tpin?: string;
   emailVerified?: boolean;
   primaryDistrict?: string;
   primaryProvince?: string;

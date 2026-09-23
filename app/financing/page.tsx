@@ -41,8 +41,7 @@ export default function FinancingPage() {
               Direct Payment
             </h3>
             <p className="font-body-lg text-body-lg text-neutral-grey-dark mb-6 flex-grow">
-              Immediate transaction completion via trusted networks. Powered by{" "}
-              <strong className="text-primary font-bold">pawaPay</strong>. Secure, fast, and straightforward.
+              Immediate transaction completion via trusted networks. Secure, fast, and straightforward.
             </p>
             <div className="w-full space-y-3">
               <div className="flex items-center gap-3 border-b border-border-light pb-2">
@@ -54,7 +53,7 @@ export default function FinancingPage() {
                   check_circle
                 </span>
                 <span className="font-body-sm text-body-sm text-on-surface">
-                  MTN MoMo, Airtel Money &amp; Zamtel Kwacha (via pawaPay)
+                  MTN MoMo, Airtel Money &amp; Zamtel Kwacha
                 </span>
               </div>
               <div className="flex items-center gap-3 border-b border-border-light pb-2">
@@ -66,7 +65,7 @@ export default function FinancingPage() {
                   check_circle
                 </span>
                 <span className="font-body-sm text-body-sm text-on-surface">
-                  Visa / Mastercard (3D-Secure via pawaPay)
+                  Visa / Mastercard (3D-Secure)
                 </span>
               </div>
               <div className="flex items-center gap-3 pb-2">
@@ -224,10 +223,10 @@ export default function FinancingPage() {
           </span>
           <div>
             <h4 className="font-label-cta text-label-cta text-primary">
-              pawaPay Secured Transactions Guaranteed
+              Secured Multi-Carrier Transactions Guaranteed
             </h4>
             <p className="font-body-sm text-body-sm text-neutral-grey-dark">
-              All mobile money and digital card payments are routed through the <strong className="text-primary">pawaPay</strong> multi-carrier switch with Bank of Zambia compliance and bank-grade 256-bit encryption.
+              All mobile money and digital card payments are routed through a secured multi-carrier switch with Bank of Zambia compliance and bank-grade 256-bit encryption.
             </p>
           </div>
         </div>

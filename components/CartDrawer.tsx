@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CartDrawer() {
   const {
@@ -23,6 +24,16 @@ export default function CartDrawer() {
     totalItemsCount,
     getWhatsAppQuoteUrl,
   } = useCart();
+  const { user, isAuthenticated } = useAuth();
+
+  const defaultAddress =
+    user?.savedAddresses?.find((a) => a.isDefault) || user?.savedAddresses?.[0];
+  const hasSavedAddress = Boolean(
+    defaultAddress?.fullAddress ||
+      user?.primaryAddress ||
+      user?.primaryDistrict ||
+      user?.primaryProvince
+  );
 
   return (
     <div
@@ -181,19 +192,30 @@ export default function CartDrawer() {
                         <button
                           type="button"
                           onClick={() => toggleInstallation(item.id)}
-                          className={`font-technical-data text-[11px] flex items-center gap-1 mt-1 text-left px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                          className={`font-technical-data text-[11px] flex items-center gap-1.5 mt-1.5 text-left p-1.5 rounded-lg border transition-all cursor-pointer ${
                             item.installationIncluded
-                              ? "bg-secondary-container/40 text-secondary border-secondary/30 font-semibold"
-                              : "bg-surface-container text-on-surface-variant border-transparent hover:text-primary"
+                              ? "bg-secondary-container/30 text-secondary border-secondary/40 font-semibold"
+                              : "bg-surface-container text-on-surface-variant border-border-light hover:text-primary"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[13px]">
-                            {item.installationIncluded ? "check_box" : "check_box_outline_blank"}
+                          <span
+                            className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all shrink-0 ${
+                              item.installationIncluded
+                                ? "bg-primary border-primary text-white"
+                                : "border-outline bg-white text-transparent"
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[10px] font-bold">
+                              {item.installationIncluded ? "check" : ""}
+                            </span>
                           </span>
-                          <span>
+                          <span className="material-symbols-outlined text-secondary text-[14px]">
+                            verified_user
+                          </span>
+                          <span className="truncate">
                             {item.installationIncluded
-                              ? `Pro Install Included (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`
-                              : `Add Pro Install (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`}
+                              ? `Installation Selected (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`
+                              : `Add Installation (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`}
                           </span>
                         </button>
                       )}
@@ -264,14 +286,34 @@ export default function CartDrawer() {
 
             <div className="space-y-2.5">
               {/* Primary: Checkout */}
-              <Link
-                href="/checkout"
-                onClick={closeDrawer}
-                className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
-              >
-                <span>PROCEED TO CHECKOUT</span>
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  href="/login?redirect=/checkout"
+                  onClick={closeDrawer}
+                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                >
+                  <span>SIGN IN TO CHECKOUT</span>
+                  <span className="material-symbols-outlined text-[18px]">lock</span>
+                </Link>
+              ) : !hasSavedAddress ? (
+                <Link
+                  href="/profile"
+                  onClick={closeDrawer}
+                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                >
+                  <span>ADD ADDRESS IN PROFILE TO PROCEED</span>
+                  <span className="material-symbols-outlined text-[18px]">add_location</span>
+                </Link>
+              ) : (
+                <Link
+                  href="/checkout"
+                  onClick={closeDrawer}
+                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                >
+                  <span>PROCEED TO CHECKOUT</span>
+                  <span className="material-symbols-outlined text-[18px]">lock</span>
+                </Link>
+              )}
 
               {/* Secondary: WhatsApp Quote */}
               <a

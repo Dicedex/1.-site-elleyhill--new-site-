@@ -40,51 +40,65 @@ export default function ServicesPage() {
     <div className="font-body-lg text-on-surface bg-surface-container-lowest antialiased min-h-screen flex flex-col">
       <main className="pt-[72px] pb-stack-lg flex-grow">
         {/* Hero Section */}
-        <section className="relative w-full overflow-hidden bg-gradient-to-b from-surface-container-low via-surface-container-lowest to-surface-container-lowest py-16 md:py-24 border-b border-border-light">
+        <section className="relative w-full overflow-hidden bg-charcoal py-20 md:py-28 border-b border-border-light text-white">
+          {/* Background Image with Dark & Radiant Gradient Overlay */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
+            <div
+              className="w-full h-full bg-cover bg-center opacity-35 scale-105 transform transition-transform duration-1000 ease-out"
+              style={{
+                backgroundImage: "url('/images/services/installation.jpg')",
+              }}
+            />
+            {/* Multi-layer ambient color gradients */}
+            <div className="absolute inset-0 bg-gradient-to-b from-charcoal/90 via-[#072b22]/85 to-charcoal/95" />
+            <div className="absolute -top-24 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent-yellow/10 rounded-full blur-3xl pointer-events-none" />
+          </div>
+
           <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center relative z-10">
-            <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary font-technical-data text-xs uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 border border-primary/20 font-bold">
-              <Award className="w-3.5 h-3.5 text-secondary" /> Certified Solar Engineering &amp; EPC Services
+            <span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md text-accent-yellow font-technical-data text-xs uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 border border-accent-yellow/30 font-bold shadow-sm">
+              <Award className="w-3.5 h-3.5 text-accent-yellow" /> Certified Solar Engineering &amp; EPC Services
             </span>
-            <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero text-primary mb-stack-md max-w-4xl mx-auto">
+            <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero text-white mb-stack-md max-w-4xl mx-auto drop-shadow-md">
               Turnkey Engineering, Field EPC &amp; Solar Maintenance
             </h1>
-            <p className="font-body-lg text-body-lg text-neutral-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className="font-body-lg text-body-lg text-neutral-200 max-w-3xl mx-auto mb-10 leading-relaxed drop-shadow-sm">
               Standard-setting hybrid solar engineering for residential homes, commercial estates, and agricultural farms across Zambia. Certified by ERB &amp; EIZ.
             </p>
 
-            {/* Quality Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-technical-data text-charcoal">
-              <span className="flex items-center gap-1.5 bg-surface-container-lowest px-4 py-2 rounded-full border border-border-light shadow-xs font-medium">
-                <CheckCircle className="w-4 h-4 text-brand-status-green" /> EIZ &amp; ERB Certified Engineers
+            {/* Quality Badges with Glassmorphism */}
+            <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-technical-data text-white">
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm font-medium hover:bg-white/15 transition-colors">
+                <CheckCircle className="w-4 h-4 text-emerald-400" /> EIZ &amp; ERB Certified Engineers
               </span>
-              <span className="flex items-center gap-1.5 bg-surface-container-lowest px-4 py-2 rounded-full border border-border-light shadow-xs font-medium">
-                <CheckCircle className="w-4 h-4 text-brand-status-green" /> De-ionized Spot-Free Panel Wash
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm font-medium hover:bg-white/15 transition-colors">
+                <CheckCircle className="w-4 h-4 text-emerald-400" /> De-ionized Spot-Free Panel Wash
               </span>
-              <span className="flex items-center gap-1.5 bg-surface-container-lowest px-4 py-2 rounded-full border border-border-light shadow-xs font-medium">
-                <CheckCircle className="w-4 h-4 text-brand-status-green" /> Thermal Hot-Spot Diagnostics
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm font-medium hover:bg-white/15 transition-colors">
+                <CheckCircle className="w-4 h-4 text-emerald-400" /> Thermal Hot-Spot Diagnostics
               </span>
-              <span className="flex items-center gap-1.5 bg-surface-container-lowest px-4 py-2 rounded-full border border-border-light shadow-xs font-medium">
-                <CheckCircle className="w-4 h-4 text-brand-status-green" /> Nationwide Service Reach
+              <span className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-sm font-medium hover:bg-white/15 transition-colors">
+                <CheckCircle className="w-4 h-4 text-emerald-400" /> Nationwide Service Reach
               </span>
             </div>
 
             {/* Quick KPI Strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-12 pt-8 border-t border-border-light/60">
-              <div className="text-center p-3">
-                <div className="font-display-hero text-2xl md:text-3xl text-primary font-bold">500+</div>
-                <div className="text-xs text-text-secondary mt-0.5">Turnkey Systems Installed</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-12 pt-8 border-t border-white/15">
+              <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                <div className="font-display-hero text-2xl md:text-3xl text-accent-yellow font-bold">500+</div>
+                <div className="text-xs text-neutral-300 mt-1 font-medium">Turnkey Systems Installed</div>
               </div>
-              <div className="text-center p-3">
-                <div className="font-display-hero text-2xl md:text-3xl text-primary font-bold">10,000+</div>
-                <div className="text-xs text-text-secondary mt-0.5">Panels Cleaned &amp; Serviced</div>
+              <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                <div className="font-display-hero text-2xl md:text-3xl text-accent-yellow font-bold">10,000+</div>
+                <div className="text-xs text-neutral-300 mt-1 font-medium">Panels Cleaned &amp; Serviced</div>
               </div>
-              <div className="text-center p-3">
-                <div className="font-display-hero text-2xl md:text-3xl text-primary font-bold">99.8%</div>
-                <div className="text-xs text-text-secondary mt-0.5">System Uptime Reliability</div>
+              <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                <div className="font-display-hero text-2xl md:text-3xl text-accent-yellow font-bold">99.8%</div>
+                <div className="text-xs text-neutral-300 mt-1 font-medium">System Uptime Reliability</div>
               </div>
-              <div className="text-center p-3">
-                <div className="font-display-hero text-2xl md:text-3xl text-primary font-bold">24-48h</div>
-                <div className="text-xs text-text-secondary mt-0.5">Rapid Field Support Dispatch</div>
+              <div className="text-center p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10">
+                <div className="font-display-hero text-2xl md:text-3xl text-accent-yellow font-bold">24-48h</div>
+                <div className="text-xs text-neutral-300 mt-1 font-medium">Rapid Field Support Dispatch</div>
               </div>
             </div>
           </div>

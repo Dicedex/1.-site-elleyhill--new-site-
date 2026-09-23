@@ -7,9 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
     phone TEXT NOT NULL,
-    account_type TEXT NOT NULL DEFAULT 'residential', -- 'residential' | 'commercial' | 'agricultural'
-    company_name TEXT,
-    tpin TEXT,
+    account_type TEXT NOT NULL DEFAULT 'residential',
     email_verified INTEGER NOT NULL DEFAULT 0, -- 0 (false) | 1 (true)
     primary_district TEXT DEFAULT 'Lusaka',
     primary_province TEXT DEFAULT 'Lusaka Province',

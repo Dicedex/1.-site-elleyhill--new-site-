@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useCart, WHATSAPP_PHONE_DISPLAY } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CartPage() {
   const {
@@ -24,8 +25,49 @@ export default function CartPage() {
     totalItemsCount,
     getWhatsAppQuoteUrl,
   } = useCart();
+  const { user, isAuthenticated } = useAuth();
 
-  const laybyMonthly = Math.round(grandTotal / 3);
+  const defaultAddress =
+    user?.savedAddresses?.find((a) => a.isDefault) ||
+    (user?.savedAddresses && user.savedAddresses.length > 0
+      ? user.savedAddresses[0]
+      : null);
+  const primaryAddressText = defaultAddress?.fullAddress || user?.primaryAddress || "";
+  const districtText = defaultAddress?.district || user?.primaryDistrict || "";
+  const provinceText = defaultAddress?.province || user?.primaryProvince || "";
+  const hasSavedAddress = Boolean(
+    primaryAddressText.trim() || districtText.trim() || provinceText.trim()
+  );
+
+  // Sync delivery zone based on user's saved location
+  React.useEffect(() => {
+    if (isAuthenticated && hasSavedAddress) {
+      const fullLoc = `${provinceText} ${districtText} ${primaryAddressText}`.toLowerCase();
+      if (
+        fullLoc.includes("copperbelt") ||
+        fullLoc.includes("ndola") ||
+        fullLoc.includes("kitwe") ||
+        fullLoc.includes("livingstone") ||
+        fullLoc.includes("solwezi") ||
+        fullLoc.includes("central") ||
+        fullLoc.includes("southern") ||
+        fullLoc.includes("eastern") ||
+        fullLoc.includes("northern") ||
+        fullLoc.includes("muchinga") ||
+        fullLoc.includes("luapula") ||
+        fullLoc.includes("north-western") ||
+        fullLoc.includes("western")
+      ) {
+        if (!fullLoc.includes("lusaka")) {
+          setDeliveryZone("copperbelt");
+        } else {
+          setDeliveryZone("lusaka");
+        }
+      } else {
+        setDeliveryZone("lusaka");
+      }
+    }
+  }, [isAuthenticated, hasSavedAddress, provinceText, districtText, primaryAddressText, setDeliveryZone]);
 
   return (
     <div className="bg-surface font-body-lg text-body-lg text-on-surface antialiased min-h-screen pt-[72px]">
@@ -37,10 +79,6 @@ export default function CartPage() {
               <div className="flex items-center gap-2">
                 <span className="font-technical-data text-technical-data uppercase tracking-widest text-secondary font-bold">
                   Secure Hardware Logistics
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-technical-data text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-status-success animate-pulse"></span>{" "}
-                  Live Dispatch Hub
                 </span>
               </div>
               <h1 className="font-headline-lg text-headline-lg uppercase tracking-tight text-primary">
@@ -161,33 +199,57 @@ export default function CartPage() {
                               </p>
                             )}
 
-                            {/* Installation Addon Option */}
+                            {/* Installation Addon Option with Circular Toggle */}
                             {item.installationPrice !== undefined && item.installationPrice > 0 && (
                               <div
                                 onClick={() => toggleInstallation(item.id)}
-                                className={`p-3.5 rounded-lg mb-5 flex items-center justify-between gap-3 cursor-pointer border transition-colors ${
+                                className={`p-4 rounded-xl mb-5 flex items-center justify-between gap-3 cursor-pointer border transition-all ${
                                   item.installationIncluded
-                                    ? "bg-secondary-container/20 border-secondary/40"
-                                    : "bg-surface-container-low border-border-light hover:bg-surface-container"
+                                    ? "bg-secondary-container/20 border-secondary shadow-xs ring-1 ring-secondary/30"
+                                    : "bg-surface-container-low border-border-light hover:bg-surface-container hover:border-border-medium"
                                 }`}
                               >
-                                <div className="flex items-center gap-2.5">
-                                  <div className="w-7 h-7 rounded-full bg-secondary-container flex items-center justify-center flex-shrink-0">
-                                    <span className="material-symbols-outlined text-secondary text-[16px]">
-                                      {item.installationIncluded ? "verified_user" : "add_moderator"}
+                                <div className="flex items-center gap-3">
+                                  {/* Circular Toggle Button */}
+                                  <div
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
+                                      item.installationIncluded
+                                        ? "bg-primary border-primary text-white shadow-xs"
+                                        : "border-outline bg-surface-container-lowest text-transparent hover:border-primary"
+                                    }`}
+                                  >
+                                    <span className="material-symbols-outlined text-[15px] font-bold">
+                                      {item.installationIncluded ? "check" : ""}
                                     </span>
                                   </div>
+
+                                  <div
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                                      item.installationIncluded
+                                        ? "bg-secondary text-white"
+                                        : "bg-secondary-container text-secondary"
+                                    }`}
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">
+                                      verified_user
+                                    </span>
+                                  </div>
+
                                   <div>
-                                    <div className="font-technical-data text-sm text-primary font-bold flex items-center gap-2">
+                                    <div className="font-technical-data text-sm text-primary font-bold flex flex-wrap items-center gap-2">
                                       <span>Full Professional Installation &amp; Certified Energy Audit</span>
-                                      {item.installationIncluded && (
-                                        <span className="text-xs text-secondary font-semibold">
+                                      {item.installationIncluded ? (
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-secondary-container text-secondary font-bold">
                                           (Selected)
+                                        </span>
+                                      ) : (
+                                        <span className="text-xs text-on-surface-variant font-normal">
+                                          (Optional Add-on)
                                         </span>
                                       )}
                                     </div>
-                                    <div className="font-body-sm text-xs text-on-surface-variant">
-                                      Includes structural aluminum mounting, DC surge protection &amp; COC certificate
+                                    <div className="font-body-sm text-xs text-on-surface-variant mt-0.5">
+                                      Includes structural aluminum mounting, DC surge protection &amp; COC certificate.
                                     </div>
                                   </div>
                                 </div>
@@ -301,67 +363,127 @@ export default function CartPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <label
-                      className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors border ${
-                        deliveryZone === "lusaka"
-                          ? "bg-secondary-container/30 border-secondary"
-                          : "bg-surface-container-low border-border-light hover:bg-surface-container"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="delivery-zone"
-                        value="lusaka"
-                        checked={deliveryZone === "lusaka"}
-                        onChange={() => setDeliveryZone("lusaka")}
-                        className="mt-1 accent-primary"
-                      />
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-technical-data text-sm text-primary font-bold">
-                            Lusaka Province Delivery
-                          </span>
-                          <span className={`font-technical-data text-sm font-bold ${isFreeDelivery ? "text-status-success" : "text-primary"}`}>
-                            {isFreeDelivery ? "FREE (> K78k)" : "ZMW 750"}
-                          </span>
+                  {/* Conditional Authentication & Logistics Address Logic */}
+                  {!isAuthenticated ? (
+                    <div className="p-5 rounded-2xl bg-surface-container-low border border-border-light space-y-4">
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-10 h-10 rounded-full bg-secondary-container/80 flex items-center justify-center flex-shrink-0 text-secondary">
+                          <span className="material-symbols-outlined text-[20px]">person_pin_circle</span>
                         </div>
-                        <p className="font-body-sm text-xs text-on-surface-variant leading-relaxed">
-                          Dedicated transport, site staging, and certified engineer dispatch within 48h from our Lusaka Central Hub.
-                        </p>
+                        <div className="space-y-1">
+                          <h4 className="font-technical-data text-sm font-bold text-primary">
+                            Sign in to Calculate Exact Dispatch Logistics
+                          </h4>
+                          <p className="font-body-sm text-xs text-on-surface-variant leading-relaxed">
+                            Logistics rates and engineering staging are calculated directly against your verified site location in Zambia. Sign in or create an account to link your delivery address.
+                          </p>
+                        </div>
                       </div>
-                    </label>
 
-                    <label
-                      className={`flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-colors border ${
-                        deliveryZone === "copperbelt"
-                          ? "bg-secondary-container/30 border-secondary"
-                          : "bg-surface-container-low border-border-light hover:bg-surface-container"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="delivery-zone"
-                        value="copperbelt"
-                        checked={deliveryZone === "copperbelt"}
-                        onChange={() => setDeliveryZone("copperbelt")}
-                        className="mt-1 accent-primary"
-                      />
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-technical-data text-sm text-primary font-bold">
-                            Copperbelt &amp; Regional Dispatch
-                          </span>
-                          <span className="text-primary font-technical-data text-sm font-bold">
-                            + ZMW 2,500
+                      <div className="flex flex-wrap items-center gap-3 pt-1">
+                        <Link
+                          href="/login?redirect=/cart"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs font-bold tracking-wide uppercase transition-all shadow-sm cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">login</span>
+                          <span>Log In to Account</span>
+                        </Link>
+                        <Link
+                          href="/signup?redirect=/cart"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container-lowest hover:bg-surface-container border border-border-light text-primary font-label-cta text-xs font-bold tracking-wide uppercase transition-all cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">person_add</span>
+                          <span>Create Free Account</span>
+                        </Link>
+                      </div>
+                    </div>
+                  ) : !hasSavedAddress ? (
+                    <div className="p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 space-y-4">
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0 text-amber-800 dark:text-amber-400">
+                          <span className="material-symbols-outlined text-[20px]">add_location_alt</span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-technical-data text-sm font-bold text-amber-900 dark:text-amber-200">
+                              No Delivery Address on File
+                            </h4>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">
+                              Action Required
+                            </span>
+                          </div>
+                          <p className="font-body-sm text-xs text-on-surface-variant leading-relaxed">
+                            You are signed in as <strong className="text-primary">{user?.fullName || user?.email}</strong>, but haven&apos;t added an installation or delivery address to your profile.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-1">
+                        <Link
+                          href="/profile"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs font-bold tracking-wide uppercase transition-all shadow-sm cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">add_location</span>
+                          <span>Add Address to Proceed</span>
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-2xl bg-surface-container-low border border-border-light space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="flex items-start gap-3.5">
+                          <div className="w-10 h-10 rounded-full bg-secondary-container/80 flex items-center justify-center flex-shrink-0 text-secondary">
+                            <span className="material-symbols-outlined text-[20px]">verified_user</span>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary-container text-secondary border border-secondary/20">
+                                {defaultAddress?.label || "Primary Installation Site"}
+                              </span>
+                              <span className="text-xs font-bold text-status-success flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                Verified Address
+                              </span>
+                            </div>
+                            <p className="font-technical-data text-sm font-bold text-primary pt-0.5">
+                              {primaryAddressText}
+                            </p>
+                            <p className="font-body-sm text-xs text-on-surface-variant">
+                              {[districtText, provinceText].filter(Boolean).join(", ")}
+                              {defaultAddress?.contactPhone && ` • Contact: ${defaultAddress.contactPhone}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Link
+                          href="/profile"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-lowest hover:bg-surface-container border border-border-light text-primary font-technical-data text-xs font-bold transition-colors self-start sm:self-auto cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">edit_location_alt</span>
+                          <span>Change Address</span>
+                        </Link>
+                      </div>
+
+                      {/* Logistics Routing Summary */}
+                      <div className="pt-3 border-t border-border-light flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-secondary text-[18px]">local_shipping</span>
+                          <span className="font-technical-data text-xs font-bold text-primary">
+                            {deliveryZone === "lusaka" ? "Lusaka Central Hub Staging" : "Regional Convoy Logistics"}
                           </span>
                         </div>
-                        <p className="font-body-sm text-xs text-on-surface-variant leading-relaxed">
-                          Ndola, Kitwe, Livingstone, Solwezi. Secure logistics convoy direct to your residential or commercial site.
-                        </p>
+                        <div className="font-technical-data text-xs font-bold">
+                          {deliveryZone === "lusaka" ? (
+                            <span className={isFreeDelivery ? "text-status-success font-bold" : "text-primary font-bold"}>
+                              {isFreeDelivery ? "FREE Dispatch (> K78,000)" : "ZMW 750 Dispatch Fee"}
+                            </span>
+                          ) : (
+                            <span className="text-primary font-bold">ZMW 2,500 Regional Dispatch Fee</span>
+                          )}
+                        </div>
                       </div>
-                    </label>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Assurance Trust Badges */}
@@ -477,39 +599,33 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  {/* Flexible Energy Lay-By */}
-                  <div className="p-4 rounded-xl bg-surface-container-low space-y-2 border border-border-light">
-                    <div className="flex items-center gap-2 text-secondary">
-                      <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                      <span className="font-technical-data text-xs font-bold uppercase tracking-wider">
-                        Flexible Energy Lay-By
-                      </span>
-                    </div>
-                    <p className="font-body-sm text-xs text-on-surface leading-relaxed">
-                      Or reserve now with Lay-By:{" "}
-                      <span className="font-bold text-primary">
-                        3 monthly payments of ZMW {laybyMonthly.toLocaleString()}
-                      </span>{" "}
-                      with 0% hidden interest.
-                    </p>
-                    <Link
-                      className="inline-flex items-center gap-1 font-technical-data text-secondary hover:underline font-bold text-xs"
-                      href="/financing"
-                    >
-                      <span>Learn about Lay-By Terms</span>
-                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                    </Link>
-                  </div>
-
                   {/* Actions */}
                   <div className="space-y-3 pt-2">
-                    <Link
-                      href="/checkout"
-                      className="w-full py-4 px-6 rounded-full bg-accent-yellow text-primary font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold hover:scale-[1.01]"
-                    >
-                      <span>PROCEED TO SECURE CHECKOUT</span>
-                      <span className="material-symbols-outlined text-[18px]">lock</span>
-                    </Link>
+                    {!isAuthenticated ? (
+                      <Link
+                        href="/login?redirect=/checkout"
+                        className="w-full py-4 px-6 rounded-full bg-accent-yellow text-primary font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold hover:scale-[1.01]"
+                      >
+                        <span>SIGN IN TO PROCEED TO CHECKOUT</span>
+                        <span className="material-symbols-outlined text-[18px]">lock</span>
+                      </Link>
+                    ) : !hasSavedAddress ? (
+                      <Link
+                        href="/profile"
+                        className="w-full py-4 px-6 rounded-full bg-accent-yellow text-primary font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold hover:scale-[1.01]"
+                      >
+                        <span>ADD ADDRESS IN PROFILE TO PROCEED</span>
+                        <span className="material-symbols-outlined text-[18px]">add_location</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/checkout"
+                        className="w-full py-4 px-6 rounded-full bg-accent-yellow text-primary font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold hover:scale-[1.01]"
+                      >
+                        <span>PROCEED TO SECURE CHECKOUT</span>
+                        <span className="material-symbols-outlined text-[18px]">lock</span>
+                      </Link>
+                    )}
                     <a
                       className="w-full py-3.5 px-6 rounded-full bg-secondary-container/40 hover:bg-secondary-container text-on-secondary-container font-label-cta text-xs tracking-wide uppercase transition-all flex items-center justify-center gap-2 font-bold text-center"
                       href={getWhatsAppQuoteUrl()}

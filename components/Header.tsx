@@ -72,7 +72,7 @@ export default function Header() {
   const mobileNavItems = [
     {
       label: "Home",
-      subtitle: "Official Zambian Portal & Overview",
+      subtitle: "Official Zambia Solar & Energy Overview",
       href: "/",
       icon: "home",
     },
@@ -238,11 +238,19 @@ export default function Header() {
                       <div className="p-3 border-b border-border-light">
                         <div className="font-bold text-sm text-charcoal truncate">{user.fullName}</div>
                         <div className="text-[11px] text-on-surface-variant truncate">{user.email}</div>
-                        <div className="mt-1.5">
-                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-light text-primary border border-primary/20">
-                            {user.role === "admin" ? "ADMINISTRATOR" : `${user.accountType} account`}
-                          </span>
-                        </div>
+                        {user.role === "admin" ? (
+                          <div className="mt-1.5">
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-light text-primary border border-primary/20">
+                              ADMINISTRATOR
+                            </span>
+                          </div>
+                        ) : user.accountType && user.accountType !== "residential" ? (
+                          <div className="mt-1.5">
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-light text-primary border border-primary/20">
+                              {`${user.accountType} account`}
+                            </span>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="py-1 space-y-0.5 text-xs font-medium">
@@ -262,7 +270,7 @@ export default function Header() {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px] text-primary">person</span>
-                          <span>Client Dashboard</span>
+                          <span>My Account</span>
                         </Link>
                         <Link
                           href="/profile"
@@ -270,7 +278,7 @@ export default function Header() {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px] text-secondary">verified_user</span>
-                          <span>Warranty Vault ({user.warranties.length})</span>
+                          <span>My Warranties ({user.warranties.length})</span>
                         </Link>
                         <Link
                           href="/profile"
@@ -278,7 +286,7 @@ export default function Header() {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-charcoal hover:bg-surface-container transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px] text-secondary">local_shipping</span>
-                          <span>Orders &amp; Dispatch</span>
+                          <span>My Orders &amp; Tracking</span>
                         </Link>
                       </div>
 
@@ -376,9 +384,15 @@ export default function Header() {
                     </div>
                     <div className="min-w-0">
                       <div className="font-bold text-xs text-charcoal truncate">{user.fullName}</div>
-                      <div className="text-[10px] text-secondary font-medium truncate uppercase">
-                        {user.role === "admin" ? "ADMINISTRATOR" : `${user.accountType} Account`}
-                      </div>
+                      {user.role === "admin" ? (
+                        <div className="text-[10px] text-secondary font-medium truncate uppercase">
+                          ADMINISTRATOR
+                        </div>
+                      ) : user.accountType && user.accountType !== "residential" ? (
+                        <div className="text-[10px] text-secondary font-medium truncate uppercase">
+                          {`${user.accountType} Account`}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <button
@@ -410,7 +424,7 @@ export default function Header() {
                     className="py-1.5 px-2 rounded-lg bg-white border border-border-light text-charcoal text-[10px] font-semibold text-center hover:bg-surface-container flex items-center justify-center gap-1 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[13px] text-primary">person</span>
-                    <span>Portal</span>
+                    <span>Account</span>
                   </Link>
                   <Link
                     href="/profile"
@@ -418,7 +432,7 @@ export default function Header() {
                     className="py-1.5 px-2 rounded-lg bg-white border border-border-light text-charcoal text-[10px] font-semibold text-center hover:bg-surface-container flex items-center justify-center gap-1 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[13px] text-secondary">verified_user</span>
-                    <span>Vault</span>
+                    <span>Warranties</span>
                   </Link>
                 </div>
               </div>
@@ -429,7 +443,7 @@ export default function Header() {
                     <span className="material-symbols-outlined text-[18px]">account_circle</span>
                   </div>
                   <div className="min-w-0">
-                    <div className="font-bold text-xs text-charcoal">Client Portal</div>
+                    <div className="font-bold text-xs text-charcoal">My Account</div>
                     <div className="text-[10px] text-on-surface-variant truncate">Warranties &amp; Tracking</div>
                   </div>
                 </div>

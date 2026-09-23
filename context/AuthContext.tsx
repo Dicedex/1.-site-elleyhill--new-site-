@@ -34,6 +34,22 @@ import {
   deleteAddressFromD1,
   getD1AdminSummary,
 } from "@/lib/cloudflare-d1";
+import { validatePasswordPolicy } from "@/lib/password-policy";
+
+export const getNextSequenceNumber = (
+  key: string = "ehp_order_sequence",
+  padLength: number = 4
+): string => {
+  try {
+    if (typeof window === "undefined") return "1".padStart(padLength, "0");
+    const raw = localStorage.getItem(key);
+    const next = raw ? parseInt(raw, 10) + 1 : 1;
+    localStorage.setItem(key, next.toString());
+    return next.toString().padStart(padLength, "0");
+  } catch {
+    return "1".padStart(padLength, "0");
+  }
+};
 
 export type AccountType = "residential" | "commercial" | "agricultural";
 export type UserRole = "admin" | "customer";
@@ -114,11 +130,9 @@ export interface UserProfile {
   phone: string;
   role?: UserRole;
   accountType: AccountType;
-  companyName?: string;
-  tpin?: string;
-  primaryProvince: string;
-  primaryDistrict: string;
-  primaryAddress: string;
+  primaryProvince?: string;
+  primaryDistrict?: string;
+  primaryAddress?: string;
   avatarUrl?: string;
   joinedDate: string;
   savedAddresses: SavedAddress[];
@@ -170,7 +184,6 @@ interface AuthContextType {
     assignedEngineer?: string;
     trackingNumber?: string;
   }) => UserOrder;
-  loginWithDemo: (type: "residential" | "commercial" | "admin") => void;
 
   // Admin Specific Controls
   allOrders: UserOrder[];
@@ -188,124 +201,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Initial Master Data for Admin
-const INITIAL_INVENTORY: InventoryItem[] = [
-  {
-    id: "inv_01",
-    name: "Greenrich WM5000 4.96kWh High-Output Lithium Battery (1.5C)",
-    sku: "GR-WM5000-ZM",
-    category: "Battery",
-    stockCount: 42,
-    reservedCount: 8,
-    minThreshold: 10,
-    unitPriceZmw: 42000,
-    status: "In Stock",
-    warehouseBay: "Lusaka Depot - Bay B2",
-  },
-  {
-    id: "inv_02",
-    name: "Greenrich UP5000 4.96kWh Wall-Mount Lithium Battery",
-    sku: "GR-UP5000-ZM",
-    category: "Battery",
-    stockCount: 28,
-    reservedCount: 6,
-    minThreshold: 10,
-    unitPriceZmw: 38500,
-    status: "In Stock",
-    warehouseBay: "Lusaka Depot - Bay B3",
-  },
-  {
-    id: "inv_03",
-    name: "Greenrich HV-Cabinet 40kWh Industrial Storage Rack",
-    sku: "GR-HV40K-ZM",
-    category: "Battery",
-    stockCount: 4,
-    reservedCount: 2,
-    minThreshold: 2,
-    unitPriceZmw: 295000,
-    status: "In Stock",
-    warehouseBay: "Lusaka Heavy Rigging Yard",
-  },
-  {
-    id: "inv_04",
-    name: "Deye 6kW Low Voltage Hybrid Inverter (SUN-6K-SG04LP1)",
-    sku: "DY-6K-LV-ZM",
-    category: "Inverter",
-    stockCount: 35,
-    reservedCount: 12,
-    minThreshold: 8,
-    unitPriceZmw: 36000,
-    status: "In Stock",
-    warehouseBay: "Lusaka Depot - Bay I1",
-  },
-  {
-    id: "inv_05",
-    name: "Deye 8kW Low Voltage Hybrid Inverter (SUN-8K-SG01LP1)",
-    sku: "DY-8K-LV-ZM",
-    category: "Inverter",
-    stockCount: 18,
-    reservedCount: 5,
-    minThreshold: 6,
-    unitPriceZmw: 46500,
-    status: "In Stock",
-    warehouseBay: "Lusaka Depot - Bay I2",
-  },
-  {
-    id: "inv_06",
-    name: "Deye 50kW 3-Phase Commercial Hybrid Inverter (SUN-50K-SG01HP3)",
-    sku: "DY-50K-HV-ZM",
-    category: "Inverter",
-    stockCount: 3,
-    reservedCount: 1,
-    minThreshold: 2,
-    unitPriceZmw: 185000,
-    status: "Low Stock",
-    warehouseBay: "Lusaka Heavy Rigging Yard",
-  },
-  {
-    id: "inv_07",
-    name: "JA Solar 550W Deep Blue 3.0 MBB Mono Panels (Tier-1)",
-    sku: "JA-550M-MBB",
-    category: "Solar Panels",
-    stockCount: 480,
-    reservedCount: 120,
-    minThreshold: 100,
-    unitPriceZmw: 3100,
-    status: "In Stock",
-    warehouseBay: "Lusaka Depot - Pallet Rack P1-P4",
-  },
-  {
-    id: "inv_08",
-    name: "JA Solar 605W Bifacial Double-Glass Tier-1 Panels",
-    sku: "JA-605W-BF",
-    category: "Solar Panels",
-    stockCount: 12,
-    reservedCount: 8,
-    minThreshold: 50,
-    unitPriceZmw: 3600,
-    status: "Shipment En Route",
-    warehouseBay: "Container Transit (Durban -> Lusaka)",
-  },
-];
-
-const DEMO_ADMIN_USER: UserProfile = {
-  id: "adm_zm_001",
-  fullName: "Elleyhill Operations Admin",
-  email: "admin@elleyhill.co.zm",
-  emailVerified: true,
-  phone: "0971 838 038",
-  role: "admin",
-  accountType: "commercial",
-  companyName: "Elleyhill Power Zambia - HQ Operations",
-  tpin: "1003482910",
-  primaryProvince: "Lusaka Province",
-  primaryDistrict: "Lusaka (Showgrounds / Great East)",
-  primaryAddress: "Elleyhill Energy Hub, Great East Road & East Park Mall Depot",
-  joinedDate: "October 2022",
-  savedAddresses: [],
-  warranties: [],
-  orders: [],
-};
+// Initial Master Data for Admin (Loaded from database)
+const INITIAL_INVENTORY: InventoryItem[] = [];
 
 const WORKER_GATEWAY_URL =
   process.env.NEXT_PUBLIC_PAWAPAY_WORKER_URL || "https://elleyhill-pawapay-gateway.kakinda.workers.dev";
@@ -348,8 +245,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           fullName: profile.fullName,
           phone: profile.phone,
           accountType: profile.accountType,
-          companyName: profile.companyName,
-          tpin: profile.tpin,
           emailVerified: profile.emailVerified,
           primaryDistrict: profile.primaryDistrict,
           primaryProvince: profile.primaryProvince,
@@ -407,7 +302,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               fullName: cleanName,
               email: fbUser.email || `${fbUser.phoneNumber || "client"}@elleyhill.zm`,
               phone: fbUser.phoneNumber || "+260",
-              role: (fbUser.email === DEMO_ADMIN_USER.email || fbUser.email?.includes("admin@elleyhill")) ? "admin" : "customer",
+              role: (fbUser.email?.toLowerCase().includes("admin@elleyhill") || fbUser.email?.toLowerCase().endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
               accountType: "residential",
               primaryProvince: "Lusaka Province",
               primaryDistrict: "Lusaka",
@@ -509,56 +404,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     const cleanEmail = email.trim().toLowerCase();
 
-    // Fast-path demo admin login
-    if (cleanEmail === DEMO_ADMIN_USER.email.toLowerCase() || cleanEmail === "admin") {
-      await syncUserProfile(DEMO_ADMIN_USER);
+    if (!cleanEmail || !cleanEmail.includes("@")) {
       setIsLoading(false);
-      return { success: true, role: "admin" };
+      return { success: false, error: "Please enter a valid email address." };
+    }
+
+    if (!password) {
+      setIsLoading(false);
+      return { success: false, error: "Please enter your password." };
     }
 
     try {
-      if (password && password.length >= 6) {
-        const cred = await signInWithEmailAndPassword(auth, cleanEmail, password);
-        const userDoc = await getDoc(doc(db, "users", cred.user.uid));
-        if (userDoc.exists()) {
-          const profile = userDoc.data() as UserProfile;
-          await syncUserProfile(profile);
-          setIsLoading(false);
-          return { success: true, role: profile.role || "customer" };
-        }
+      const cred = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+      if (userDoc.exists()) {
+        const profile = userDoc.data() as UserProfile;
+        await syncUserProfile(profile);
+        setIsLoading(false);
+        return { success: true, role: profile.role || "customer" };
+      } else {
+        const newProfile: UserProfile = {
+          id: cred.user.uid,
+          firebaseUid: cred.user.uid,
+          fullName: cred.user.displayName || cleanEmail.split("@")[0],
+          email: cleanEmail,
+          phone: "+260",
+          role: (cleanEmail.includes("admin@elleyhill") || cleanEmail.endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
+          accountType: "residential",
+          primaryProvince: "Lusaka Province",
+          primaryDistrict: "Lusaka",
+          primaryAddress: "Lusaka, Zambia",
+          joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
+          savedAddresses: [],
+          warranties: [],
+          orders: [],
+        };
+        await syncUserProfile(newProfile);
+        setIsLoading(false);
+        return { success: true, role: newProfile.role };
       }
-    } catch (firebaseErr: unknown) {
-      const msg = firebaseErr instanceof Error ? firebaseErr.message : "Authentication error";
-      // If user doesn't exist yet in Firebase Auth, fall back to guest session
-      console.warn("Firebase signin info:", msg);
-    }
-
-    // Fallback: create session for valid email
-    if (cleanEmail.includes("@")) {
-      const username = cleanEmail.split("@")[0].replace(".", " ");
-      const formattedName = username.charAt(0).toUpperCase() + username.slice(1);
-      const guestUser: UserProfile = {
-        id: `usr_${Date.now()}`,
-        fullName: formattedName,
-        email: cleanEmail,
-        phone: "+260 97 000 0000",
-        role: "customer",
-        accountType: "residential",
-        primaryProvince: "Lusaka Province",
-        primaryDistrict: "Lusaka",
-        primaryAddress: "Lusaka, Zambia",
-        joinedDate: "Today",
-        savedAddresses: [],
-        warranties: [],
-        orders: [],
-      };
-      await syncUserProfile(guestUser);
+    } catch (firebaseErr: any) {
       setIsLoading(false);
-      return { success: true, role: "customer" };
+      let errorMsg = "Invalid email or password. Please check and try again.";
+      if (firebaseErr?.code === "auth/operation-not-allowed") {
+        errorMsg = "Email/Password sign-in is currently not enabled in your Firebase Console. Please enable 'Email/Password' under Firebase Console > Authentication > Sign-in method.";
+      } else if (
+        firebaseErr?.code === "auth/user-not-found" ||
+        firebaseErr?.code === "auth/wrong-password" ||
+        firebaseErr?.code === "auth/invalid-credential"
+      ) {
+        errorMsg = "Invalid email or password. Please check your credentials or create a new account.";
+      } else if (firebaseErr?.code === "auth/too-many-requests") {
+        errorMsg = "Access temporarily disabled due to many failed login attempts. Please reset your password or try again later.";
+      } else if (firebaseErr?.message) {
+        errorMsg = firebaseErr.message;
+      }
+      return { success: false, error: errorMsg };
     }
-
-    setIsLoading(false);
-    return { success: false, error: "Please enter a valid email address." };
   };
 
   // Backwards compatible login
@@ -570,41 +472,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password?: string
   ): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
-    let uid = `usr_${Date.now()}`;
 
-    try {
-      if (password && password.length >= 6) {
-        const cred = await createUserWithEmailAndPassword(auth, userData.email, password);
-        uid = cred.user.uid;
-      }
-    } catch (fbErr: unknown) {
-      console.warn("Firebase signup error:", fbErr);
+    if (!password) {
+      setIsLoading(false);
+      return { success: false, error: "Password is required." };
     }
 
-    const newProfile: UserProfile = {
-      ...userData,
-      id: uid,
-      firebaseUid: uid,
-      role: "customer",
-      joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
-      savedAddresses: [
-        {
-          id: `addr_${Date.now()}`,
-          label: "Primary Site / Delivery Point",
-          fullAddress: userData.primaryAddress,
-          district: userData.primaryDistrict,
-          province: userData.primaryProvince,
-          contactPhone: userData.phone,
-          isDefault: true,
-        },
-      ],
-      warranties: [],
-      orders: [],
-    };
+    const policy = validatePasswordPolicy(password);
+    if (!policy.isValid) {
+      setIsLoading(false);
+      return {
+        success: false,
+        error: `Password does not meet the security policy requirements: ${policy.errors.join(", ")}.`,
+      };
+    }
 
-    await syncUserProfile(newProfile);
-    setIsLoading(false);
-    return { success: true };
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, userData.email, password);
+      const uid = cred.user.uid;
+
+      const newProfile: UserProfile = {
+        ...userData,
+        primaryProvince: userData.primaryProvince || undefined,
+        primaryDistrict: userData.primaryDistrict || undefined,
+        primaryAddress: userData.primaryAddress || undefined,
+        id: uid,
+        firebaseUid: uid,
+        role: "customer",
+        joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
+        savedAddresses: userData.primaryAddress
+          ? [
+              {
+                id: `addr_${Date.now()}`,
+                label: "Primary Site / Delivery Point",
+                fullAddress: userData.primaryAddress,
+                district: userData.primaryDistrict || "",
+                province: userData.primaryProvince || "",
+                contactPhone: userData.phone,
+                isDefault: true,
+              },
+            ]
+          : [],
+        warranties: [],
+        orders: [],
+      };
+
+      await syncUserProfile(newProfile);
+      setIsLoading(false);
+      return { success: true };
+    } catch (fbErr: any) {
+      setIsLoading(false);
+      let errorMsg = "Failed to create account. Please try again.";
+      if (fbErr?.code === "auth/operation-not-allowed") {
+        errorMsg = "Email/Password account creation is not enabled in Firebase Console. Please enable 'Email/Password' under Firebase Console > Authentication > Sign-in method.";
+      } else if (fbErr?.code === "auth/email-already-in-use") {
+        errorMsg = "An account with this email already exists. Please sign in instead.";
+      } else if (fbErr?.code === "auth/weak-password") {
+        errorMsg = "The password is too weak. Please choose a stronger password.";
+      } else if (fbErr?.code === "auth/invalid-email") {
+        errorMsg = "Please provide a valid email address.";
+      } else if (fbErr?.message) {
+        errorMsg = fbErr.message;
+      }
+      return { success: false, error: errorMsg };
+    }
   };
 
   const signup = signupWithEmail;
@@ -632,7 +563,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fullName: fbUser.displayName || "Solar Customer",
         email: fbUser.email || `${fbUser.uid}@elleyhill.zm`,
         phone: fbUser.phoneNumber || "+260",
-        role: fbUser.email === DEMO_ADMIN_USER.email ? "admin" : "customer",
+        role: (fbUser.email?.toLowerCase().includes("admin@elleyhill") || fbUser.email?.toLowerCase().endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
         accountType: "residential",
         primaryProvince: "Lusaka Province",
         primaryDistrict: "Lusaka",
@@ -647,12 +578,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await syncUserProfile(newProfile);
       setIsLoading(false);
       return { success: true, role: newProfile.role };
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Google sign in error:", error);
       setIsLoading(false);
+      let errorMsg = "Google sign-in was cancelled or failed.";
+      if (error?.code === "auth/operation-not-allowed") {
+        errorMsg = "Google Sign-In is not enabled in Firebase Console. Please enable 'Google' under Firebase Console > Authentication > Sign-in method.";
+      } else if (error instanceof Error) {
+        errorMsg = error.message;
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Google sign-in was cancelled or failed.",
+        error: errorMsg,
       };
     }
   };
@@ -674,11 +611,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
       return { success: true, confirmationResult };
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Phone OTP error:", error);
+      let errorMsg = "Failed to send SMS OTP code.";
+      if (error?.code === "auth/operation-not-allowed") {
+        errorMsg = "Phone authentication is not enabled in Firebase Console. Please enable 'Phone' under Firebase Console > Authentication > Sign-in method.";
+      } else if (error instanceof Error) {
+        errorMsg = error.message;
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to send SMS OTP code.",
+        error: errorMsg,
       };
     }
   };
@@ -737,10 +680,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await sendPasswordResetEmail(auth, email.trim());
       return { success: true };
-    } catch (error: unknown) {
+    } catch (error: any) {
+      let errorMsg = "Could not send password reset email.";
+      if (error?.code === "auth/user-not-found") {
+        errorMsg = "No account found with this email address. Please verify your email or create a new account.";
+      } else if (error?.code === "auth/invalid-email") {
+        errorMsg = "Please enter a valid email address.";
+      } else if (error?.code === "auth/too-many-requests") {
+        errorMsg = "Too many reset requests sent. Please wait a few minutes before trying again or check your inbox/spam.";
+      } else if (error?.code === "auth/operation-not-allowed") {
+        errorMsg = "Password reset is not enabled in Firebase Console. Please enable 'Email/Password' under Firebase Authentication.";
+      } else if (error instanceof Error) {
+        errorMsg = error.message;
+      }
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Could not send password reset email.",
+        error: errorMsg,
       };
     }
   };
@@ -924,7 +879,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     assignedEngineer?: string;
     trackingNumber?: string;
   }): UserOrder => {
-    const orderNumber = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = getNextSequenceNumber("ehp_order_sequence", 4);
     const orderId = orderData.id || `ORD-${new Date().getFullYear()}-${orderNumber}`;
     const custName = orderData.customerName || (user ? user.fullName : "Online Client");
     const custEmail = orderData.customerEmail || (user ? user.email : "procurement@enterprise.zm");
@@ -969,14 +924,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         customerEmail: custEmail,
         productName: item.name,
         category,
-        serialNumber: `EHP-${category.substring(0, 3).toUpperCase()}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+        serialNumber: `EHP-${category.substring(0, 3).toUpperCase()}-${new Date().getFullYear()}-${orderNumber}`,
         installationDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date()),
         warrantyPeriodYears: years,
         expiryDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(expDate),
         status: "Active",
         systemCapacity: item.name,
         installerName: "Elleyhill Certified Tech Team (Eng. Banda)",
-        certificateNumber: `EHP-WAR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+        certificateNumber: `EHP-WAR-${new Date().getFullYear()}-${orderNumber}`,
       };
       newWarranties.push(warranty);
     });
@@ -1021,29 +976,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     return newOrder;
-  };
-
-  const loginWithDemo = (type: "residential" | "commercial" | "admin") => {
-    if (type === "admin") {
-      syncUserProfile(DEMO_ADMIN_USER);
-    } else {
-      syncUserProfile({
-        id: "usr_zm_demo",
-        fullName: type === "commercial" ? "Kafue Agri-Holdings Ltd" : "Mwape Chilufya",
-        email: type === "commercial" ? "operations@kafueagri.com" : "mwape.chilufya@gmail.com",
-        emailVerified: true,
-        phone: "+260 971 838 038",
-        role: "customer",
-        accountType: type === "commercial" ? "commercial" : "residential",
-        primaryProvince: "Lusaka Province",
-        primaryDistrict: "Lusaka",
-        primaryAddress: "Plot 4812, Independence Avenue, Lusaka",
-        joinedDate: "January 2024",
-        savedAddresses: [],
-        warranties: [],
-        orders: [],
-      });
-    }
   };
 
   // ADMIN OPERATIONS METHODS
@@ -1103,7 +1035,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createAdminOrder = (
     orderData: Omit<UserOrder, "id" | "date" | "trackingNumber">
   ): UserOrder => {
-    const orderNumber = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = getNextSequenceNumber("ehp_order_sequence", 4);
     const newOrder: UserOrder = {
       ...orderData,
       id: `ORD-${new Date().getFullYear()}-${orderNumber}`,
@@ -1128,7 +1060,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerNewWarranty = (
     warrantyData: Omit<WarrantyRecord, "id" | "certificateNumber">
   ): WarrantyRecord => {
-    const certNum = `EHP-WAR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const certSeq = getNextSequenceNumber("ehp_warranty_sequence", 4);
+    const certNum = `EHP-WAR-${new Date().getFullYear()}-${certSeq}`;
     const newWarranty: WarrantyRecord = {
       ...warrantyData,
       id: `war_${Date.now()}`,
@@ -1182,7 +1115,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(STORAGE_KEY_ADMIN_INVENTORY, JSON.stringify(updated));
   };
 
-  const isAdmin = user?.role === "admin" || user?.email === DEMO_ADMIN_USER.email;
+  const isAdmin =
+    user?.role === "admin" ||
+    (!!user?.email &&
+      (user.email.toLowerCase().includes("admin@elleyhill") ||
+        user.email.toLowerCase().endsWith("@elleyhill.co.zm")));
 
   return (
     <AuthContext.Provider
@@ -1210,7 +1147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteSavedAddress,
         setDefaultAddress,
         addOrder,
-        loginWithDemo,
         allOrders,
         allWarranties,
         inventory,

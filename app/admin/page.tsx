@@ -48,7 +48,6 @@ export default function AdminDashboardPage() {
     isAdmin,
     isAuthenticated,
     logout,
-    loginWithDemo,
     allOrders,
     allWarranties,
     inventory,
@@ -138,18 +137,12 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="pt-2 space-y-3">
-            <button
-              onClick={() => loginWithDemo("admin")}
-              className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all cursor-pointer"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Sign In as Admin (Operations Lead)</span>
-            </button>
             <Link
               href="/login?redirect=/admin"
-              className="w-full py-2.5 px-4 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal font-semibold text-xs text-center block transition-all"
+              className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all text-center block"
             >
-              Enter Admin Credentials
+              <ShieldCheck className="w-4 h-4" />
+              <span>Sign In with Admin Credentials</span>
             </Link>
           </div>
 
@@ -390,7 +383,7 @@ export default function AdminDashboardPage() {
                 className="px-3.5 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
               >
                 <Users className="w-3.5 h-3.5 text-primary" />
-                <span>Client View</span>
+                <span>Customer View</span>
               </Link>
 
               <button
@@ -435,7 +428,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="p-5 rounded-2xl bg-white border border-border-light shadow-sm">
-            <div className="text-xs text-on-surface-variant uppercase font-bold">Active Warranty Vault</div>
+            <div className="text-xs text-on-surface-variant uppercase font-bold">Active Warranties</div>
             <div className="text-2xl sm:text-3xl font-bold text-secondary mt-1 font-mono">
               {allWarranties.length} Certificates
             </div>
@@ -1187,7 +1180,7 @@ export default function AdminDashboardPage() {
                   type="text"
                   value={editTracking}
                   onChange={(e) => setEditTracking(e.target.value)}
-                  placeholder="e.g. EHP-LUS-9214"
+                  placeholder="e.g. EHP-LUS-0001"
                   className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-border-medium text-sm text-charcoal focus:outline-none focus:border-primary font-mono"
                 />
               </div>
@@ -1406,7 +1399,7 @@ export default function AdminDashboardPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Mwape Chilufya"
+                    placeholder="e.g. Customer Name"
                     value={newOrderCustomer}
                     onChange={(e) => setNewOrderCustomer(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-white border border-border-medium text-xs text-charcoal focus:outline-none focus:border-primary"
@@ -1553,7 +1546,7 @@ export default function AdminDashboardPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Mwape Chilufya"
+                    placeholder="e.g. Customer Name"
                     value={newWarCustomer}
                     onChange={(e) => setNewWarCustomer(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-white border border-border-medium text-xs text-charcoal focus:outline-none focus:border-primary"
@@ -1565,7 +1558,7 @@ export default function AdminDashboardPage() {
                   </label>
                   <input
                     type="email"
-                    placeholder="mwape@gmail.com"
+                    placeholder="customer@example.com"
                     value={newWarEmail}
                     onChange={(e) => setNewWarEmail(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-white border border-border-medium text-xs text-charcoal focus:outline-none focus:border-primary"

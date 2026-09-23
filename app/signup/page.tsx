@@ -3,16 +3,13 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth, AccountType } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { validatePasswordPolicy } from "@/lib/password-policy";
 import {
   Lock,
   Mail,
   User,
   Phone,
-  MapPin,
-  Building2,
-  Home,
-  Tractor,
   Eye,
   EyeOff,
   ArrowRight,
@@ -22,19 +19,6 @@ import {
   Zap,
 } from "lucide-react";
 
-const ZAMBIAN_PROVINCES = [
-  { name: "Lusaka Province", districts: ["Lusaka Urban", "Woodlands/Kabulonga", "Lusaka West", "Chilanga", "Chongwe", "Kafue", "Luangwa"] },
-  { name: "Copperbelt Province", districts: ["Kitwe", "Ndola", "Chingola", "Mufulira", "Luanshya", "Kalulushi", "Chililabombwe"] },
-  { name: "Central Province", districts: ["Kabwe", "Kapiri Mposhi", "Mkushi Farm Block", "Serenje", "Chibombo"] },
-  { name: "Southern Province", districts: ["Mazabuka", "Choma", "Livingstone", "Monze", "Kalomo", "Siavonga"] },
-  { name: "Eastern Province", districts: ["Chipata", "Petauke", "Katete", "Lundazi", "Nyimba"] },
-  { name: "North-Western Province", districts: ["Solwezi", "Kalumbila", "Kansanshi", "Kasempa", "Mwinilunga"] },
-  { name: "Northern Province", districts: ["Kasama", "Mbala", "Mporokoso", "Luwingu"] },
-  { name: "Luapula Province", districts: ["Mansa", "Samfya", "Kawambwa", "Nchelenge"] },
-  { name: "Muchinga Province", districts: ["Chinsali", "Mpika", "Nakonde", "Isoka"] },
-  { name: "Western Province", districts: ["Mongu", "Kaoma", "Senanga", "Sesheke"] },
-];
-
 function SignupFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,15 +26,9 @@ function SignupFormContent() {
 
   const { signup, loginWithGoogle, user } = useAuth();
 
-  const [accountType, setAccountType] = useState<AccountType>("residential");
   const [fullName, setFullName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [tpin, setTpin] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [province, setProvince] = useState(ZAMBIAN_PROVINCES[0].name);
-  const [district, setDistrict] = useState(ZAMBIAN_PROVINCES[0].districts[0]);
-  const [primaryAddress, setPrimaryAddress] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(true);
@@ -66,17 +44,6 @@ function SignupFormContent() {
     }
   }, [user, router, redirectUrl]);
 
-  // Update district options when province changes
-  const handleProvinceChange = (newProv: string) => {
-    setProvince(newProv);
-    const provObj = ZAMBIAN_PROVINCES.find((p) => p.name === newProv);
-    if (provObj && provObj.districts.length > 0) {
-      setDistrict(provObj.districts[0]);
-    }
-  };
-
-  const currentProvinceObj = ZAMBIAN_PROVINCES.find((p) => p.name === province);
-
   const handleGoogleSignUp = async () => {
     setErrorMsg("");
     setIsGoogleLoading(true);
@@ -90,12 +57,14 @@ function SignupFormContent() {
     }
   };
 
+  const passwordPolicy = validatePasswordPolicy(password);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
     if (!fullName.trim()) {
-      setErrorMsg("Please enter your full name or primary contact name.");
+      setErrorMsg("Please enter your full name.");
       return;
     }
     if (!email.trim() || !email.includes("@")) {
@@ -103,19 +72,15 @@ function SignupFormContent() {
       return;
     }
     if (!phone.trim()) {
-      setErrorMsg("Please enter your phone number for dispatch and warranty registration.");
+      setErrorMsg("Please enter your phone number or WhatsApp contact.");
       return;
     }
-    if (!primaryAddress.trim()) {
-      setErrorMsg("Please enter your physical site or delivery address.");
-      return;
-    }
-    if (password.length < 6) {
-      setErrorMsg("Password should be at least 6 characters long.");
+    if (!passwordPolicy.isValid) {
+      setErrorMsg(`Password does not meet policy requirements: ${passwordPolicy.errors.join(", ")}.`);
       return;
     }
     if (!acceptTerms) {
-      setErrorMsg("Please accept the Terms of Service & Warranty registration guidelines.");
+      setErrorMsg("Please accept the Terms of Service & Warranty guidelines.");
       return;
     }
 
@@ -123,15 +88,10 @@ function SignupFormContent() {
 
     const result = await signup(
       {
-        fullName,
-        email,
-        phone,
-        accountType,
-        companyName: accountType !== "residential" ? companyName : undefined,
-        tpin: accountType !== "residential" ? tpin : undefined,
-        primaryProvince: province,
-        primaryDistrict: district,
-        primaryAddress,
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        accountType: "residential",
       },
       password
     );
@@ -151,7 +111,7 @@ function SignupFormContent() {
       <div className="absolute top-20 left-1/3 w-[600px] h-[350px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-10 left-10 w-[400px] h-[300px] bg-secondary/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <div className="max-w-2xl w-full mx-auto relative z-10">
+      <div className="max-w-xl w-full mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
           <Link
@@ -159,13 +119,13 @@ function SignupFormContent() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-border-light text-xs font-semibold text-secondary mb-4 hover:border-primary/40 shadow-sm transition-all"
           >
             <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
-            <span>ELLEYHILL CLIENT REGISTRATION</span>
+            <span>ELLEYHILL ACCOUNT REGISTRATION</span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-charcoal font-headline">
-            Create Your Solar Client Account
+            Create Your Solar Account
           </h1>
-          <p className="mt-2 text-sm text-on-surface-variant max-w-lg mx-auto">
-            Register your installation site to activate 10-Year Lithium Battery Warranties, digital commissioning certificates, and expedited Lusaka dispatch.
+          <p className="mt-2 text-sm text-on-surface-variant max-w-md mx-auto">
+            Get instant access to solar orders, live inverter monitoring, and digital battery warranty certificates.
           </p>
         </div>
 
@@ -209,7 +169,7 @@ function SignupFormContent() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-3 text-outline font-semibold tracking-wider">
-                Or fill registration details
+                Or enter account details
               </span>
             </div>
           </div>
@@ -221,124 +181,32 @@ function SignupFormContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Account Type Selector */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
             <div>
-              <label className="block text-xs font-bold text-charcoal mb-2.5 uppercase tracking-wider">
-                Select Installation Profile Type
+              <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
+                Full Name *
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setAccountType("residential")}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                    accountType === "residential"
-                      ? "bg-primary-light border-primary text-charcoal shadow-sm"
-                      : "bg-surface-container-low border-border-medium text-on-surface-variant hover:border-primary/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Home className={`w-5 h-5 ${accountType === "residential" ? "text-primary" : "text-outline"}`} />
-                    {accountType === "residential" && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-charcoal">Residential</div>
-                    <div className="text-[11px] text-on-surface-variant">Home &amp; Load-Shedding</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAccountType("commercial")}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                    accountType === "commercial"
-                      ? "bg-secondary-light border-secondary text-charcoal shadow-sm"
-                      : "bg-surface-container-low border-border-medium text-on-surface-variant hover:border-secondary/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Building2 className={`w-5 h-5 ${accountType === "commercial" ? "text-secondary" : "text-outline"}`} />
-                    {accountType === "commercial" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-charcoal">Commercial</div>
-                    <div className="text-[11px] text-on-surface-variant">Offices, Clinics &amp; Retail</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAccountType("agricultural")}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                    accountType === "agricultural"
-                      ? "bg-secondary-light border-secondary text-charcoal shadow-sm"
-                      : "bg-surface-container-low border-border-medium text-on-surface-variant hover:border-secondary/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <Tractor className={`w-5 h-5 ${accountType === "agricultural" ? "text-secondary" : "text-outline"}`} />
-                    {accountType === "agricultural" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-charcoal">Agricultural</div>
-                    <div className="text-[11px] text-on-surface-variant">Farms &amp; Solar Pumps</div>
-                  </div>
-                </button>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
+                  <User className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  name="name"
+                  id="signup-fullname"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Kakinda Mwaanga"
+                  required
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
+                />
               </div>
             </div>
 
-            {/* Commercial / Agri Extra Fields */}
-            {accountType !== "residential" && (
-              <div className="p-4 rounded-xl bg-surface-container-low border border-border-light grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fadeIn">
-                <div>
-                  <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                    Company / Farm Entity Name
-                  </label>
-                  <input
-                    type="text"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    placeholder="e.g. Copperbelt Agri Farms Ltd"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                    ZRA TPIN (For Tax Invoices)
-                  </label>
-                  <input
-                    type="text"
-                    value={tpin}
-                    onChange={(e) => setTpin(e.target.value)}
-                    placeholder="10-digit TPIN"
-                    maxLength={10}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:outline-none focus:border-primary font-mono"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Personal / Contact Details */}
+            {/* Email Address & Phone Number */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Contact Full Name *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Mwape Chilufya"
-                    required
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
                   Email Address *
@@ -349,21 +217,22 @@ function SignupFormContent() {
                   </div>
                   <input
                     type="email"
+                    name="email"
+                    id="signup-email"
+                    autoComplete="email"
+                    inputMode="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="mwape@example.com"
+                    placeholder="you@example.com"
                     required
                     className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Phone & Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Zambian Phone / WhatsApp *
+                  Phone / WhatsApp *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
@@ -371,6 +240,10 @@ function SignupFormContent() {
                   </div>
                   <input
                     type="tel"
+                    name="tel"
+                    id="signup-phone"
+                    autoComplete="tel"
+                    inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0977 000 000 / +260"
@@ -379,65 +252,9 @@ function SignupFormContent() {
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Province *
-                </label>
-                <select
-                  value={province}
-                  onChange={(e) => handleProvinceChange(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  {ZAMBIAN_PROVINCES.map((prov) => (
-                    <option key={prov.name} value={prov.name} className="text-charcoal">
-                      {prov.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            {/* District and Address */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-1">
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  District / Area *
-                </label>
-                <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal focus:bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  {currentProvinceObj?.districts.map((d) => (
-                    <option key={d} value={d} className="text-charcoal">
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
-                  Physical Site / Delivery Address *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    value={primaryAddress}
-                    onChange={(e) => setPrimaryAddress(e.target.value)}
-                    placeholder="Plot / Stand number, Street, Suburb"
-                    required
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Password */}
+            {/* Password with Policy Enforcement Checklist */}
             <div>
               <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase tracking-wider">
                 Create Account Password *
@@ -448,9 +265,12 @@ function SignupFormContent() {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  id="signup-password"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="Create a compliant password"
                   required
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-surface-container-low border border-border-medium text-sm text-charcoal placeholder:text-outline/60 focus:bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-sans"
                 />
@@ -461,6 +281,88 @@ function SignupFormContent() {
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+
+              {/* Password Requirement Options (Policy Enforcement) */}
+              <div className="mt-3 p-3.5 rounded-xl bg-surface-container-low border border-border-light text-xs space-y-2">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-charcoal flex items-center justify-between">
+                  <span>Password Requirement Policy:</span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      passwordPolicy.isValid
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {passwordPolicy.isValid ? "Compliant" : "Action Required"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+                  <div
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      passwordPolicy.hasMinLength ? "text-emerald-700 font-semibold" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {passwordPolicy.hasMinLength ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border-medium shrink-0 inline-block" />
+                    )}
+                    <span>Require 8+ characters</span>
+                  </div>
+
+                  <div
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      passwordPolicy.hasUppercase ? "text-emerald-700 font-semibold" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {passwordPolicy.hasUppercase ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border-medium shrink-0 inline-block" />
+                    )}
+                    <span>Require uppercase character (A-Z)</span>
+                  </div>
+
+                  <div
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      passwordPolicy.hasLowercase ? "text-emerald-700 font-semibold" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {passwordPolicy.hasLowercase ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border-medium shrink-0 inline-block" />
+                    )}
+                    <span>Require lowercase character (a-z)</span>
+                  </div>
+
+                  <div
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      passwordPolicy.hasSpecialChar ? "text-emerald-700 font-semibold" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {passwordPolicy.hasSpecialChar ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border-medium shrink-0 inline-block" />
+                    )}
+                    <span>Require special character (!@#$...)</span>
+                  </div>
+
+                  <div
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      passwordPolicy.hasNumber ? "text-emerald-700 font-semibold" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {passwordPolicy.hasNumber ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border-medium shrink-0 inline-block" />
+                    )}
+                    <span>Require numeric digit (0-9)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -474,7 +376,7 @@ function SignupFormContent() {
                 className="mt-0.5 w-4 h-4 rounded border-border-medium text-primary focus:ring-primary accent-primary"
               />
               <label htmlFor="terms" className="text-xs text-on-surface-variant leading-relaxed cursor-pointer">
-                I agree to the Elleyhill Power terms, digital warranty registration guidelines, and receive dispatch updates on my order.
+                I agree to the Elleyhill Power terms and digital warranty registration guidelines.
               </label>
             </div>
 
@@ -491,7 +393,7 @@ function SignupFormContent() {
                 </>
               ) : (
                 <>
-                  <span>Complete Registration &amp; Open Dashboard</span>
+                  <span>Create Account &amp; Continue</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -514,7 +416,7 @@ function SignupFormContent() {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-on-surface-variant">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-secondary" />
-            <span>10-Year Lithium Battery Warranty Vault</span>
+            <span>10-Year Lithium Battery Warranty Protection</span>
           </div>
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-primary" />
@@ -528,7 +430,13 @@ function SignupFormContent() {
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-surface-container-low flex items-center justify-center text-charcoal">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-surface-container-low flex items-center justify-center text-charcoal">
+          Loading...
+        </div>
+      }
+    >
       <SignupFormContent />
     </Suspense>
   );
