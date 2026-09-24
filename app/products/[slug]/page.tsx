@@ -10,24 +10,60 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+function resolveProductAndVariant(slug: string): { product?: Product; initialVariantId?: string } {
+  let product = PRODUCTS.find((p) => p.slug === slug);
+  let initialVariantId: string | undefined = undefined;
+
+  if (!product) {
+    if (slug === "545w-solar-panels" || slug === "605w-solar-panels") {
+      product = PRODUCTS.find((p) => p.slug === "605w-ja-solar-bifacial-panels");
+    } else if (slug === "5kw-standard-home-comfort-kit" || slug === "6kw-standard-home-comfort-kit") {
+      product =
+        PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit") ||
+        PRODUCTS.find((p) => p.slug === "5kw-standard-home-comfort-kit");
+    } else if (slug === "pv-combiner-box-5kw" || slug === "pv-combiner-box") {
+      product = PRODUCTS.find((p) => p.slug === "dc-combiner-box");
+      initialVariantId = "5kw";
+    } else if (slug === "pv-combiner-box-6kw") {
+      product = PRODUCTS.find((p) => p.slug === "dc-combiner-box");
+      initialVariantId = "6kw";
+    } else if (slug === "pv-combiner-box-8kw") {
+      product = PRODUCTS.find((p) => p.slug === "dc-combiner-box");
+      initialVariantId = "8kw";
+    } else if (slug === "db-combiner-box-5kw" || slug === "db-combiner-box") {
+      product = PRODUCTS.find((p) => p.slug === "ac-combiner-box");
+      initialVariantId = "5kw";
+    } else if (slug === "db-combiner-box-6kw") {
+      product = PRODUCTS.find((p) => p.slug === "ac-combiner-box");
+      initialVariantId = "6kw";
+    } else if (slug === "db-combiner-box-8kw") {
+      product = PRODUCTS.find((p) => p.slug === "ac-combiner-box");
+      initialVariantId = "8kw";
+    }
+  }
+
+  return { product, initialVariantId };
+}
+
 export async function generateStaticParams() {
   const params = PRODUCTS.map((p) => ({
     slug: p.slug,
   }));
   params.push({ slug: "545w-solar-panels" });
   params.push({ slug: "5kw-standard-home-comfort-kit" });
+  params.push({ slug: "pv-combiner-box-5kw" });
+  params.push({ slug: "pv-combiner-box-6kw" });
+  params.push({ slug: "pv-combiner-box-8kw" });
+  params.push({ slug: "db-combiner-box-5kw" });
+  params.push({ slug: "db-combiner-box-6kw" });
+  params.push({ slug: "db-combiner-box-8kw" });
   return params;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  let product = PRODUCTS.find((p) => p.slug === slug);
-  if (!product && (slug === "545w-solar-panels" || slug === "605w-solar-panels")) {
-    product = PRODUCTS.find((p) => p.slug === "605w-ja-solar-bifacial-panels");
-  }
-  if (!product && (slug === "5kw-standard-home-comfort-kit" || slug === "6kw-standard-home-comfort-kit")) {
-    product = PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit") || PRODUCTS.find((p) => p.slug === "5kw-standard-home-comfort-kit");
-  }
+  const { product } = resolveProductAndVariant(slug);
+
   if (!product) {
     return {
       title: "Product Not Found | Elleyhill Power ZM",
@@ -42,13 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DynamicProductPage({ params }: Props) {
   const { slug } = await params;
-  let product = PRODUCTS.find((p) => p.slug === slug);
-  if (!product && (slug === "545w-solar-panels" || slug === "605w-solar-panels")) {
-    product = PRODUCTS.find((p) => p.slug === "605w-ja-solar-bifacial-panels");
-  }
-  if (!product && (slug === "5kw-standard-home-comfort-kit" || slug === "6kw-standard-home-comfort-kit")) {
-    product = PRODUCTS.find((p) => p.slug === "6kw-standard-home-comfort-kit") || PRODUCTS.find((p) => p.slug === "5kw-standard-home-comfort-kit");
-  }
+  const { product, initialVariantId } = resolveProductAndVariant(slug);
 
   if (!product) {
     notFound();
@@ -154,8 +184,8 @@ export default async function DynamicProductPage({ params }: Props) {
               </div>
             )}
 
-            {/* Actions */}
-            <ProductPurchaseActions product={product} />
+            {/* Actions (with Variant / Size Toggle) */}
+            <ProductPurchaseActions product={product} initialVariantId={initialVariantId} />
           </div>
         </div>
 

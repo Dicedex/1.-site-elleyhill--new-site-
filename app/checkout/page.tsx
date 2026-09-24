@@ -12,6 +12,30 @@ type Step = 1 | 2;
 type PaymentMethod = "momo" | "card" | "staged" | "layby" | "wire";
 type MomoProvider = "mtn" | "airtel" | "zamtel";
 
+/**
+ * Detects the Zambian Mobile Money network provider based on phone number prefixes:
+ * - MTN Zambia: 096, 076 (or +260 96, +260 76, 96, 76)
+ * - Airtel Zambia: 097, 077 (or +260 97, +260 77, 97, 77)
+ * - Zamtel: 095, 075 (or +260 95, +260 75, 95, 75)
+ */
+function detectMomoProvider(phoneStr: string): MomoProvider | null {
+  if (!phoneStr) return null;
+  const cleaned = phoneStr.replace(/\D/g, "");
+  const withoutCountryCode = cleaned.startsWith("260") ? cleaned.slice(3) : cleaned;
+  const nationalNumber = withoutCountryCode.startsWith("0") ? withoutCountryCode.slice(1) : withoutCountryCode;
+
+  if (nationalNumber.startsWith("96") || nationalNumber.startsWith("76")) {
+    return "mtn";
+  }
+  if (nationalNumber.startsWith("97") || nationalNumber.startsWith("77")) {
+    return "airtel";
+  }
+  if (nationalNumber.startsWith("95") || nationalNumber.startsWith("75")) {
+    return "zamtel";
+  }
+  return null;
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const {
@@ -64,12 +88,35 @@ export default function CheckoutPage() {
   const [roofType, setRoofType] = useState("ibr");
   const [scheduleOption, setScheduleOption] = useState<"fastest" | "scheduled" | "staged">("fastest");
 
+  // Step 2: Payment Gateway Form State
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
+  const [momoProvider, setMomoProvider] = useState<MomoProvider>("mtn");
+  const [momoPhone, setMomoPhone] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [acceptStagedAgreement, setAcceptStagedAgreement] = useState(true);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [activeOrderRef, setActiveOrderRef] = useState("");
+
   // Sync with logged in user profile
   useEffect(() => {
     if (user) {
       if (user.fullName) setFullName(user.fullName);
       if (user.email) setEmail(user.email);
-      if (user.phone) setPhone(user.phone.replace("+260", "").trim());
+      if (user.phone) {
+        const cleanPhone = user.phone.replace("+260", "").trim();
+        setPhone(cleanPhone);
+        setMomoPhone((prev) => {
+          if (!prev) {
+            const detected = detectMomoProvider(cleanPhone);
+            if (detected) setMomoProvider(detected);
+            return cleanPhone;
+          }
+          return prev;
+        });
+      }
       const defaultAddr =
         user.savedAddresses?.find((a) => a.isDefault) ||
         (user.savedAddresses && user.savedAddresses.length > 0
@@ -88,17 +135,14 @@ export default function CheckoutPage() {
     }
   }, [user, setDeliveryZone]);
 
-  // Step 2: Payment Gateway Form State
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("momo");
-  const [momoProvider, setMomoProvider] = useState<MomoProvider>("mtn");
-  const [momoPhone, setMomoPhone] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [acceptStagedAgreement, setAcceptStagedAgreement] = useState(true);
-  const [toastVisible, setToastVisible] = useState(false);
-  const [activeOrderRef, setActiveOrderRef] = useState("");
+  const handleMomoPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setMomoPhone(val);
+    const detected = detectMomoProvider(val);
+    if (detected) {
+      setMomoProvider(detected);
+    }
+  };
 
   const copyOrderRef = () => {
     navigator.clipboard.writeText(activeOrderRef);
@@ -123,6 +167,15 @@ export default function CheckoutPage() {
       router.push("/cart");
       return;
     }
+    // Auto-populate Momo phone from Step 1 phone if not already filled
+    if (!momoPhone && phone) {
+      const cleanPhone = phone.replace("+260", "").trim();
+      setMomoPhone(cleanPhone);
+      const detected = detectMomoProvider(cleanPhone);
+      if (detected) {
+        setMomoProvider(detected);
+      }
+    }
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -142,11 +195,16 @@ export default function CheckoutPage() {
 
     const checkoutItems = items.length > 0 ? items : [];
 
+    const finalCustomerName = fullName || user?.fullName || "Online Client";
+    const finalCustomerEmail = email || user?.email || "customer@elleyhill.co.zm";
+    const finalPhone = momoPhone || phone || user?.phone || "0971838038";
+    const finalAddress = address || defaultAddress?.fullAddress || user?.primaryAddress || "Lusaka Delivery";
+
     // Trigger Cloudflare Worker Edge request to payment switch if Mobile Money or Card
     if (paymentMethod === "momo" || paymentMethod === "card") {
       setPaymentStatusText(
         paymentMethod === "momo"
-          ? `Initiating ${momoProvider.toUpperCase()} MoMo STK Push (+260 ${momoPhone})...`
+          ? `Initiating ${momoProvider.toUpperCase()} MoMo STK Push (+260 ${finalPhone})...`
           : "Authorizing 3D-Secure Card..."
       );
 
@@ -154,10 +212,10 @@ export default function CheckoutPage() {
         await initiatePawaPayPayment({
           orderRef: generatedRef,
           amount: grandTotal,
-          phone: momoPhone,
+          phone: finalPhone,
           provider: paymentMethod === "momo" ? momoProvider : "card",
-          customerName: fullName,
-          customerEmail: email,
+          customerName: finalCustomerName,
+          customerEmail: finalCustomerEmail,
         });
       } catch (pawaErr) {
         console.warn("pawaPay gateway dispatch:", pawaErr);
@@ -168,10 +226,10 @@ export default function CheckoutPage() {
       orderRef: generatedRef,
       createdAt: new Date().toISOString(),
       customer: {
-        fullName,
-        email,
-        phone,
-        address,
+        fullName: finalCustomerName,
+        email: finalCustomerEmail,
+        phone: finalPhone,
+        address: finalAddress,
         province,
         roofType,
         scheduleOption,
@@ -179,7 +237,7 @@ export default function CheckoutPage() {
       payment: {
         method: paymentMethod,
         momoProvider,
-        momoPhone,
+        momoPhone: finalPhone,
         gateway: "pawaPay (Cloudflare Edge)",
         status: "authorized",
       },
@@ -198,8 +256,8 @@ export default function CheckoutPage() {
     try {
       addOrder({
         id: generatedRef,
-        customerName: fullName,
-        customerEmail: email,
+        customerName: finalCustomerName,
+        customerEmail: finalCustomerEmail,
         items: checkoutItems.map((i) => ({
           id: i.id,
           name: i.name,
@@ -210,10 +268,10 @@ export default function CheckoutPage() {
         total: grandTotal,
         subtotal: hardwareSubtotal + installationSubtotal,
         deliveryFee: deliveryCost,
-        deliveryAddress: address,
+        deliveryAddress: finalAddress,
         district: province === "lusaka" ? "Lusaka" : "Regional",
         province: province === "lusaka" ? "Lusaka Province" : `${province} Province`,
-        phone: phone,
+        phone: finalPhone,
         paymentMethod:
           paymentMethod === "momo"
             ? `Mobile Money (${momoProvider.toUpperCase()})`
@@ -1054,8 +1112,10 @@ export default function CheckoutPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
                         <label
                           onClick={() => setMomoProvider("mtn")}
-                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border ${
-                            momoProvider === "mtn" ? "border-secondary ring-1 ring-secondary" : "border-border-light"
+                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border transition-all ${
+                            momoProvider === "mtn"
+                              ? "border-secondary ring-2 ring-secondary/20 bg-secondary-container/20"
+                              : "border-border-light hover:bg-surface-container"
                           }`}
                         >
                           <input
@@ -1072,8 +1132,10 @@ export default function CheckoutPage() {
                         </label>
                         <label
                           onClick={() => setMomoProvider("airtel")}
-                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border ${
-                            momoProvider === "airtel" ? "border-secondary ring-1 ring-secondary" : "border-border-light"
+                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border transition-all ${
+                            momoProvider === "airtel"
+                              ? "border-secondary ring-2 ring-secondary/20 bg-secondary-container/20"
+                              : "border-border-light hover:bg-surface-container"
                           }`}
                         >
                           <input
@@ -1090,8 +1152,10 @@ export default function CheckoutPage() {
                         </label>
                         <label
                           onClick={() => setMomoProvider("zamtel")}
-                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border ${
-                            momoProvider === "zamtel" ? "border-secondary ring-1 ring-secondary" : "border-border-light"
+                          className={`flex items-center gap-3 p-3 rounded-lg bg-surface-container-lowest cursor-pointer shadow-sm border transition-all ${
+                            momoProvider === "zamtel"
+                              ? "border-secondary ring-2 ring-secondary/20 bg-secondary-container/20"
+                              : "border-border-light hover:bg-surface-container"
                           }`}
                         >
                           <input
@@ -1103,14 +1167,26 @@ export default function CheckoutPage() {
                           />
                           <div className="flex flex-col">
                             <span className="font-headline-md text-[13px] text-on-surface font-semibold">Zamtel Kwacha</span>
-                            <span className="font-technical-data text-[10px] text-outline">095 series</span>
+                            <span className="font-technical-data text-[10px] text-outline">095 / 075 series</span>
                           </div>
                         </label>
                       </div>
                       <div className="mt-4">
-                        <label className="block font-technical-data text-[12px] font-bold uppercase text-on-surface tracking-wider mb-1">
-                          Subscriber Mobile Number
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block font-technical-data text-[12px] font-bold uppercase text-on-surface tracking-wider">
+                            Subscriber Mobile Number
+                          </label>
+                          {detectMomoProvider(momoPhone) ? (
+                            <span className="font-technical-data text-[11px] text-secondary font-semibold flex items-center gap-1 bg-secondary-container/60 px-2 py-0.5 rounded">
+                              <span className="material-symbols-outlined text-[13px]">auto_awesome</span>
+                              <span>Auto-detected: {momoProvider.toUpperCase()}</span>
+                            </span>
+                          ) : (
+                            <span className="font-technical-data text-[10px] text-outline">
+                              Auto-switches to MTN / Airtel / Zamtel
+                            </span>
+                          )}
+                        </div>
                         <div className="relative flex items-center">
                           <span className="absolute left-3 font-technical-data text-body-sm font-semibold text-text-secondary">
                             +260
@@ -1120,7 +1196,7 @@ export default function CheckoutPage() {
                             placeholder="97 183 8038"
                             type="tel"
                             value={momoPhone}
-                            onChange={(e) => setMomoPhone(e.target.value)}
+                            onChange={handleMomoPhoneChange}
                           />
                         </div>
                       </div>

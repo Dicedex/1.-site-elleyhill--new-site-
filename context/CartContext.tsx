@@ -179,7 +179,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...item, qty: addQty }];
     });
-    setIsDrawerOpen(true);
   };
 
   const removeItem = (id: string) => {

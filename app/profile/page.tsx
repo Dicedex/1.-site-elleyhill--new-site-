@@ -45,6 +45,8 @@ import {
   Wrench,
   Leaf,
   Share2,
+  Eye,
+  Package,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -63,9 +65,10 @@ export default function ProfilePage() {
 
   const [activeTab, setActiveTab] = useState<"warranties" | "orders" | "settings">("warranties");
 
-  // Certificate and Invoice Modals
+  // Certificate, Invoice, and Full Order Modals
   const [selectedWarrantyForModal, setSelectedWarrantyForModal] = useState<WarrantyRecord | null>(null);
   const [selectedOrderForInvoiceModal, setSelectedOrderForInvoiceModal] = useState<UserOrder | null>(null);
+  const [selectedOrderForDetailsModal, setSelectedOrderForDetailsModal] = useState<UserOrder | null>(null);
 
   // Email Verification Modal State
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
@@ -483,7 +486,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                {["all", "Inverter", "Battery", "Panel", "Kit"].map((cat) => (
+                {["all", "Inverter", "Battery", "Panel", "Portable", "Kit"].map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setWarrantyCategoryFilter(cat)}
@@ -745,21 +748,34 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Order Items */}
-                      <div className="py-2 space-y-2.5">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2.5 max-w-xl">
-                              <span className="w-6 h-6 rounded-lg bg-surface-container flex items-center justify-center font-bold text-primary text-xs">
+                      {/* Order Items Preview (Compact portion) */}
+                      <div className="py-2 space-y-2">
+                        {order.items.slice(0, 1).map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-xs bg-surface-container-low p-3 rounded-xl border border-border-light">
+                            <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-xs shrink-0">
                                 {item.quantity}x
                               </span>
-                              <span className="text-charcoal font-medium">{item.name}</span>
+                              <span className="text-charcoal font-medium truncate">{item.name}</span>
                             </div>
-                            <div className="font-bold text-charcoal font-mono">
+                            <div className="font-bold text-charcoal font-mono shrink-0">
                               K{(item.price * item.quantity).toLocaleString()}
                             </div>
                           </div>
                         ))}
+
+                        {order.items.length > 1 && (
+                          <button
+                            onClick={() => setSelectedOrderForDetailsModal(order)}
+                            className="w-full py-2.5 px-3 rounded-xl bg-surface-container/60 hover:bg-surface-container border border-dashed border-border-medium text-primary text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer group shadow-2xs"
+                          >
+                            <span>+{order.items.length - 1} more item{order.items.length - 1 > 1 ? "s" : ""} in this order</span>
+                            <span className="text-on-surface-variant font-normal group-hover:text-primary transition-colors">
+                              (Click to view full manifest)
+                            </span>
+                            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        )}
                       </div>
 
                       {/* Dispatch & Delivery SLA & Actions */}
@@ -795,13 +811,20 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border-light">
+                        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border-light">
+                          <button
+                            onClick={() => setSelectedOrderForDetailsModal(order)}
+                            className="px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm shadow-primary/20 transition-all"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View Full Order</span>
+                          </button>
                           <button
                             onClick={() => setSelectedOrderForInvoiceModal(order)}
                             className="px-3.5 py-2 rounded-xl bg-white hover:bg-surface-container border border-border-light text-charcoal text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
                           >
                             <FileText className="w-3.5 h-3.5 text-primary" />
-                            <span>View Invoice</span>
+                            <span>Invoice</span>
                           </button>
                           <a
                             href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20inquiring%20about%20my%20order%20${encodeURIComponent(order.id)}.`}
@@ -1387,6 +1410,214 @@ export default function ProfilePage() {
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Official Invoice</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL ORDER DETAILS & MANIFEST POPUP MODAL */}
+      {selectedOrderForDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-border-medium rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto flex flex-col justify-between space-y-6">
+            <div>
+              {/* Modal Header */}
+              <div className="flex items-start justify-between pb-5 border-b border-border-light">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                      <Package className="w-4 h-4" />
+                    </span>
+                    <h3 className="text-xl font-bold text-charcoal font-headline">Order Manifest &amp; Details</h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary-light text-primary border border-primary/20 font-bold ml-1">
+                      {selectedOrderForDetailsModal.status}
+                    </span>
+                  </div>
+                  <div className="text-xs text-on-surface-variant flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+                    <span className="font-mono text-secondary font-bold">#{selectedOrderForDetailsModal.id}</span>
+                    <span>•</span>
+                    <span>Placed on {selectedOrderForDetailsModal.date}</span>
+                    <span>•</span>
+                    <span>Payment: <strong className="text-charcoal">{selectedOrderForDetailsModal.paymentMethod}</strong></span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedOrderForDetailsModal(null)}
+                  className="w-8 h-8 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-charcoal flex items-center justify-center transition-colors cursor-pointer"
+                  title="Close modal"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Visual Dispatch Stepper */}
+              <div className="mt-5 p-4 rounded-2xl bg-surface-container-low border border-border-light">
+                <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                  <div className="text-primary flex flex-col items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                    <span>1. Confirmed</span>
+                  </div>
+                  <div className="text-primary flex flex-col items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    </div>
+                    <span>2. QA &amp; Packaging</span>
+                  </div>
+                  <div className={selectedOrderForDetailsModal.status.includes("Transit") || selectedOrderForDetailsModal.status.includes("Delivered") ? "text-primary flex flex-col items-center gap-1.5" : "text-slate-400 flex flex-col items-center gap-1.5"}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${selectedOrderForDetailsModal.status.includes("Transit") || selectedOrderForDetailsModal.status.includes("Delivered") ? "bg-primary text-white" : "bg-slate-200 text-slate-500"}`}>
+                      <Truck className="w-3.5 h-3.5" />
+                    </div>
+                    <span>3. Lusaka Dispatch</span>
+                  </div>
+                  <div className={selectedOrderForDetailsModal.status.includes("Delivered") ? "text-secondary flex flex-col items-center gap-1.5" : "text-slate-400 flex flex-col items-center gap-1.5"}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${selectedOrderForDetailsModal.status.includes("Delivered") ? "bg-secondary text-white" : "bg-slate-200 text-slate-500"}`}>
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    </div>
+                    <span>4. Delivered &amp; Commissioned</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Site & Logistics Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5 text-xs">
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                    <span>Delivery Site Information</span>
+                  </div>
+                  <div className="text-sm font-bold text-charcoal">{selectedOrderForDetailsModal.customerName || user.fullName}</div>
+                  <div className="text-on-surface-variant leading-relaxed">
+                    {selectedOrderForDetailsModal.deliveryAddress}
+                    <br />
+                    {selectedOrderForDetailsModal.district}, {selectedOrderForDetailsModal.province}
+                  </div>
+                  <div className="text-primary font-semibold flex items-center gap-1 pt-1">
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>{selectedOrderForDetailsModal.phone}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-surface-container-low border border-border-light space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-secondary" />
+                    <span>Logistics &amp; SLA Tracking</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-on-surface-variant">Estimated SLA:</span>
+                    <span className="text-secondary font-bold">{selectedOrderForDetailsModal.estimatedDelivery}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-on-surface-variant">Tracking Number:</span>
+                    <span className="font-mono text-charcoal font-bold">{selectedOrderForDetailsModal.trackingNumber || `EHP-${selectedOrderForDetailsModal.id}`}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-on-surface-variant">Assigned Engineer:</span>
+                    <span className="text-charcoal font-medium">{selectedOrderForDetailsModal.assignedEngineer || "Elleyhill Technical Support"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Complete Items Manifest Table */}
+              <div className="mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-charcoal flex items-center gap-2">
+                    <span>All Items in this Order</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-surface-container font-bold text-on-surface-variant">
+                      {selectedOrderForDetailsModal.items.length} {selectedOrderForDetailsModal.items.length === 1 ? "line item" : "line items"}
+                    </span>
+                  </h4>
+                </div>
+
+                <div className="border border-border-light rounded-2xl overflow-hidden bg-white shadow-2xs">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-surface-container-low text-on-surface-variant uppercase font-bold text-[10px] border-b border-border-light">
+                      <tr>
+                        <th className="py-3 px-4">Item &amp; Description</th>
+                        <th className="py-3 px-3 text-center">Qty</th>
+                        <th className="py-3 px-4 text-right">Unit Price</th>
+                        <th className="py-3 px-4 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-light">
+                      {selectedOrderForDetailsModal.items.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-surface-container-low/50 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-charcoal text-xs">{item.name}</div>
+                            <div className="text-[11px] text-on-surface-variant mt-0.5">Elleyhill Certified Hardware</div>
+                          </td>
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-lg bg-surface-container font-bold text-primary font-mono">
+                              {item.quantity}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono text-on-surface-variant">
+                            K{item.price.toLocaleString()}
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-mono font-bold text-charcoal">
+                            K{(item.price * item.quantity).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="mt-5 p-4 rounded-2xl bg-surface-container-low border border-border-light space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">Hardware Subtotal:</span>
+                  <span className="font-mono text-charcoal font-bold">ZMW {selectedOrderForDetailsModal.subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">Logistics &amp; Handling:</span>
+                  <span className="font-mono text-status-success font-bold">
+                    {selectedOrderForDetailsModal.deliveryFee === 0 ? "FREE (Included)" : `ZMW ${selectedOrderForDetailsModal.deliveryFee.toLocaleString()}`}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-on-surface-variant">16% ZRA Statutory VAT:</span>
+                  <span className="font-mono text-status-success font-bold">0% (Zero-Rated Clean Energy)</span>
+                </div>
+                <div className="flex justify-between pt-2.5 border-t border-border-medium text-sm font-bold">
+                  <span className="text-charcoal uppercase">Grand Total Value:</span>
+                  <span className="text-primary text-base font-mono">ZMW {selectedOrderForDetailsModal.total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-border-light">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    const ord = selectedOrderForDetailsModal;
+                    setSelectedOrderForDetailsModal(null);
+                    setSelectedOrderForInvoiceModal(ord);
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-surface-container border border-border-light text-charcoal font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all"
+                >
+                  <FileText className="w-4 h-4 text-primary" />
+                  <span>View Proforma Invoice</span>
+                </button>
+                <a
+                  href={`https://wa.me/260971838038?text=Hello%20Elleyhill%20Support,%20I%20am%20inquiring%20about%20my%20order%20${encodeURIComponent(selectedOrderForDetailsModal.id)}.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-status-success/10 hover:bg-status-success/20 border border-status-success/30 text-status-success font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>Support Desk</span>
+                </a>
+              </div>
+
+              <button
+                onClick={() => setSelectedOrderForDetailsModal(null)}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-border-light text-charcoal font-bold text-xs cursor-pointer transition-all"
+              >
+                Close
               </button>
             </div>
           </div>

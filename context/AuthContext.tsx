@@ -87,7 +87,7 @@ export interface WarrantyRecord {
   customerName?: string;
   customerEmail?: string;
   productName: string;
-  category: "Battery" | "Inverter" | "Solar Panels" | "Complete System";
+  category: "Battery" | "Inverter" | "Solar Panels" | "Portable" | "Complete System";
   serialNumber: string;
   installationDate: string;
   warrantyPeriodYears: number;
@@ -1228,25 +1228,93 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       assignedEngineer: orderData.assignedEngineer || "Elleyhill Technical Team",
     };
 
-    // Auto-generate warranties
+    // Auto-generate warranties (ONLY for Battery, Inverter, Portables, Solar Panels, and Complete Systems. NOT for cables, combiner boxes, accessories, brackets, etc.)
     const newWarranties: WarrantyRecord[] = [];
     orderData.items.forEach((item, idx) => {
-      const isBattery = item.name.toLowerCase().includes("battery") || item.name.toLowerCase().includes("lithium");
-      const isInverter = item.name.toLowerCase().includes("inverter") || item.name.toLowerCase().includes("deye") || item.name.toLowerCase().includes("growatt");
-      const isPanel = item.name.toLowerCase().includes("panel") || item.name.toLowerCase().includes("solar");
-      const isSystem = item.name.toLowerCase().includes("system") || item.name.toLowerCase().includes("kit");
+      const lowerName = (item.name || "").toLowerCase();
 
-      const category: WarrantyRecord["category"] = isSystem
-        ? "Complete System"
-        : isBattery
-        ? "Battery"
-        : isInverter
-        ? "Inverter"
-        : isPanel
-        ? "Solar Panels"
-        : "Complete System";
+      // Check if it is an accessory or cable/part and skip warranty generation
+      const isAccessory =
+        lowerName.includes("cable") ||
+        lowerName.includes("combiner") ||
+        lowerName.includes("bracket") ||
+        lowerName.includes("lug") ||
+        lowerName.includes("fuse") ||
+        lowerName.includes("disconnect") ||
+        lowerName.includes("mounting") ||
+        lowerName.includes("structure") ||
+        lowerName.includes("connector") ||
+        lowerName.includes("mc4") ||
+        lowerName.includes("wire") ||
+        lowerName.includes("clamp") ||
+        lowerName.includes("rail") ||
+        lowerName.includes("breaker");
 
-      const years = category === "Battery" ? 10 : category === "Inverter" ? 5 : category === "Solar Panels" ? 12 : 10;
+      if (isAccessory) {
+        return; // No warranty certificates for accessories or cables
+      }
+
+      // Check for eligible categories
+      const isSystem =
+        lowerName.includes("complete system") ||
+        lowerName.includes("comfort kit") ||
+        lowerName.includes("turnkey") ||
+        lowerName.includes("complete solar system") ||
+        (lowerName.includes("system") && !lowerName.includes("cable") && !lowerName.includes("mount"));
+
+      const isPortable =
+        lowerName.includes("portable") ||
+        lowerName.includes("power station") ||
+        lowerName.includes("kapa") ||
+        lowerName.includes("river") ||
+        lowerName.includes("delta") ||
+        lowerName.includes("ecoflow");
+
+      const isBattery =
+        (lowerName.includes("battery") || lowerName.includes("lithium") || lowerName.includes("lifepo4") || lowerName.includes("greenrich") || lowerName.includes("dyness") || lowerName.includes("ssre")) &&
+        !lowerName.includes("cable") &&
+        !lowerName.includes("lug");
+
+      const isInverter =
+        lowerName.includes("inverter") ||
+        lowerName.includes("deye") ||
+        lowerName.includes("growatt") ||
+        lowerName.includes("must") ||
+        lowerName.includes("sunsynk");
+
+      const isPanel =
+        lowerName.includes("panel") ||
+        lowerName.includes("solar array") ||
+        lowerName.includes("haitai") ||
+        lowerName.includes("ja solar") ||
+        lowerName.includes("longi") ||
+        lowerName.includes("jinko") ||
+        lowerName.includes("canadian solar");
+
+      let category: WarrantyRecord["category"] | null = null;
+      let years = 5;
+
+      if (isSystem) {
+        category = "Complete System";
+        years = 10;
+      } else if (isPortable) {
+        category = "Portable";
+        years = 2;
+      } else if (isBattery) {
+        category = "Battery";
+        years = 10;
+      } else if (isInverter) {
+        category = "Inverter";
+        years = 5;
+      } else if (isPanel) {
+        category = "Solar Panels";
+        years = 12;
+      }
+
+      if (!category) {
+        return; // Exclude anything not matching core eligible equipment
+      }
+
       const expDate = new Date();
       expDate.setFullYear(expDate.getFullYear() + years);
 
@@ -1256,7 +1324,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         customerEmail: custEmail,
         productName: item.name,
         category,
-        serialNumber: `EHP-${category.substring(0, 3).toUpperCase()}-${new Date().getFullYear()}-${orderNumber}`,
+        serialNumber: `EHP-${category.replace(/\s+/g, "").substring(0, 3).toUpperCase()}-${new Date().getFullYear()}-${orderNumber}`,
         installationDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date()),
         warrantyPeriodYears: years,
         expiryDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(expDate),

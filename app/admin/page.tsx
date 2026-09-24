@@ -1555,7 +1555,8 @@ export default function AdminDashboardPage() {
                     <option value="Battery">Lithium Battery</option>
                     <option value="Inverter">Hybrid Inverter</option>
                     <option value="Solar Panels">Solar Array</option>
-                    <option value="Complete System">Turnkey Microgrid</option>
+                    <option value="Portable">Portable Power Station</option>
+                    <option value="Complete System">Complete Turnkey System</option>
                   </select>
                 </div>
                 <div>
@@ -1567,10 +1568,10 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setNewWarYears(Number(e.target.value))}
                     className="w-full px-3 py-2 rounded-lg bg-white border border-border-medium text-xs text-charcoal focus:outline-none focus:border-primary"
                   >
-                    <option value={10}>10 Years (Lithium Batteries)</option>
-                    <option value={12}>12 Years (JA Solar Panels)</option>
-                    <option value={5}>5 Years (Deye Inverters)</option>
-                    <option value={3}>3 Years (Accessories)</option>
+                    <option value={10}>10 Years (Lithium Batteries / Complete Systems)</option>
+                    <option value={12}>12 Years (Solar Panels)</option>
+                    <option value={5}>5 Years (Hybrid Inverters)</option>
+                    <option value={2}>2 Years (Portable Power Stations)</option>
                   </select>
                 </div>
               </div>

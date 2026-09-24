@@ -527,7 +527,7 @@ export default function Home() {
               "545w-haitai-solar-panels",
               "greenrich-hybrid-inverter-8kw",
               "ssre-eu10k-10kwh-battery",
-              "db-combiner-box-5kw",
+              "ac-combiner-box",
             ]
               .map((slug) => PRODUCTS.find((p) => p.slug === slug))
               .filter((p): p is (typeof PRODUCTS)[number] => Boolean(p))

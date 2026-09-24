@@ -385,12 +385,18 @@ export default {
 
         if (request.method === "POST") {
           const ord = await request.json();
-          const userEmail = String(
+          const rawEmail = String(
             ord.userEmail || ord.customerEmail || ord.user_email || ord.customer_email || ""
           ).trim().toLowerCase();
 
-          if (!ord.id || !userEmail) {
-            return jsonResponse({ error: "Missing required order fields (id, userEmail or customerEmail)" }, 400, corsHeaders);
+          const fallbackEmail = ord.phone || ord.contactPhone
+            ? `${String(ord.phone || ord.contactPhone).replace(/[^0-9]/g, "")}@client.elleyhill.zm`
+            : "procurement@enterprise.zm";
+
+          const userEmail = rawEmail || fallbackEmail;
+
+          if (!ord.id) {
+            return jsonResponse({ error: "Missing required order ID (id)" }, 400, corsHeaders);
           }
 
           const now = new Date().toISOString();
@@ -658,7 +664,7 @@ export default {
         // Format Zambian MSISDN: Ensure 260XXXXXXXXX format
         const cleanPhone = normalizeZambianPhone(body.phone || "");
         const correspondent = CORRESPONDENTS[body.provider] || "MTN_MOMO_ZMB";
-        const depositId = `EHP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const depositId = crypto.randomUUID();
 
         // Save payment log in D1
         if (db) {
@@ -689,6 +695,9 @@ export default {
           ? "https://api.pawapay.io"
           : "https://api.sandbox.pawapay.io";
 
+        const rawMsg = body.statementDescription || `Elleyhill ${body.orderRef || ""}`;
+        const cleanCustomerMessage = rawMsg.replace(/[^a-zA-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim().substring(0, 22);
+
         // Official pawaPay v2 Payload Structure
         const pawaPayPayload = {
           depositId,
@@ -701,13 +710,8 @@ export default {
               provider: correspondent,
             },
           },
-          clientReferenceId: body.orderRef,
-          customerMessage: (body.statementDescription || `Elleyhill #${body.orderRef}`).substring(0, 22),
-          metadata: [
-            { fieldName: "orderRef", fieldValue: body.orderRef },
-            { fieldName: "customerEmail", fieldValue: body.customerEmail || "customer@elleyhill.co.zm" },
-            { fieldName: "customerName", fieldValue: body.customerName || "Valued Client" },
-          ],
+          clientReferenceId: String(body.orderRef || "").replace(/[^a-zA-Z0-9_-]/g, ""),
+          customerMessage: cleanCustomerMessage,
         };
 
         // If no API Token configured (e.g. testing in dev), return simulated successful STK Push

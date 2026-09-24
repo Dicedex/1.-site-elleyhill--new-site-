@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -12,11 +12,11 @@ export default function CartDrawer() {
     closeDrawer,
     removeItem,
     updateQty,
+    clearCart,
     toggleInstallation,
     hardwareSubtotal,
     installationSubtotal,
     deliveryCost,
-    deliveryZone,
     isFreeDelivery,
     freeDeliveryProgress,
     amountForFreeDelivery,
@@ -25,6 +25,7 @@ export default function CartDrawer() {
     getWhatsAppQuoteUrl,
   } = useCart();
   const { user, isAuthenticated } = useAuth();
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const defaultAddress =
     user?.savedAddresses?.find((a) => a.isDefault) || user?.savedAddresses?.[0];
@@ -53,36 +54,49 @@ export default function CartDrawer() {
 
       {/* Drawer Panel */}
       <div
-        className={`absolute right-0 top-0 bottom-0 h-[100dvh] max-h-[100dvh] w-full max-w-md bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
+        className={`absolute right-0 top-0 bottom-0 h-[100dvh] max-h-[100dvh] w-full max-w-md md:max-w-lg bg-surface-container-lowest shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
           isDrawerOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="p-5 md:p-6 bg-surface-container-lowest flex items-center justify-between border-b border-border-light">
+        <div className="p-4 md:p-5 bg-surface-container-lowest flex items-center justify-between border-b border-border-light flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-secondary-container text-secondary flex items-center justify-center">
               <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
             </div>
             <div>
-              <h3 className="font-headline-md text-lg text-primary font-bold">
-                Quick Cart
+              <h3 className="font-headline-md text-base md:text-lg text-primary font-bold">
+                Shopping Cart
               </h3>
-              <span className="font-technical-data text-xs text-on-surface-variant">
-                {totalItemsCount} {totalItemsCount === 1 ? "item" : "items"} selected
+              <span className="font-technical-data text-xs text-on-surface-variant font-medium">
+                {totalItemsCount} {totalItemsCount === 1 ? "item" : "items"} in cart
               </span>
             </div>
           </div>
-          <button
-            onClick={closeDrawer}
-            className="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface transition-colors focus:outline-none cursor-pointer"
-            aria-label="Close cart drawer"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={clearCart}
+                className="text-[11px] font-technical-data font-bold text-on-surface-variant hover:text-error transition-colors px-2 py-1 rounded hover:bg-surface-container cursor-pointer"
+                title="Empty shopping cart"
+              >
+                Clear All
+              </button>
+            )}
+            <button
+              onClick={closeDrawer}
+              className="w-9 h-9 rounded-full bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-on-surface transition-colors focus:outline-none cursor-pointer"
+              aria-label="Close cart drawer"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 space-y-4">
+        {/* Content: All Items List */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-3.5">
           {items.length === 0 ? (
             <div className="py-16 text-center space-y-4">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">
@@ -149,114 +163,141 @@ export default function CartDrawer() {
                 </p>
               </div>
 
-              {items.map((item) => {
-                const itemTotal =
-                  item.price * item.qty +
-                  (item.installationIncluded && item.installationPrice
-                    ? item.installationPrice * item.qty
-                    : 0);
+              {/* All Cart Items Rendered Cleanly */}
+              <div className="space-y-3">
+                {items.map((item) => {
+                  const itemTotal =
+                    item.price * item.qty +
+                    (item.installationIncluded && item.installationPrice
+                      ? item.installationPrice * item.qty
+                      : 0);
+                  const hasImageError = imageErrors[item.id];
 
-                return (
-                  <div
-                    key={item.id}
-                    className="flex gap-3.5 p-3.5 rounded-2xl bg-surface-container-low border border-border-light relative group"
-                  >
-                    <div className="w-16 h-16 rounded-xl bg-surface-container-lowest border border-border-light flex items-center justify-center flex-shrink-0 p-1">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-headline-md text-xs leading-snug text-primary font-bold line-clamp-2">
-                          {item.name}
-                        </h4>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-on-surface-variant hover:text-error transition-colors p-0.5 cursor-pointer"
-                          title="Remove item"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
-                        </button>
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex gap-3.5 p-3.5 rounded-2xl bg-surface-container-low border border-border-light relative group hover:border-neutral-300 transition-colors"
+                    >
+                      {/* Product Thumbnail */}
+                      <div className="w-16 h-16 rounded-xl bg-surface-container-lowest border border-border-light flex items-center justify-center flex-shrink-0 p-1 overflow-hidden">
+                        {item.image && !hasImageError ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            onError={() =>
+                              setImageErrors((prev) => ({ ...prev, [item.id]: true }))
+                            }
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <span className="material-symbols-outlined text-outline text-[24px]">
+                            solar_power
+                          </span>
+                        )}
                       </div>
 
-                      <div className="font-technical-data text-xs text-secondary font-bold">
-                        ZMW {item.price.toLocaleString()} each
-                      </div>
-
-                      {item.installationPrice !== undefined && item.installationPrice > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => toggleInstallation(item.id)}
-                          className={`font-technical-data text-[11px] flex items-center gap-1.5 mt-1.5 text-left p-1.5 rounded-lg border transition-all cursor-pointer ${
-                            item.installationIncluded
-                              ? "bg-secondary-container/30 text-secondary border-secondary/40 font-semibold"
-                              : "bg-surface-container text-on-surface-variant border-border-light hover:text-primary"
-                          }`}
-                        >
-                          <span
-                            className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all shrink-0 ${
-                              item.installationIncluded
-                                ? "bg-primary border-primary text-white"
-                                : "border-outline bg-white text-transparent"
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-[10px] font-bold">
-                              {item.installationIncluded ? "check" : ""}
-                            </span>
-                          </span>
-                          <span className="material-symbols-outlined text-secondary text-[14px]">
-                            verified_user
-                          </span>
-                          <span className="truncate">
-                            {item.installationIncluded
-                              ? `Installation Selected (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`
-                              : `Add Installation (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`}
-                          </span>
-                        </button>
-                      )}
-
-                      <div className="flex items-center justify-between pt-1">
-                        {/* Quantity Stepper */}
-                        <div className="inline-flex items-center rounded-full bg-surface-container-lowest border border-border-light p-0.5">
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            {item.tag && (
+                              <span className="text-[10px] font-technical-data font-bold uppercase tracking-wider text-secondary block">
+                                {item.tag}
+                              </span>
+                            )}
+                            <h4 className="font-headline-md text-xs sm:text-sm leading-snug text-primary font-bold line-clamp-2">
+                              {item.name}
+                            </h4>
+                          </div>
                           <button
-                            onClick={() => updateQty(item.id, -1)}
-                            className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-primary text-xs cursor-pointer"
-                            aria-label="Decrease quantity"
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            className="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container cursor-pointer flex-shrink-0"
+                            title="Remove item"
+                            aria-label={`Remove ${item.name}`}
                           >
-                            -
-                          </button>
-                          <span className="font-technical-data text-xs font-semibold px-2">
-                            {item.qty}
-                          </span>
-                          <button
-                            onClick={() => updateQty(item.id, 1)}
-                            className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-primary text-xs cursor-pointer"
-                            aria-label="Increase quantity"
-                          >
-                            +
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
                           </button>
                         </div>
 
-                        <span className="font-technical-data text-xs text-primary font-bold">
-                          ZMW {itemTotal.toLocaleString()}
-                        </span>
+                        <div className="font-technical-data text-xs text-secondary font-bold">
+                          ZMW {item.price.toLocaleString()} each
+                        </div>
+
+                        {/* Optional Professional Installation Toggle */}
+                        {item.installationPrice !== undefined && item.installationPrice > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleInstallation(item.id)}
+                            className={`font-technical-data text-[11px] flex items-center gap-1.5 mt-1 text-left p-1.5 rounded-lg border transition-all cursor-pointer w-full ${
+                              item.installationIncluded
+                                ? "bg-secondary-container/30 text-secondary border-secondary/40 font-semibold"
+                                : "bg-surface-container text-on-surface-variant border-border-light hover:text-primary"
+                            }`}
+                          >
+                            <span
+                              className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all shrink-0 ${
+                                item.installationIncluded
+                                  ? "bg-primary border-primary text-white"
+                                  : "border-outline bg-white text-transparent"
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[10px] font-bold">
+                                {item.installationIncluded ? "check" : ""}
+                              </span>
+                            </span>
+                            <span className="material-symbols-outlined text-secondary text-[14px]">
+                              verified_user
+                            </span>
+                            <span className="truncate">
+                              {item.installationIncluded
+                                ? `Installation Selected (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`
+                                : `Add Installation (+ZMW ${(item.installationPrice * item.qty).toLocaleString()})`}
+                            </span>
+                          </button>
+                        )}
+
+                        {/* Quantity Stepper & Line Item Subtotal */}
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="inline-flex items-center rounded-full bg-surface-container-lowest border border-border-light p-0.5 shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() => updateQty(item.id, -1)}
+                              className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-primary text-xs cursor-pointer font-bold"
+                              aria-label="Decrease quantity"
+                            >
+                              -
+                            </button>
+                            <span className="font-technical-data text-xs font-bold px-2.5 text-primary">
+                              {item.qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updateQty(item.id, 1)}
+                              className="w-6 h-6 rounded-full hover:bg-surface-container flex items-center justify-center text-primary text-xs cursor-pointer font-bold"
+                              aria-label="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <span className="font-technical-data text-xs sm:text-sm text-primary font-bold">
+                            ZMW {itemTotal.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </>
           )}
         </div>
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="p-5 md:p-6 bg-surface-container-low border-t border-border-light space-y-4 flex-shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
+          <div className="p-4 md:p-5 bg-surface-container-low border-t border-border-light space-y-3.5 flex-shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
             <div className="space-y-1.5 font-technical-data text-xs">
               <div className="flex justify-between text-on-surface-variant">
                 <span>Hardware Subtotal</span>
@@ -280,17 +321,17 @@ export default function CartDrawer() {
               </div>
               <div className="flex justify-between text-headline-md text-base text-charcoal pt-2 border-t border-border-light font-bold">
                 <span>Estimated Total</span>
-                <span className="text-primary">ZMW {grandTotal.toLocaleString()}</span>
+                <span className="text-primary text-lg font-bold">ZMW {grandTotal.toLocaleString()}</span>
               </div>
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {/* Primary: Checkout */}
               {!isAuthenticated ? (
                 <Link
                   href="/login?redirect=/checkout"
                   onClick={closeDrawer}
-                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                  className="w-full py-3 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
                 >
                   <span>SIGN IN TO CHECKOUT</span>
                   <span className="material-symbols-outlined text-[18px]">lock</span>
@@ -299,7 +340,7 @@ export default function CartDrawer() {
                 <Link
                   href="/profile"
                   onClick={closeDrawer}
-                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                  className="w-full py-3 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
                 >
                   <span>ADD ADDRESS IN PROFILE TO PROCEED</span>
                   <span className="material-symbols-outlined text-[18px]">add_location</span>
@@ -308,7 +349,7 @@ export default function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeDrawer}
-                  className="w-full py-3.5 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
+                  className="w-full py-3 px-6 rounded-full bg-primary hover:bg-primary-hover text-white font-label-cta text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 font-bold"
                 >
                   <span>PROCEED TO CHECKOUT</span>
                   <span className="material-symbols-outlined text-[18px]">lock</span>
@@ -330,7 +371,7 @@ export default function CartDrawer() {
               <Link
                 href="/cart"
                 onClick={closeDrawer}
-                className="w-full py-2.5 px-6 rounded-full bg-surface-container hover:bg-surface-container-high text-charcoal hover:text-primary font-technical-data text-xs tracking-wide uppercase transition-all flex items-center justify-center gap-2 font-semibold"
+                className="w-full py-2 px-6 rounded-full bg-surface-container hover:bg-surface-container-high text-charcoal hover:text-primary font-technical-data text-xs tracking-wide uppercase transition-all flex items-center justify-center gap-2 font-semibold"
               >
                 <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                 <span>View Full Cart Details</span>

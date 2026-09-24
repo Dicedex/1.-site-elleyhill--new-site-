@@ -169,62 +169,34 @@ export const PRODUCTS: Product[] = [
     aiHint: "power station"
   },
   {
-    name: "PV Combiner Box 5kW",
-    slug: "pv-combiner-box-5kw",
+    name: "DC Combiner Box",
+    slug: "dc-combiner-box",
     category: "Accessories",
-    description: "Essential protection for a 5kW solar array.",
-    price: "K 5,603.18",
-    features: ["Suits 5kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
+    description: "Heavy-duty DC combiner box for solar PV arrays with integrated surge protection and DC disconnects. Select size (5kW, 6kW, or 8kW).",
+    price: "K 5,000.00",
+    features: [
+      "Selectable 5kW, 6kW, or 8kW Array Ratings",
+      "Type-II DC Surge Protection Device (SPD)",
+      "High-Voltage DC String Breakers & Fuses",
+      "IP65 Weatherproof & UV-Resistant Enclosure",
+      "Pre-wired & Tested for Fast Commissioning"
+    ],
     image: "/images/products/pv.jpg",
     aiHint: "electrical box"
   },
   {
-    name: "PV Combiner Box 6kW",
-    slug: "pv-combiner-box-6kw",
+    name: "AC Combiner Box",
+    slug: "ac-combiner-box",
     category: "Accessories",
-    description: "Essential protection for a 6kW solar array.",
-    price: "K 5,603.18",
-    features: ["Suits 6kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
-    image: "/images/products/pv.jpg",
-    aiHint: "electrical box"
-  },
-  {
-    name: "PV Combiner box 8kw",
-    slug: "pv-combiner-box-8kw",
-    category: "Accessories",
-    description: "Essential protection for an 8kW solar array. Note: Typo from user, assuming 'PC' is 'PV'.",
-    price: "K 5,603.18",
-    features: ["Suits 8kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
-    image: "/images/products/pv.jpg",
-    aiHint: "electrical box"
-  },
-  {
-    name: "DB Combiner Box 5kW",
-    slug: "db-combiner-box-5kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 5kW systems.",
-    price: "K 5,759.98",
-    features: ["Suits 5kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
-    image: "/images/products/combiner-box1.jpeg",
-    aiHint: "circuit breaker"
-  },
-  {
-    name: "DB Combiner Box 6kW",
-    slug: "db-combiner-box-6kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 6kW systems.",
-    price: "K 5,759.98",
-    features: ["Suits 6kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
-    image: "/images/products/combiner-box1.jpeg",
-    aiHint: "circuit breaker"
-  },
-  {
-    name: "DB Combiner Box 8KW",
-    slug: "db-combiner-box-8kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 8kW systems.",
-    price: "K 5,759.98",
-    features: ["Suits 8kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
+    description: "Distribution board (DB) AC combiner box with circuit breakers and surge protection for hybrid solar inverters. Select size (5kW, 6kW, or 8kW).",
+    price: "K 4,000.00",
+    features: [
+      "Selectable 5kW, 6kW, or 8kW System Ratings",
+      "AC Overcurrent & Short-Circuit Breakers",
+      "Type-II AC Surge Protection Device (SPD)",
+      "Bypass / Manual Changeover Switch Support",
+      "Flame-Retardant Surface-Mounted Enclosure"
+    ],
     image: "/images/products/combiner-box1.jpeg",
     aiHint: "circuit breaker"
   },

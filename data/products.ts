@@ -1,3 +1,14 @@
+export type ProductVariant = {
+  id: string;
+  label: string;
+  name?: string;
+  price?: string;
+  description?: string;
+  features?: string[];
+  image?: string;
+  inStock?: boolean;
+};
+
 export type Product = {
   name: string;
   slug: string;
@@ -11,6 +22,9 @@ export type Product = {
   image: string;
   aiHint?: string;
   inStock?: boolean;
+  variantType?: "size" | "capacity" | "rating";
+  variants?: ProductVariant[];
+  defaultVariantId?: string;
 };
 
 export const PRODUCTS: Product[] = [
@@ -394,70 +408,102 @@ export const PRODUCTS: Product[] = [
     inStock: true
   },
   {
-    name: "PV Combiner Box 5kW",
-    slug: "pv-combiner-box-5kw",
+    name: "DC Combiner Box",
+    slug: "dc-combiner-box",
     category: "Accessories",
-    description: "Essential protection for a 5kW solar array.",
+    description: "Heavy-duty DC combiner box for solar PV arrays with integrated surge protection and DC disconnects. Select size (5kW, 6kW, or 8kW).",
+    longDescription: "Engineered specifically for solar PV installations in Zambia. Provides essential DC-side string fusing, overcurrent protection, and Type-II DC surge arrestors for 5kW, 6kW, and 8kW solar arrays. Pre-wired in an IP65 weatherproof enclosure for rapid, secure installation.",
     price: "K 5,000.00",
-    features: ["Suits 5kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
+    features: [
+      "Selectable 5kW, 6kW, or 8kW Array Ratings",
+      "Type-II DC Surge Protection Device (SPD)",
+      "High-Voltage DC String Breakers & Fuses",
+      "IP65 Weatherproof & UV-Resistant Enclosure",
+      "Pre-wired & Tested for Fast Commissioning"
+    ],
+    whatsInTheBox: [
+      "1 x Pre-wired DC Combiner Box (Selected kW Size)",
+      "Mounting Screws & Wall Plugs",
+      "Factory QC & Commissioning Certificate"
+    ],
+    warranty: "2-Year Hardware Warranty",
     image: "/images/products/pv.jpg",
     aiHint: "electrical box",
-    inStock: true
+    inStock: true,
+    variantType: "size",
+    defaultVariantId: "5kw",
+    variants: [
+      {
+        id: "5kw",
+        label: "5kW",
+        name: "DC Combiner Box (5kW)",
+        price: "K 5,000.00",
+        description: "Essential DC protection & string combining for 5kW solar arrays."
+      },
+      {
+        id: "6kw",
+        label: "6kW",
+        name: "DC Combiner Box (6kW)",
+        price: "K 5,000.00",
+        description: "Essential DC protection & string combining for 6kW solar arrays."
+      },
+      {
+        id: "8kw",
+        label: "8kW",
+        name: "DC Combiner Box (8kW)",
+        price: "K 5,000.00",
+        description: "Essential DC protection & string combining for 8kW solar arrays."
+      }
+    ]
   },
   {
-    name: "PV Combiner Box 6kW",
-    slug: "pv-combiner-box-6kw",
+    name: "AC Combiner Box",
+    slug: "ac-combiner-box",
     category: "Accessories",
-    description: "Essential protection for a 6kW solar array.",
-    price: "K 5,000.00",
-    features: ["Suits 6kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
-    image: "/images/products/pv.jpg",
-    aiHint: "electrical box",
-    inStock: true
-  },
-  {
-    name: "PV Combiner Box 8kW",
-    slug: "pv-combiner-box-8kw",
-    category: "Accessories",
-    description: "Essential protection for an 8kW solar array.",
-    price: "K 5,000.00",
-    features: ["Suits 8kW systems", "Overcurrent & Surge Protection", "Weatherproof Enclosure", "Easy Installation"],
-    image: "/images/products/pv.jpg",
-    aiHint: "electrical box",
-    inStock: true
-  },
-  {
-    name: "DB Combiner Box 5kW",
-    slug: "db-combiner-box-5kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 5kW systems.",
+    description: "Distribution board (DB) AC combiner box with circuit breakers and surge protection for hybrid solar inverters. Select size (5kW, 6kW, or 8kW).",
+    longDescription: "Standard AC distribution board combiner box engineered for seamless inverter output and grid/generator changeover protection. Includes high-grade AC breakers, Type-II AC surge arrestor, and changeover switchgear for 5kW, 6kW, and 8kW inverter setups.",
     price: "K 4,000.00",
-    features: ["Suits 5kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
+    features: [
+      "Selectable 5kW, 6kW, or 8kW System Ratings",
+      "AC Overcurrent & Short-Circuit Breakers",
+      "Type-II AC Surge Protection Device (SPD)",
+      "Bypass / Manual Changeover Switch Support",
+      "Flame-Retardant Surface-Mounted Enclosure"
+    ],
+    whatsInTheBox: [
+      "1 x Pre-wired AC Combiner Distribution Box (Selected kW Size)",
+      "Mounting Hardware",
+      "Commissioning & Circuit Diagram Labeling"
+    ],
+    warranty: "2-Year Hardware Warranty",
     image: "/images/products/combiner-box1.jpeg",
     aiHint: "circuit breaker",
-    inStock: true
-  },
-  {
-    name: "DB Combiner Box 6kW",
-    slug: "db-combiner-box-6kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 6kW systems.",
-    price: "K 4,000.00",
-    features: ["Suits 6kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
-    image: "/images/products/combiner-box1.jpeg",
-    aiHint: "circuit breaker",
-    inStock: true
-  },
-  {
-    name: "DB Combiner Box 8kW",
-    slug: "db-combiner-box-8kw",
-    category: "Accessories",
-    description: "Distribution board combiner box for 8kW systems.",
-    price: "K 4,000.00",
-    features: ["Suits 8kW systems", "AC/DC Protection", "Circuit Breakers Included", "Organized Wiring"],
-    image: "/images/products/combiner-box1.jpeg",
-    aiHint: "circuit breaker",
-    inStock: true
+    inStock: true,
+    variantType: "size",
+    defaultVariantId: "5kw",
+    variants: [
+      {
+        id: "5kw",
+        label: "5kW",
+        name: "AC Combiner Box (5kW)",
+        price: "K 4,000.00",
+        description: "AC distribution and inverter protection for 5kW hybrid systems."
+      },
+      {
+        id: "6kw",
+        label: "6kW",
+        name: "AC Combiner Box (6kW)",
+        price: "K 4,000.00",
+        description: "AC distribution and inverter protection for 6kW hybrid systems."
+      },
+      {
+        id: "8kw",
+        label: "8kW",
+        name: "AC Combiner Box (8kW)",
+        price: "K 4,000.00",
+        description: "AC distribution and inverter protection for 8kW hybrid systems."
+      }
+    ]
   },
   {
     name: "Battery Cable with Lug",
