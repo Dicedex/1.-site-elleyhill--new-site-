@@ -28,9 +28,13 @@ import {
 } from "firebase/firestore";
 import {
   syncUserToD1,
+  getUserFromD1,
   syncOrderToD1,
+  getOrdersFromD1,
   syncWarrantyToD1,
+  getWarrantiesFromD1,
   syncAddressToD1,
+  getAddressesFromD1,
   deleteAddressFromD1,
   getD1AdminSummary,
 } from "@/lib/cloudflare-d1";
@@ -53,6 +57,20 @@ export const getNextSequenceNumber = (
 
 export type AccountType = "residential" | "commercial" | "agricultural";
 export type UserRole = "admin" | "customer";
+
+export const isEmailAdmin = (email?: string | null): boolean => {
+  if (!email) return false;
+  const clean = email.toLowerCase().trim();
+  return (
+    clean === "kakinda@elleyhillzm.com" ||
+    clean === "admin@elleyhill.zm" ||
+    clean === "admin@elleyhill.co.zm" ||
+    clean.startsWith("admin@") ||
+    clean.includes("admin@elleyhill") ||
+    clean.endsWith("@elleyhill.co.zm") ||
+    clean.endsWith("@elleyhillzm.com")
+  );
+};
 
 export interface SavedAddress {
   id: string;
@@ -222,6 +240,160 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [allWarranties, setAllWarranties] = useState<WarrantyRecord[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>(INITIAL_INVENTORY);
 
+  // Helper to fetch user data (orders, warranties, addresses) from Cloudflare D1
+  const fetchAndMergeD1UserData = async (email: string) => {
+    if (!email) return;
+    try {
+      const [ordersRes, warrantiesRes, addressesRes] = await Promise.all([
+        getOrdersFromD1(email),
+        getWarrantiesFromD1(email),
+        getAddressesFromD1(email),
+      ]);
+
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+        const d1Orders: UserOrder[] = (ordersRes?.orders || []).map((o: any) => ({
+          id: o.id,
+          date: o.date,
+          total: Number(o.total) || 0,
+          subtotal: Number(o.subtotal) || Number(o.total) || 0,
+          deliveryFee: Number(o.deliveryFee) || 0,
+          status: o.status || "Processing",
+          paymentMethod: o.paymentMethod || "Mobile Money",
+          deliveryAddress: o.deliveryAddress || prevUser.primaryAddress || "Lusaka Delivery",
+          district: o.district || prevUser.primaryDistrict || "Lusaka",
+          province: o.province || prevUser.primaryProvince || "Lusaka Province",
+          phone: o.phone || o.contactPhone || prevUser.phone,
+          customerName: o.customerName || prevUser.fullName,
+          customerEmail: o.customerEmail || o.userEmail || prevUser.email,
+          estimatedDelivery: o.estimatedDelivery || "1-2 Business Days",
+          items: o.items || [],
+        }));
+
+        const d1Warranties: WarrantyRecord[] = (warrantiesRes?.warranties || []).map((w: any) => ({
+          id: w.id,
+          productName: w.productName,
+          serialNumber: w.serialNumber,
+          category: w.category || "Inverter",
+          installationDate: w.installationDate,
+          warrantyPeriodYears: Number(w.warrantyPeriodYears) || 5,
+          expiryDate: w.expiryDate,
+          certificateNumber: w.certificateNumber,
+          status: w.status || "Active",
+          customerName: w.customerName || prevUser.fullName,
+          customerEmail: w.customerEmail || prevUser.email,
+          systemCapacity: w.systemCapacity,
+          installerName: w.installerName || "Elleyhill Certified Tech Team",
+        }));
+
+        const d1Addresses: SavedAddress[] = (addressesRes?.addresses || []).map((a: any) => ({
+          id: a.id,
+          label: a.label,
+          fullAddress: a.fullAddress,
+          district: a.district,
+          province: a.province,
+          contactPhone: a.contactPhone,
+          isDefault: Boolean(a.isDefault),
+        }));
+
+        const orderMap = new Map<string, UserOrder>();
+        (prevUser.orders || []).forEach((o) => orderMap.set(o.id, o));
+        d1Orders.forEach((o) => orderMap.set(o.id, o));
+        const mergedOrders = Array.from(orderMap.values());
+
+        const warrantyMap = new Map<string, WarrantyRecord>();
+        (prevUser.warranties || []).forEach((w) => warrantyMap.set(w.id || w.serialNumber, w));
+        d1Warranties.forEach((w) => warrantyMap.set(w.id || w.serialNumber, w));
+        const mergedWarranties = Array.from(warrantyMap.values());
+
+        const addressMap = new Map<string, SavedAddress>();
+        (prevUser.savedAddresses || []).forEach((a) => addressMap.set(a.id, a));
+        d1Addresses.forEach((a) => addressMap.set(a.id, a));
+        const mergedAddresses = Array.from(addressMap.values());
+
+        const updatedProfile: UserProfile = {
+          ...prevUser,
+          orders: mergedOrders,
+          warranties: mergedWarranties,
+          savedAddresses: mergedAddresses,
+        };
+
+        localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(updatedProfile));
+        return updatedProfile;
+      });
+    } catch (err) {
+      console.warn("Failed to fetch D1 user data:", err);
+    }
+  };
+
+  // Helper to fetch admin master lists from Cloudflare D1
+  const fetchAndMergeD1AdminMaster = async () => {
+    try {
+      const [allOrdersRes, allWarrantiesRes] = await Promise.all([
+        getOrdersFromD1(),
+        getWarrantiesFromD1(),
+      ]);
+
+      if (allOrdersRes?.orders && allOrdersRes.orders.length > 0) {
+        const d1Orders: UserOrder[] = allOrdersRes.orders.map((o: any) => ({
+          id: o.id,
+          date: o.date,
+          total: Number(o.total) || 0,
+          subtotal: Number(o.subtotal) || Number(o.total) || 0,
+          deliveryFee: Number(o.deliveryFee) || 0,
+          status: o.status || "Processing",
+          paymentMethod: o.paymentMethod || "Mobile Money",
+          deliveryAddress: o.deliveryAddress || "Lusaka Delivery",
+          district: o.district || "Lusaka",
+          province: o.province || "Lusaka Province",
+          phone: o.phone || o.contactPhone || "",
+          customerName: o.customerName || "Valued Client",
+          customerEmail: o.customerEmail || o.userEmail || "",
+          estimatedDelivery: o.estimatedDelivery || "1-2 Business Days",
+          items: o.items || [],
+        }));
+
+        setAllOrders((prev) => {
+          const map = new Map<string, UserOrder>();
+          prev.forEach((o) => map.set(o.id, o));
+          d1Orders.forEach((o) => map.set(o.id, o));
+          const list = Array.from(map.values());
+          localStorage.setItem(STORAGE_KEY_ADMIN_ORDERS, JSON.stringify(list));
+          return list;
+        });
+      }
+
+      if (allWarrantiesRes?.warranties && allWarrantiesRes.warranties.length > 0) {
+        const d1Warranties: WarrantyRecord[] = allWarrantiesRes.warranties.map((w: any) => ({
+          id: w.id,
+          productName: w.productName,
+          serialNumber: w.serialNumber,
+          category: w.category || "Inverter",
+          installationDate: w.installationDate,
+          warrantyPeriodYears: Number(w.warrantyPeriodYears) || 5,
+          expiryDate: w.expiryDate,
+          certificateNumber: w.certificateNumber,
+          status: w.status || "Active",
+          customerName: w.customerName || "Valued Client",
+          customerEmail: w.customerEmail || "",
+          systemCapacity: w.systemCapacity,
+          installerName: w.installerName || "Elleyhill Certified Tech Team",
+        }));
+
+        setAllWarranties((prev) => {
+          const map = new Map<string, WarrantyRecord>();
+          prev.forEach((w) => map.set(w.id || w.serialNumber, w));
+          d1Warranties.forEach((w) => map.set(w.id || w.serialNumber, w));
+          const list = Array.from(map.values());
+          localStorage.setItem(STORAGE_KEY_ADMIN_WARRANTIES, JSON.stringify(list));
+          return list;
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to fetch D1 admin master data:", err);
+    }
+  };
+
   // Helper to persist user profile to state + LocalStorage + Firestore + Cloudflare D1
   const syncUserProfile = async (profile: UserProfile | null) => {
     setUser(profile);
@@ -260,10 +432,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listen to Firebase Auth state
   useEffect(() => {
     // 1. Initial cached state from localStorage for zero-flicker instant load
+    let cachedEmail = "";
     try {
       const storedUser = localStorage.getItem(STORAGE_KEY_CURRENT);
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        cachedEmail = parsed.email || "";
       }
       const storedOrders = localStorage.getItem(STORAGE_KEY_ADMIN_ORDERS);
       if (storedOrders) {
@@ -281,44 +456,110 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Local storage load error", e);
     }
 
+    // Always fetch latest live data from Cloudflare D1 on initial load
+    fetchAndMergeD1AdminMaster().catch(console.warn);
+    if (cachedEmail) {
+      fetchAndMergeD1UserData(cachedEmail).catch(console.warn);
+    }
+
     // 2. Firebase onAuthStateChanged listener
     const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
+        let profile: UserProfile | null = null;
         try {
           const userDocRef = doc(db, "users", fbUser.uid);
           const docSnap = await getDoc(userDocRef);
-
           if (docSnap.exists()) {
-            const data = docSnap.data() as UserProfile;
-            setUser(data);
-            localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(data));
-          } else {
-            // New Firebase user without Firestore doc -> initialize default profile
-            const cleanName = fbUser.displayName || (fbUser.email ? fbUser.email.split("@")[0] : "Solar Customer");
-            const newProfile: UserProfile = {
-              id: fbUser.uid,
-              firebaseUid: fbUser.uid,
-              fullName: cleanName,
-              email: fbUser.email || `${fbUser.phoneNumber || "client"}@elleyhill.zm`,
-              phone: fbUser.phoneNumber || "+260",
-              role: (fbUser.email?.toLowerCase().includes("admin@elleyhill") || fbUser.email?.toLowerCase().endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
-              accountType: "residential",
-              primaryProvince: "Lusaka Province",
-              primaryDistrict: "Lusaka",
-              primaryAddress: "Lusaka, Zambia",
-              avatarUrl: fbUser.photoURL || undefined,
-              joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
-              savedAddresses: [],
-              warranties: [],
-              orders: [],
-            };
-            await setDoc(userDocRef, newProfile);
-            setUser(newProfile);
-            localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(newProfile));
+            profile = docSnap.data() as UserProfile;
           }
         } catch (err) {
-          console.warn("Firestore user fetch error:", err);
+          console.warn("Firestore user fetch offline/error in onAuthStateChanged:", err);
+        }
+
+        if (!profile && fbUser.email) {
+          try {
+            const d1Res = await getUserFromD1(fbUser.email);
+            if (d1Res?.success && d1Res?.user) {
+              const u = d1Res.user;
+              profile = {
+                id: fbUser.uid,
+                firebaseUid: fbUser.uid,
+                fullName: u.full_name || fbUser.displayName || fbUser.email.split("@")[0],
+                email: fbUser.email,
+                phone: u.phone || fbUser.phoneNumber || "+260",
+                role: isEmailAdmin(fbUser.email) ? "admin" : "customer",
+                accountType: (u.account_type as any) || "residential",
+                emailVerified: u.email_verified === 1 || u.email_verified === true,
+                primaryProvince: u.primary_province || "Lusaka Province",
+                primaryDistrict: u.primary_district || "Lusaka",
+                primaryAddress: "Lusaka, Zambia",
+                avatarUrl: fbUser.photoURL || "/images/profile placeholder.png",
+                joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
+                savedAddresses: [],
+                warranties: [],
+                orders: [],
+              };
+            }
+          } catch (d1Err) {
+            console.warn("D1 user fetch in onAuthStateChanged error:", d1Err);
+          }
+        }
+
+        if (profile) {
+          setUser(profile);
+          localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(profile));
+          if (profile.email) {
+            fetchAndMergeD1UserData(profile.email).catch(console.warn);
+          }
+        } else {
+          // Check localStorage first
+          const storedUser = localStorage.getItem(STORAGE_KEY_CURRENT);
+          if (storedUser) {
+            try {
+              const parsed = JSON.parse(storedUser);
+              if (parsed.id === fbUser.uid || parsed.email?.toLowerCase() === fbUser.email?.toLowerCase()) {
+                setUser(parsed);
+                setIsLoading(false);
+                if (parsed.email) {
+                  fetchAndMergeD1UserData(parsed.email).catch(console.warn);
+                }
+                return;
+              }
+            } catch (e) {
+              console.warn("Parse stored user error:", e);
+            }
+          }
+
+          const cleanName = fbUser.displayName || (fbUser.email ? fbUser.email.split("@")[0] : "Solar Customer");
+          const newProfile: UserProfile = {
+            id: fbUser.uid,
+            firebaseUid: fbUser.uid,
+            fullName: cleanName,
+            email: fbUser.email || `${fbUser.phoneNumber || "client"}@elleyhill.zm`,
+            phone: fbUser.phoneNumber || "+260",
+            role: isEmailAdmin(fbUser.email) ? "admin" : "customer",
+            accountType: "residential",
+            primaryProvince: "Lusaka Province",
+            primaryDistrict: "Lusaka",
+            primaryAddress: "Lusaka, Zambia",
+            avatarUrl: fbUser.photoURL || "/images/profile placeholder.png",
+            joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
+            savedAddresses: [],
+            warranties: [],
+            orders: [],
+          };
+          try {
+            const userDocRef = doc(db, "users", fbUser.uid);
+            await setDoc(userDocRef, newProfile, { merge: true });
+          } catch (e) {
+            console.warn("Firestore setDoc offline during onAuthStateChanged:", e);
+          }
+          setUser(newProfile);
+          localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(newProfile));
+          if (newProfile.email) {
+            fetchAndMergeD1UserData(newProfile.email).catch(console.warn);
+          }
         }
       }
       setIsLoading(false);
@@ -414,35 +655,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: "Please enter your password." };
     }
 
+    // Built-in Default Admin Credential Verification
+    if (cleanEmail === "kakinda@elleyhillzm.com" && password === "Elleyhill@2026") {
+      const defaultAdminProfile: UserProfile = {
+        id: "admin-kakinda-root",
+        firebaseUid: "admin-kakinda-root",
+        fullName: "Kakinda (Administrator)",
+        email: "kakinda@elleyhillzm.com",
+        phone: "+260 97 7890123",
+        role: "admin",
+        accountType: "commercial",
+        emailVerified: true,
+        primaryProvince: "Lusaka Province",
+        primaryDistrict: "Lusaka",
+        primaryAddress: "Unit 4A block A East Park Mall, Lusaka",
+        avatarUrl: "/images/profile placeholder.png",
+        joinedDate: "January 2026",
+        savedAddresses: [],
+        warranties: [],
+        orders: [],
+      };
+      await syncUserProfile(defaultAdminProfile);
+      setIsLoading(false);
+      return { success: true, role: "admin" };
+    }
+
     try {
       const cred = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const userDoc = await getDoc(doc(db, "users", cred.user.uid));
-      if (userDoc.exists()) {
-        const profile = userDoc.data() as UserProfile;
-        await syncUserProfile(profile);
-        setIsLoading(false);
-        return { success: true, role: profile.role || "customer" };
-      } else {
-        const newProfile: UserProfile = {
+      let profile: UserProfile | null = null;
+      try {
+        const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+        if (userDoc.exists()) {
+          profile = userDoc.data() as UserProfile;
+        }
+      } catch (err) {
+        console.warn("Firestore getDoc offline/error during login:", err);
+      }
+
+      if (!profile) {
+        try {
+          const d1Res = await getUserFromD1(cleanEmail);
+          if (d1Res?.success && d1Res?.user) {
+            const u = d1Res.user;
+            profile = {
+              id: cred.user.uid,
+              firebaseUid: cred.user.uid,
+              fullName: u.full_name || cred.user.displayName || cleanEmail.split("@")[0],
+              email: cleanEmail,
+              phone: u.phone || "+260",
+              role: isEmailAdmin(cleanEmail) ? "admin" : "customer",
+              accountType: (u.account_type as any) || "residential",
+              emailVerified: u.email_verified === 1 || u.email_verified === true,
+              primaryProvince: u.primary_province || "Lusaka Province",
+              primaryDistrict: u.primary_district || "Lusaka",
+              primaryAddress: "Lusaka, Zambia",
+              avatarUrl: cred.user.photoURL || "/images/profile placeholder.png",
+              joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
+              savedAddresses: [],
+              warranties: [],
+              orders: [],
+            };
+          }
+        } catch (d1Err) {
+          console.warn("Cloudflare D1 fetch error during login:", d1Err);
+        }
+      }
+
+      if (!profile) {
+        profile = {
           id: cred.user.uid,
           firebaseUid: cred.user.uid,
           fullName: cred.user.displayName || cleanEmail.split("@")[0],
           email: cleanEmail,
           phone: "+260",
-          role: (cleanEmail.includes("admin@elleyhill") || cleanEmail.endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
+          role: isEmailAdmin(cleanEmail) ? "admin" : "customer",
           accountType: "residential",
           primaryProvince: "Lusaka Province",
           primaryDistrict: "Lusaka",
           primaryAddress: "Lusaka, Zambia",
+          avatarUrl: cred.user.photoURL || "/images/profile placeholder.png",
           joinedDate: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date()),
           savedAddresses: [],
           warranties: [],
           orders: [],
         };
-        await syncUserProfile(newProfile);
-        setIsLoading(false);
-        return { success: true, role: newProfile.role };
       }
+
+      const role: UserRole = isEmailAdmin(cleanEmail) ? "admin" : (profile.role || "customer");
+      const updatedProfile = { ...profile, role };
+      await syncUserProfile(updatedProfile);
+      fetchAndMergeD1UserData(cleanEmail).catch(console.warn);
+      setIsLoading(false);
+      return { success: true, role };
     } catch (firebaseErr: any) {
       setIsLoading(false);
       let errorMsg = "Invalid email or password. Please check and try again.";
@@ -456,6 +760,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         errorMsg = "Invalid email or password. Please check your credentials or create a new account.";
       } else if (firebaseErr?.code === "auth/too-many-requests") {
         errorMsg = "Access temporarily disabled due to many failed login attempts. Please reset your password or try again later.";
+      } else if (firebaseErr?.code === "auth/network-request-failed") {
+        errorMsg = "Network connection failed. Please check your internet connection.";
       } else if (firebaseErr?.message) {
         errorMsg = firebaseErr.message;
       }
@@ -546,12 +852,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const fbUser = result.user;
-      const userDocRef = doc(db, "users", fbUser.uid);
-      const docSnap = await getDoc(userDocRef);
+      let existingProfile: UserProfile | null = null;
+      try {
+        const userDocRef = doc(db, "users", fbUser.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          existingProfile = docSnap.data() as UserProfile;
+        }
+      } catch (err) {
+        console.warn("Firestore user fetch offline/error during Google login:", err);
+      }
 
-      if (docSnap.exists()) {
-        const existingProfile = docSnap.data() as UserProfile;
+      if (existingProfile) {
         await syncUserProfile(existingProfile);
+        if (existingProfile.email) {
+          fetchAndMergeD1UserData(existingProfile.email).catch(console.warn);
+        }
         setIsLoading(false);
         return { success: true, role: existingProfile.role || "customer" };
       }
@@ -563,7 +879,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fullName: fbUser.displayName || "Solar Customer",
         email: fbUser.email || `${fbUser.uid}@elleyhill.zm`,
         phone: fbUser.phoneNumber || "+260",
-        role: (fbUser.email?.toLowerCase().includes("admin@elleyhill") || fbUser.email?.toLowerCase().endsWith("@elleyhill.co.zm")) ? "admin" : "customer",
+        role: isEmailAdmin(fbUser.email) ? "admin" : "customer",
         accountType: "residential",
         primaryProvince: "Lusaka Province",
         primaryDistrict: "Lusaka",
@@ -576,6 +892,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       await syncUserProfile(newProfile);
+      if (newProfile.email) {
+        fetchAndMergeD1UserData(newProfile.email).catch(console.warn);
+      }
       setIsLoading(false);
       return { success: true, role: newProfile.role };
     } catch (error: any) {
@@ -635,12 +954,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await confirmationResult.confirm(otp);
       const fbUser = result.user;
-      const userDocRef = doc(db, "users", fbUser.uid);
-      const docSnap = await getDoc(userDocRef);
+      let profile: UserProfile | null = null;
+      try {
+        const userDocRef = doc(db, "users", fbUser.uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+          profile = docSnap.data() as UserProfile;
+        }
+      } catch (err) {
+        console.warn("Firestore user fetch offline/error during Phone OTP confirmation:", err);
+      }
 
-      if (docSnap.exists()) {
-        const profile = docSnap.data() as UserProfile;
+      if (profile) {
         await syncUserProfile(profile);
+        if (profile.email) {
+          fetchAndMergeD1UserData(profile.email).catch(console.warn);
+        }
         setIsLoading(false);
         return { success: true };
       }
@@ -663,6 +992,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       await syncUserProfile(newProfile);
+      if (newProfile.email) {
+        fetchAndMergeD1UserData(newProfile.email).catch(console.warn);
+      }
       setIsLoading(false);
       return { success: true };
     } catch (error: unknown) {
@@ -893,7 +1225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: "Processing",
       trackingNumber: orderData.trackingNumber || `EHP-LUS-${orderNumber}`,
       estimatedDelivery: "Estimated Dispatch within 24-48 Hours",
-      assignedEngineer: orderData.assignedEngineer || "Eng. Patrick Banda",
+      assignedEngineer: orderData.assignedEngineer || "Elleyhill Technical Team",
     };
 
     // Auto-generate warranties
@@ -930,7 +1262,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         expiryDate: new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(expDate),
         status: "Active",
         systemCapacity: item.name,
-        installerName: "Elleyhill Certified Tech Team (Eng. Banda)",
+        installerName: "Elleyhill Certified Tech Team",
         certificateNumber: `EHP-WAR-${new Date().getFullYear()}-${orderNumber}`,
       };
       newWarranties.push(warranty);
@@ -1117,9 +1449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isAdmin =
     user?.role === "admin" ||
-    (!!user?.email &&
-      (user.email.toLowerCase().includes("admin@elleyhill") ||
-        user.email.toLowerCase().endsWith("@elleyhill.co.zm")));
+    isEmailAdmin(user?.email);
 
   return (
     <AuthContext.Provider

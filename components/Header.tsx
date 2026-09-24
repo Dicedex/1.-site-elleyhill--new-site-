@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -223,8 +224,14 @@ export default function Header() {
                     className="flex items-center gap-2 py-1.5 px-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-border-light text-xs font-semibold text-charcoal transition-all cursor-pointer shadow-sm"
                     aria-expanded={userDropdownOpen}
                   >
-                    <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-primary-light flex items-center justify-center font-bold text-xs shadow-sm shrink-0 border border-primary/20">
+                      <Image
+                        src={user.avatarUrl || "/images/profile placeholder.png"}
+                        alt={user.fullName || "User Profile"}
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <span className="text-charcoal font-bold max-w-[120px] truncate">{user.fullName.split(" ")[0]}</span>
                     <span className="material-symbols-outlined text-[16px] text-outline">
@@ -379,8 +386,14 @@ export default function Header() {
               <div className="p-3.5 rounded-2xl bg-surface-container-low border border-border-light">
                 <div className="flex items-center justify-between gap-3 mb-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
-                      {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-primary-light flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-primary/20">
+                      <Image
+                        src={user.avatarUrl || "/images/profile placeholder.png"}
+                        alt={user.fullName || "User Profile"}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="min-w-0">
                       <div className="font-bold text-xs text-charcoal truncate">{user.fullName}</div>
@@ -439,12 +452,18 @@ export default function Header() {
             ) : (
               <div className="p-3.5 rounded-2xl bg-surface-container-low border border-border-light flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-surface-container-high text-primary flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center shrink-0 border border-border-light">
+                    <Image
+                      src="/images/profile placeholder.png"
+                      alt="Account"
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="min-w-0">
                     <div className="font-bold text-xs text-charcoal">My Account</div>
-                    <div className="text-[10px] text-on-surface-variant truncate">Warranties &amp; Tracking</div>
+                    <div className="text-[10px] text-on-surface-variant truncate">Warranties &amp; Orders</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">

@@ -488,7 +488,7 @@ export default function CheckoutPage() {
                           Verified Contact Credentials
                         </h2>
                         <p className="font-body-sm text-xs text-on-surface-variant">
-                          Official recipient details for VAT invoices, dispatch tracking &amp; warranty certificate.
+                          Official recipient details for VAT invoices, order updates &amp; warranty certificate.
                         </p>
                       </div>
                     </div>
@@ -575,7 +575,7 @@ export default function CheckoutPage() {
                         <span className="font-semibold block text-on-surface">
                           Opt-in to real-time WhatsApp logistics alerts (+260 {phone || "Phone"})
                         </span>
-                        Receive live GPS tracking of the solar delivery truck, digital commissioning reports, and warranty certificates.
+                        Receive live dispatch updates, digital commissioning reports, and warranty certificates.
                       </div>
                     </label>
                   </div>

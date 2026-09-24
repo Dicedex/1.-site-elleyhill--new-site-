@@ -115,10 +115,17 @@ export async function getUserFromD1(email: string) {
 // 2. Orders Sync
 export async function syncOrderToD1(order: D1OrderPayload) {
   try {
+    const email = (order.userEmail || order.customerEmail || "").trim().toLowerCase();
+    const payload = {
+      ...order,
+      userEmail: email,
+      customerEmail: email,
+      customerName: order.customerName || "Online Client",
+    };
     const res = await fetch(`${WORKER_BASE_URL}/api/d1/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(order),
+      body: JSON.stringify(payload),
     });
     return await res.json();
   } catch (e: any) {
@@ -143,10 +150,17 @@ export async function getOrdersFromD1(email?: string) {
 // 3. Warranties Sync
 export async function syncWarrantyToD1(warranty: D1WarrantyPayload) {
   try {
+    const email = (warranty.userEmail || warranty.customerEmail || "").trim().toLowerCase();
+    const payload = {
+      ...warranty,
+      userEmail: email,
+      customerEmail: email,
+      customerName: warranty.customerName || "Online Client",
+    };
     const res = await fetch(`${WORKER_BASE_URL}/api/d1/warranties`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(warranty),
+      body: JSON.stringify(payload),
     });
     return await res.json();
   } catch (e: any) {

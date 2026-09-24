@@ -98,18 +98,24 @@ export default {
         const otpCode = await generateOtpCode(email, env.VERIFICATION_SECRET || "elleyhill-verification-secret-2026");
         const expiresAt = new Date(Date.now() + OTP_WINDOW_MS).toISOString();
 
-        // Persist to Cloudflare D1 if available
+        // Persist OTP directly into users table in Cloudflare D1
         if (db) {
           try {
-            const id = `ver-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const id = `usr-${Date.now()}`;
+            const now = new Date().toISOString();
             await db
               .prepare(
-                "INSERT INTO email_verifications (id, email, otp_code, verified, expires_at, created_at) VALUES (?, ?, ?, 0, ?, ?)"
+                `INSERT INTO users (id, email, full_name, phone, otp_code, otp_expires_at, updated_at)
+                 VALUES (?, ?, 'Online Client', '', ?, ?, ?)
+                 ON CONFLICT(email) DO UPDATE SET
+                   otp_code = excluded.otp_code,
+                   otp_expires_at = excluded.otp_expires_at,
+                   updated_at = excluded.updated_at`
               )
-              .bind(id, email, otpCode, expiresAt, new Date().toISOString())
+              .bind(id, email, otpCode, expiresAt, now)
               .run();
           } catch (e) {
-            console.warn("Could not insert OTP into D1:", e.message);
+            console.warn("Could not insert OTP into users table in D1:", e.message);
           }
         }
 
@@ -160,20 +166,23 @@ export default {
           );
         }
 
-        // Update D1 verification status
+        // Update D1 user verification status directly in users table
         if (db) {
           try {
             const now = new Date().toISOString();
             await db
-              .prepare("UPDATE email_verifications SET verified = 1, verified_at = ? WHERE email = ? AND otp_code = ?")
-              .bind(now, email, code)
-              .run();
-            await db
-              .prepare("UPDATE users SET email_verified = 1, updated_at = ? WHERE email = ?")
+              .prepare(
+                `UPDATE users 
+                 SET email_verified = 1, 
+                     otp_code = NULL, 
+                     otp_expires_at = NULL, 
+                     updated_at = ? 
+                 WHERE email = ?`
+              )
               .bind(now, email)
               .run();
           } catch (e) {
-            console.warn("Could not update D1 verification status:", e.message);
+            console.warn("Could not update D1 user verification status:", e.message);
           }
         }
 
@@ -206,10 +215,34 @@ export default {
             return jsonResponse({ error: "Missing email parameter" }, 400, corsHeaders);
           }
           const user = await db
-            .prepare("SELECT * FROM users WHERE email = ?")
+            .prepare("SELECT * FROM users WHERE LOWER(email) = LOWER(?)")
             .bind(email.toLowerCase())
             .first();
-          return jsonResponse({ success: true, user: user || null }, 200, corsHeaders);
+
+          if (!user) {
+            return jsonResponse({ success: true, user: null }, 200, corsHeaders);
+          }
+
+          const formattedUser = {
+            id: user.id,
+            email: user.email,
+            fullName: user.full_name,
+            full_name: user.full_name,
+            phone: user.phone,
+            role: user.role || "customer",
+            accountType: user.account_type || "residential",
+            account_type: user.account_type || "residential",
+            emailVerified: Boolean(user.email_verified),
+            email_verified: Boolean(user.email_verified),
+            primaryDistrict: user.primary_district || "Lusaka",
+            primary_district: user.primary_district || "Lusaka",
+            primaryProvince: user.primary_province || "Lusaka Province",
+            primary_province: user.primary_province || "Lusaka Province",
+            createdAt: user.created_at,
+            updatedAt: user.updated_at,
+          };
+
+          return jsonResponse({ success: true, user: formattedUser }, 200, corsHeaders);
         }
 
         if (request.method === "POST" || request.method === "PUT") {
@@ -262,7 +295,7 @@ export default {
           let ordersQuery;
           if (email) {
             ordersQuery = await db
-              .prepare("SELECT * FROM orders WHERE user_email = ? ORDER BY created_at DESC")
+              .prepare("SELECT * FROM orders WHERE LOWER(user_email) = LOWER(?) ORDER BY created_at DESC")
               .bind(email.toLowerCase())
               .all();
           } else {
@@ -271,48 +304,127 @@ export default {
               .all();
           }
 
-          const orders = (ordersQuery.results || []).map((o) => ({
-            ...o,
-            items: typeof o.items_json === "string" ? JSON.parse(o.items_json || "[]") : o.items_json,
-          }));
+          let orders = (ordersQuery.results || []).map((o) => {
+            let parsedItems = [];
+            try {
+              parsedItems = typeof o.items_json === "string" ? JSON.parse(o.items_json || "[]") : (o.items_json || []);
+            } catch (e) {
+              parsedItems = [];
+            }
+
+            return {
+              id: o.id,
+              userId: o.user_id,
+              userEmail: o.user_email,
+              customerEmail: o.user_email,
+              customerName: o.customer_name || "Valued Client",
+              date: o.date,
+              total: Number(o.total) || 0,
+              subtotal: Number(o.subtotal) || Number(o.total) || 0,
+              deliveryFee: Number(o.delivery_fee) || 0,
+              status: o.status || "Processing",
+              paymentMethod: o.payment_method || "Mobile Money",
+              depositId: o.deposit_id,
+              trackingNumber: o.tracking_number || o.id,
+              deliveryAddress: o.delivery_address || "Lusaka Delivery",
+              district: o.district || "Lusaka",
+              province: o.province || "Lusaka Province",
+              phone: o.contact_phone || "",
+              contactPhone: o.contact_phone || "",
+              estimatedDelivery: o.estimated_delivery || "1-2 Business Days",
+              items: parsedItems,
+              createdAt: o.created_at,
+              updatedAt: o.updated_at,
+            };
+          });
+
+          // If no orders table entries found for this email, check if there are payments in payments table
+          if (orders.length === 0 && email) {
+            try {
+              const paymentsQuery = await db
+                .prepare("SELECT * FROM payments WHERE LOWER(phone) LIKE ? OR order_ref LIKE 'EHP-%' ORDER BY created_at DESC LIMIT 10")
+                .bind(`%${email.replace(/[^0-9]/g, "").slice(-8)}%`)
+                .all();
+
+              if (paymentsQuery?.results && paymentsQuery.results.length > 0) {
+                orders = paymentsQuery.results.map((p) => ({
+                  id: p.order_ref,
+                  userEmail: email,
+                  customerEmail: email,
+                  customerName: "Valued Client",
+                  date: (p.created_at || new Date().toISOString()).split("T")[0],
+                  total: Number(p.amount) || 0,
+                  subtotal: Number(p.amount) || 0,
+                  deliveryFee: 0,
+                  status: p.status === "COMPLETED" ? "Delivered & Commissioned" : "Processing",
+                  paymentMethod: `Mobile Money (${(p.provider || "momo").toUpperCase()})`,
+                  depositId: p.deposit_id,
+                  deliveryAddress: "Lusaka Delivery",
+                  district: "Lusaka",
+                  province: "Lusaka Province",
+                  phone: p.phone || "",
+                  contactPhone: p.phone || "",
+                  estimatedDelivery: "1-2 Business Days",
+                  items: [
+                    {
+                      id: "item_hw_pay",
+                      name: "Solar Energy System Hardware",
+                      quantity: 1,
+                      price: Number(p.amount) || 0,
+                    },
+                  ],
+                }));
+              }
+            } catch (pErr) {
+              console.warn("Error fallback querying payments:", pErr);
+            }
+          }
 
           return jsonResponse({ success: true, orders }, 200, corsHeaders);
         }
 
         if (request.method === "POST") {
           const ord = await request.json();
-          if (!ord.id || !ord.userEmail) {
-            return jsonResponse({ error: "Missing required order fields (id, userEmail)" }, 400, corsHeaders);
+          const userEmail = String(
+            ord.userEmail || ord.customerEmail || ord.user_email || ord.customer_email || ""
+          ).trim().toLowerCase();
+
+          if (!ord.id || !userEmail) {
+            return jsonResponse({ error: "Missing required order fields (id, userEmail or customerEmail)" }, 400, corsHeaders);
           }
 
           const now = new Date().toISOString();
-          const itemsStr = JSON.stringify(ord.items || []);
+          const itemsStr = typeof ord.items === "string" ? ord.items : JSON.stringify(ord.items || []);
 
           await db
             .prepare(
-              `INSERT INTO orders (id, user_id, user_email, date, total, status, payment_method, deposit_id, tracking_number, delivery_address, district, province, contact_phone, estimated_delivery, items_json, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `INSERT INTO orders (id, user_id, user_email, customer_name, date, total, subtotal, delivery_fee, status, payment_method, deposit_id, tracking_number, delivery_address, district, province, contact_phone, estimated_delivery, items_json, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT(id) DO UPDATE SET
                  status = excluded.status,
-                 tracking_number = excluded.tracking_number,
                  total = excluded.total,
+                 subtotal = excluded.subtotal,
+                 delivery_fee = excluded.delivery_fee,
                  items_json = excluded.items_json,
                  updated_at = excluded.updated_at`
             )
             .bind(
               ord.id,
               ord.userId || ord.user_id || null,
-              String(ord.userEmail || ord.user_email).toLowerCase(),
+              userEmail,
+              ord.customerName || ord.customer_name || "Valued Client",
               ord.date || now.split("T")[0],
               Number(ord.total) || 0,
+              Number(ord.subtotal) || Number(ord.total) || 0,
+              Number(ord.deliveryFee || ord.delivery_fee) || 0,
               ord.status || "Processing",
-              ord.paymentMethod || ord.payment_method || "Mobile Money (pawaPay)",
+              ord.paymentMethod || ord.payment_method || "Mobile Money",
               ord.depositId || ord.deposit_id || null,
-              ord.trackingNumber || ord.tracking_number || `EHP-TRK-${Math.floor(100000 + Math.random() * 900000)}`,
+              ord.trackingNumber || ord.tracking_number || ord.orderNumber || ord.id,
               ord.deliveryAddress || ord.delivery_address || "Lusaka Delivery",
               ord.district || "Lusaka",
               ord.province || "Lusaka Province",
-              ord.contactPhone || ord.contact_phone || "",
+              ord.contactPhone || ord.contact_phone || ord.phone || "",
               ord.estimatedDelivery || ord.estimated_delivery || "1-2 Business Days",
               itemsStr,
               now,
@@ -335,19 +447,44 @@ export default {
           let res;
           if (email) {
             res = await db
-              .prepare("SELECT * FROM warranties WHERE user_email = ? ORDER BY created_at DESC")
+              .prepare("SELECT * FROM warranties WHERE LOWER(user_email) = LOWER(?) ORDER BY created_at DESC")
               .bind(email.toLowerCase())
               .all();
           } else {
             res = await db.prepare("SELECT * FROM warranties ORDER BY created_at DESC LIMIT 100").all();
           }
-          return jsonResponse({ success: true, warranties: res.results || [] }, 200, corsHeaders);
+
+          const warranties = (res.results || []).map((w) => ({
+            id: w.id,
+            userId: w.user_id,
+            userEmail: w.user_email,
+            customerEmail: w.user_email,
+            customerName: w.customer_name || "Valued Client",
+            productName: w.product_name,
+            serialNumber: w.serial_number,
+            category: w.category,
+            installationDate: w.installation_date,
+            warrantyPeriodYears: Number(w.warranty_period_years) || 5,
+            expiryDate: w.expiry_date,
+            certificateNumber: w.certificate_number,
+            status: w.status || "Active",
+            systemCapacity: w.system_capacity,
+            installerName: w.installer_name || "Elleyhill Certified Tech Team",
+            createdAt: w.created_at,
+            updatedAt: w.updated_at,
+          }));
+
+          return jsonResponse({ success: true, warranties }, 200, corsHeaders);
         }
 
         if (request.method === "POST") {
           const w = await request.json();
-          if (!w.id || !w.userEmail || !w.serialNumber) {
-            return jsonResponse({ error: "Missing required warranty fields (id, userEmail, serialNumber)" }, 400, corsHeaders);
+          const userEmail = String(
+            w.userEmail || w.customerEmail || w.user_email || w.customer_email || ""
+          ).trim().toLowerCase();
+
+          if (!w.id || !userEmail || !w.serialNumber) {
+            return jsonResponse({ error: "Missing required warranty fields (id, userEmail or customerEmail, serialNumber)" }, 400, corsHeaders);
           }
 
           const now = new Date().toISOString();
@@ -365,7 +502,7 @@ export default {
             .bind(
               w.id,
               w.userId || w.user_id || null,
-              String(w.userEmail || w.user_email).toLowerCase(),
+              userEmail,
               w.productName || w.product_name || "Tier-1 Solar Hardware",
               w.serialNumber || w.serial_number,
               w.category || "Inverter",
@@ -549,23 +686,23 @@ export default {
 
         const isProduction = env.PAWAPAY_ENV === "production";
         const pawaPayBaseUrl = isProduction
-          ? "https://api.pawapay.cloud"
-          : "https://api.sandbox.pawapay.cloud";
+          ? "https://api.pawapay.io"
+          : "https://api.sandbox.pawapay.io";
 
+        // Official pawaPay v2 Payload Structure
         const pawaPayPayload = {
           depositId,
-          amount: Number(body.amount).toFixed(2),
+          amount: String(Math.round(Number(body.amount))),
           currency: "ZMW",
-          country: "ZMB",
-          correspondent,
           payer: {
-            type: "MSISDN",
-            address: {
-              value: cleanPhone,
+            type: "MMO",
+            accountDetails: {
+              phoneNumber: cleanPhone,
+              provider: correspondent,
             },
           },
-          customerTimestamp: new Date().toISOString(),
-          statementDescription: (body.statementDescription || `Elleyhill #${body.orderRef}`).substring(0, 22),
+          clientReferenceId: body.orderRef,
+          customerMessage: (body.statementDescription || `Elleyhill #${body.orderRef}`).substring(0, 22),
           metadata: [
             { fieldName: "orderRef", fieldValue: body.orderRef },
             { fieldName: "customerEmail", fieldValue: body.customerEmail || "customer@elleyhill.co.zm" },
@@ -581,7 +718,7 @@ export default {
               mode: "simulated_sandbox",
               depositId,
               orderRef: body.orderRef,
-              status: "SUBMITTED",
+              status: "ACCEPTED",
               message: `STK push initiated to +${cleanPhone} for ZMW ${Number(body.amount).toLocaleString()} via ${String(body.provider).toUpperCase()} MoMo.`,
               correspondent,
               pawaPayPayload,
@@ -591,8 +728,8 @@ export default {
           );
         }
 
-        // Call pawaPay API
-        const response = await fetch(`${pawaPayBaseUrl}/deposits`, {
+        // Call pawaPay v2 Deposits API
+        const response = await fetch(`${pawaPayBaseUrl}/v2/deposits`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -609,7 +746,7 @@ export default {
             depositId,
             orderRef: body.orderRef,
             pawaPayResponse: data,
-            status: data.status || (response.ok ? "SUBMITTED" : "FAILED"),
+            status: data.status || (response.ok ? "ACCEPTED" : "REJECTED"),
           },
           response.status,
           corsHeaders
@@ -617,7 +754,7 @@ export default {
       }
 
       // 5. Check Deposit Status
-      if (path.startsWith("/api/pay/status/") || path.startsWith("/v1/deposits/")) {
+      if (path.startsWith("/api/pay/status/") || path.startsWith("/v2/deposits/") || path.startsWith("/v1/deposits/")) {
         const depositId = path.split("/").pop();
         if (!depositId) {
           return jsonResponse({ error: "Missing depositId" }, 400, corsHeaders);
@@ -625,8 +762,8 @@ export default {
 
         const isProduction = env.PAWAPAY_ENV === "production";
         const pawaPayBaseUrl = isProduction
-          ? "https://api.pawapay.cloud"
-          : "https://api.sandbox.pawapay.cloud";
+          ? "https://api.pawapay.io"
+          : "https://api.sandbox.pawapay.io";
 
         if (!env.PAWAPAY_API_TOKEN) {
           return jsonResponse(
@@ -642,7 +779,7 @@ export default {
           );
         }
 
-        const response = await fetch(`${pawaPayBaseUrl}/deposits/${depositId}`, {
+        const response = await fetch(`${pawaPayBaseUrl}/v2/deposits/${depositId}`, {
           headers: {
             Authorization: `Bearer ${env.PAWAPAY_API_TOKEN}`,
           },

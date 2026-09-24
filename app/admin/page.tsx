@@ -81,8 +81,6 @@ export default function AdminDashboardPage() {
 
   // Edit Order State
   const [editStatus, setEditStatus] = useState<UserOrder["status"]>("Processing");
-  const [editTracking, setEditTracking] = useState("");
-  const [editEngineer, setEditEngineer] = useState("");
 
   // New Order State
   const [newOrderCustomer, setNewOrderCustomer] = useState("");
@@ -94,7 +92,6 @@ export default function AdminDashboardPage() {
   const [newOrderPayment, setNewOrderPayment] = useState("Bank Transfer / EFT");
   const [newOrderSelectedSku, setNewOrderSelectedSku] = useState(inventory[0]?.sku || "");
   const [newOrderQty, setNewOrderQty] = useState(1);
-  const [newOrderEngineer, setNewOrderEngineer] = useState("Eng. Patrick Banda");
 
   // Warranty State
   const [newWarCustomer, setNewWarCustomer] = useState("");
@@ -104,7 +101,7 @@ export default function AdminDashboardPage() {
   const [newWarSerial, setNewWarSerial] = useState("");
   const [newWarCapacity, setNewWarCapacity] = useState("4.96 kWh");
   const [newWarYears, setNewWarYears] = useState(10);
-  const [newWarInstaller, setNewWarInstaller] = useState("Elleyhill Certified Tech Team (Eng. Banda)");
+  const [newWarInstaller, setNewWarInstaller] = useState("Elleyhill Certified Tech Team");
 
   // New SKU State
   const [newSkuName, setNewSkuName] = useState("");
@@ -208,8 +205,7 @@ export default function AdminDashboardPage() {
     const matchesSearch =
       ord.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
       (ord.customerName && ord.customerName.toLowerCase().includes(orderSearch.toLowerCase())) ||
-      ord.district.toLowerCase().includes(orderSearch.toLowerCase()) ||
-      ord.trackingNumber.toLowerCase().includes(orderSearch.toLowerCase());
+      ord.district.toLowerCase().includes(orderSearch.toLowerCase());
     const matchesStatus = orderStatusFilter === "all" || ord.status === orderStatusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -233,7 +229,7 @@ export default function AdminDashboardPage() {
   const handleSaveOrderStatus = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrderForEdit) return;
-    updateOrderStatus(selectedOrderForEdit.id, editStatus, editTracking, editEngineer);
+    updateOrderStatus(selectedOrderForEdit.id, editStatus);
     setSelectedOrderForEdit(null);
   };
 
@@ -254,7 +250,6 @@ export default function AdminDashboardPage() {
       total: itemTotal,
       subtotal: itemTotal,
       deliveryFee: 0,
-      assignedEngineer: newOrderEngineer,
       estimatedDelivery: "Dispatch staged from Lusaka Warehouse",
       items: [
         {
@@ -340,7 +335,7 @@ export default function AdminDashboardPage() {
   };
 
   const getWhatsAppDispatchMessage = (ord: UserOrder) => {
-    const text = `Hello ${ord.customerName || "Valued Client"}, this is Elleyhill Power Operations Desk.\nYour solar equipment order #${ord.id} status is: ${ord.status.toUpperCase()}.\nOrder Number: ${ord.id}\nAssigned Engineer: ${ord.assignedEngineer || "Eng. Patrick Banda"}\nDelivery Destination: ${ord.deliveryAddress}.\nThank you for choosing Tier-1 Clean Energy!`;
+    const text = `Hello ${ord.customerName || "Valued Client"}, this is Elleyhill Power Operations Desk.\nYour solar equipment order #${ord.id} status is: ${ord.status.toUpperCase()}.\nOrder Number: ${ord.id}\nDelivery Destination: ${ord.deliveryAddress}.\nThank you for choosing Tier-1 Clean Energy!`;
     return `https://wa.me/260${ord.phone.replace(/[^0-9]/g, "").slice(-9)}?text=${encodeURIComponent(text)}`;
   };
 
@@ -587,7 +582,7 @@ export default function AdminDashboardPage() {
                           {ord.customerName} • {ord.deliveryAddress} ({ord.district}, {ord.province})
                         </div>
                         <div className="text-[11px] text-on-surface-variant mt-0.5">
-                          Engineer: <span className="text-primary font-medium">{ord.assignedEngineer || "Eng. Patrick Banda"}</span> • Order Number: <span className="font-mono text-secondary font-semibold">{ord.id}</span>
+                          Order Number: <span className="font-mono text-secondary font-semibold">{ord.id}</span>
                         </div>
                       </div>
 
@@ -612,8 +607,6 @@ export default function AdminDashboardPage() {
                           onClick={() => {
                             setSelectedOrderForEdit(ord);
                             setEditStatus(ord.status);
-                            setEditTracking(ord.trackingNumber);
-                            setEditEngineer(ord.assignedEngineer || "Eng. Patrick Banda");
                           }}
                           className="px-3 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-bold transition-all cursor-pointer shadow-sm"
                         >
@@ -770,7 +763,6 @@ export default function AdminDashboardPage() {
                             <div className="text-charcoal truncate font-medium">
                               {ord.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
                             </div>
-                            <div className="text-[10px] text-on-surface-variant">{ord.assignedEngineer || "Unassigned"}</div>
                           </td>
                           <td className="py-3.5 px-4">
                             <div className="font-bold text-primary font-mono">K{ord.total.toLocaleString()}</div>
@@ -812,8 +804,6 @@ export default function AdminDashboardPage() {
                                 onClick={() => {
                                   setSelectedOrderForEdit(ord);
                                   setEditStatus(ord.status);
-                                  setEditTracking(ord.trackingNumber);
-                                  setEditEngineer(ord.assignedEngineer || "Eng. Patrick Banda");
                                 }}
                                 className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-[11px] font-bold transition-colors cursor-pointer shadow-sm"
                               >
@@ -1172,32 +1162,6 @@ export default function AdminDashboardPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase">
-                  Order Reference / Tracking Code
-                </label>
-                <input
-                  type="text"
-                  value={editTracking}
-                  onChange={(e) => setEditTracking(e.target.value)}
-                  placeholder="e.g. EHP-LUS-0001"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-border-medium text-sm text-charcoal focus:outline-none focus:border-primary font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-charcoal mb-1.5 uppercase">
-                  Assigned Lead Technician / Engineer
-                </label>
-                <input
-                  type="text"
-                  value={editEngineer}
-                  onChange={(e) => setEditEngineer(e.target.value)}
-                  placeholder="e.g. Eng. Patrick Banda (ERB Registered)"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-border-medium text-sm text-charcoal focus:outline-none focus:border-primary"
-                />
-              </div>
-
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-light">
                 <button
                   type="button"
@@ -1248,7 +1212,6 @@ export default function AdminDashboardPage() {
                 <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Dispatch Logistics:</div>
                 <div className="text-charcoal font-mono font-medium">Order Number: {selectedOrderForInvoice.id}</div>
                 <div className="text-on-surface-variant mt-0.5">Payment: {selectedOrderForInvoice.paymentMethod}</div>
-                <div className="text-on-surface-variant">Lead Engineer: {selectedOrderForInvoice.assignedEngineer || "Eng. Patrick Banda"}</div>
               </div>
             </div>
 

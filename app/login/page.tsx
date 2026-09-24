@@ -200,7 +200,7 @@ function LoginFormContent() {
             Sign In to Your Account
           </h1>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Access warranty certificates, Lusaka dispatch tracking, or admin operations.
+            Access warranty certificates, live order updates, or admin operations.
           </p>
         </div>
 

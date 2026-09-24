@@ -134,7 +134,7 @@ export default function OrderConfirmationPage() {
                       Dispatch &amp; Deployment
                     </div>
                     <div className="font-body-sm text-body-sm text-on-primary-container truncate">
-                      Field Engineers Scheduled
+                      Dispatch Scheduled
                     </div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export default function OrderConfirmationPage() {
 
                   <div className="space-y-2">
                     <h1 className="font-display-hero text-[34px] md:text-[52px] leading-[1.08] text-primary tracking-tight font-bold">
-                      Order Confirmed &amp; Engineering Scheduled!
+                      Order Confirmed &amp; Delivery Scheduled!
                     </h1>
                     <p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
                       Order reference{" "}
@@ -272,7 +272,7 @@ export default function OrderConfirmationPage() {
                     </div>
                     {displayInstallation > 0 && (
                       <div className="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
-                        <span>Engineering Dispatch &amp; Installation</span>
+                        <span>Dispatch &amp; Installation</span>
                         <span className="font-technical-data text-technical-data font-medium text-secondary">
                           + ZMW {displayInstallation.toLocaleString()}
                         </span>

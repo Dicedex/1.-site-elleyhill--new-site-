@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth, SavedAddress, UserOrder, WarrantyRecord } from "@/context/AuthContext";
 import {
@@ -114,8 +115,14 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-surface-container-low text-on-surface pt-28 md:pt-32 pb-16 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
         <div className="max-w-md w-full text-center space-y-6 bg-white p-8 rounded-2xl border border-border-light shadow-xl">
-          <div className="w-16 h-16 rounded-2xl bg-primary-light border border-primary/20 flex items-center justify-center mx-auto text-primary">
-            <User className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-primary-light border border-primary/20 flex items-center justify-center mx-auto shadow-sm">
+            <Image
+              src="/images/profile placeholder.png"
+              alt="Profile placeholder"
+              width={64}
+              height={64}
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal font-headline">My Account</h1>
           <p className="text-sm text-on-surface-variant">
@@ -246,8 +253,14 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div className="flex items-start sm:items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary-light border border-primary/20 flex items-center justify-center text-primary text-2xl font-bold shadow-sm shrink-0">
-                {user.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-primary-light border border-primary/20 flex items-center justify-center shadow-sm shrink-0">
+                <Image
+                  src={user.avatarUrl || "/images/profile placeholder.png"}
+                  alt={user.fullName || "User Profile"}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -678,7 +691,6 @@ export default function ProfilePage() {
                   .filter((order) => {
                     const matchesSearch =
                       order.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
-                      order.trackingNumber.toLowerCase().includes(orderSearch.toLowerCase()) ||
                       order.items.some((it) => it.name.toLowerCase().includes(orderSearch.toLowerCase()));
                     const matchesStatus =
                       orderStatusFilter === "all" ||
@@ -1313,7 +1325,6 @@ export default function ProfilePage() {
                 <div className="text-on-surface-variant uppercase font-bold text-[10px] mb-1">Dispatch Logistics:</div>
                 <div className="text-charcoal font-mono font-medium">Order Number: {selectedOrderForInvoiceModal.id}</div>
                 <div className="text-on-surface-variant mt-0.5">Payment: {selectedOrderForInvoiceModal.paymentMethod}</div>
-                <div className="text-on-surface-variant">Lead Engineer: {selectedOrderForInvoiceModal.assignedEngineer || "Eng. Patrick Banda"}</div>
               </div>
             </div>
 
