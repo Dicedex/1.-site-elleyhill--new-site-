@@ -1,0 +1,22 @@
+# ==============================================================================
+# Elleyhill Power Zambia - Hostinger Cloud Startup .htaccess Reverse Proxy
+# Forwards all incoming domain requests to Next.js running on port 3000
+# ==============================================================================
+
+RewriteEngine On
+
+# 1. Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 2. Reverse Proxy all traffic to Next.js on port 3000
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+# Root path proxy
+RewriteRule ^$ http://127.0.0.1:3000/ [P,L]
+
+# Preserve Host header
+RequestHeader set X-Forwarded-Proto "https"
+RequestHeader set X-Real-IP "%{REMOTE_ADDR}s"
