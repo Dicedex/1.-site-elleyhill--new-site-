@@ -156,10 +156,12 @@ export default function Header() {
               href="/"
               aria-label="Elleyhill Power Zambia"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="Elleyhill Power Zambia"
+                width={180}
+                height={44}
+                priority
                 className="h-10 md:h-11 w-auto object-contain"
               />
             </Link>

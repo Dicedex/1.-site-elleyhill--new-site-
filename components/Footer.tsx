@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const socialLinks = [
@@ -48,9 +49,11 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center" aria-label="Elleyhill Power Zambia">
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="Elleyhill Power Zambia"
+                width={160}
+                height={40}
                 className="h-9 md:h-10 w-auto object-contain"
               />
             </Link>

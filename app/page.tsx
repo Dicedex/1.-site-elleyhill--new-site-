@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PRODUCTS } from "@/data/products";
 
 export default function Home() {
@@ -9,14 +10,15 @@ export default function Home() {
       <main className="pt-[72px]">
         {/* Hero Section (Apple-style Full-width Banner) */}
         <section className="relative w-full h-[819px] md:h-[921px] flex flex-col justify-center items-center text-center px-margin-mobile md:px-margin-desktop overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat w-full h-full opacity-40 -z-10"
-            data-alt="Ultra-clean background image of a modern home with solar panels integrated onto an IBR roof, set against a crisp sky. High-key lighting, bright light-mode aesthetic, sustainable architecture feel."
-            style={{
-              backgroundImage:
-                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBZQXQMohlD4reuuamwF3xBc9rMC7lRj8Z5029CcN0tTpZxz21a6sW3VVYpnJpGmFSEZTawi_pnDpIUz39fnuQsPvqOUVOe0AnU7KpuH1480s1kSPf0l0cwtAdjsrCAAtbheZdI0qI5qO2sQR9KMowG30bj1BXcaZ5Vn72gR-fTlKcxB75IDgbMulc0fbyV9OlxoqOVdzUMmW17bDj2ZEKzn13eA3my3MaDGt92EJJhfRaJvjqFjl_n')",
-            }}
-          ></div>
+          <Image
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZQXQMohlD4reuuamwF3xBc9rMC7lRj8Z5029CcN0tTpZxz21a6sW3VVYpnJpGmFSEZTawi_pnDpIUz39fnuQsPvqOUVOe0AnU7KpuH1480s1kSPf0l0cwtAdjsrCAAtbheZdI0qI5qO2sQR9KMowG30bj1BXcaZ5Vn72gR-fTlKcxB75IDgbMulc0fbyV9OlxoqOVdzUMmW17bDj2ZEKzn13eA3my3MaDGt92EJJhfRaJvjqFjl_n"
+            alt="Modern home with solar panels integrated onto an IBR roof"
+            fill
+            priority
+            sizes="100vw"
+            quality={75}
+            className="object-cover opacity-40 -z-10"
+          />
           <div className="z-10 max-w-4xl mx-auto flex flex-col items-center">
             <span className="inline-block bg-secondary/15 text-secondary font-label-cta text-[12px] uppercase tracking-widest px-4 py-1.5 rounded-full mb-stack-lg border border-secondary/30">
               FRESH ENERGY INDEPENDENCE IN ZAMBIA
@@ -115,10 +117,12 @@ export default function Home() {
             >
               <div>
                 <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
-                  <img
+                  <Image
                     src="/images/services/installation.jpg"
                     alt="Turnkey Solar Panel Installation in Zambia"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                   <div className="absolute top-3 left-3">
@@ -168,10 +172,12 @@ export default function Home() {
             >
               <div>
                 <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
-                  <img
+                  <Image
                     src="/images/services/cleaning.jpg"
                     alt="Professional Solar Panel Cleaning in Zambia"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                   <div className="absolute top-3 left-3">
@@ -226,10 +232,12 @@ export default function Home() {
             >
               <div>
                 <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
-                  <img
+                  <Image
                     src="/images/services/maintenance.jpg"
                     alt="Solar Maintenance and Inverter Diagnostics in Zambia"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                   <div className="absolute top-3 left-3">
@@ -279,10 +287,12 @@ export default function Home() {
             >
               <div>
                 <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
-                  <img
+                  <Image
                     src="/images/services/audit.jpg"
                     alt="Commercial Solar Energy Auditing and Sizing"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
                   <div className="absolute top-3 left-3">
@@ -345,11 +355,12 @@ export default function Home() {
                   Inverter + Lithium + Panels
                 </p>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              <Image
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 src="/images/products/complete systems/5kw sys.png"
                 alt="Complete Solar Kits Zambia"
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
               />
             </Link>
             <Link
@@ -364,11 +375,12 @@ export default function Home() {
                   Greenrich &amp; High-Voltage LiFePO4
                 </p>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              <Image
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 src="/images/products/UP5000.png"
                 alt="Lithium Solar Batteries"
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
               />
             </Link>
             <Link
@@ -383,11 +395,12 @@ export default function Home() {
                   Single &amp; 3-Phase Pure Sine Wave
                 </p>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              <Image
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 src="/images/products/Inverter.png"
                 alt="Hybrid Solar Inverters"
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
               />
             </Link>
             <Link
@@ -402,11 +415,12 @@ export default function Home() {
                   Plug &amp; Play Load-shedding Backup
                 </p>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              <Image
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
                 src="/images/products/Q2400.png"
                 alt="Portable Power Stations"
+                fill
+                sizes="(max-width: 768px) 100vw, 25vw"
               />
             </Link>
           </div>
@@ -449,12 +463,15 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute bottom-4 right-4 w-1/2 md:w-2/5 object-contain z-0 filter drop-shadow-xl"
-                src="/images/products/Inverter.png"
-                alt="5kW Greenrich Hybrid Inverter"
-              />
+              <div className="absolute bottom-4 right-4 w-1/2 md:w-2/5 h-48 z-0">
+                <Image
+                  className="object-contain filter drop-shadow-xl"
+                  src="/images/products/Inverter.png"
+                  alt="5kW Greenrich Hybrid Inverter"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 300px"
+                />
+              </div>
             </div>
             {/* Card 2 (Upper Right - Battery Storage) */}
             <div className="rounded-[16px] bg-surface-container-low p-6 bento-card border border-border-light relative overflow-hidden flex flex-col justify-between h-[288px]">
@@ -469,12 +486,15 @@ export default function Home() {
                   LiFePO4 Chemistry | 6,000+ Cycle Life | 10-Yr Warranty.
                 </p>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute bottom-2 right-2 w-1/2 object-contain z-0 filter drop-shadow-md"
-                src="/images/products/UP5000.png"
-                alt="5kWh 100Ah 48V Lithium Battery"
-              />
+              <div className="absolute bottom-2 right-2 w-1/2 h-36 z-0">
+                <Image
+                  className="object-contain filter drop-shadow-md"
+                  src="/images/products/UP5000.png"
+                  alt="5kWh 100Ah 48V Lithium Battery"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 200px"
+                />
+              </div>
             </div>
             {/* Card 4 (Lower Right - Price & Quick Buy) */}
             <div className="rounded-[16px] bg-surface-container-lowest p-6 bento-card border border-secondary/30 flex flex-col justify-center items-center text-center h-[288px]">
@@ -539,13 +559,14 @@ export default function Home() {
                 >
                   <div>
                     <div className="relative w-full h-44 rounded-xl bg-surface-container-low mb-4 overflow-hidden flex items-center justify-center p-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={product.image}
                         alt={product.name}
-                        className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                       />
-                      <span className="absolute top-2.5 left-2.5 bg-surface-container-lowest/90 backdrop-blur-sm text-charcoal font-technical-data text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-border-light shadow-xs">
+                      <span className="absolute top-2.5 left-2.5 bg-surface-container-lowest/90 backdrop-blur-sm text-charcoal font-technical-data text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-border-light shadow-xs z-10">
                         {product.category}
                       </span>
                     </div>
