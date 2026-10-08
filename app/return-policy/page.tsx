@@ -85,7 +85,8 @@ export default function ReturnPolicyPage() {
               <div className="flex flex-col gap-3 text-body-sm text-on-surface-variant leading-relaxed">
                 <p>To initiate a return or swap request:</p>
                 <ol className="list-decimal pl-5 flex flex-col gap-2">
-                  <li>Contact our technical support via WhatsApp at <strong>+260 96 653 7340</strong> or email <strong>support@elleyhill.co.zm</strong> with your order reference.</li>
+                  <li>Contact our technical support via WhatsApp at <strong>+260 97 183 8038</strong> or email <strong>support@elleyhillzm.com</strong> with your order reference.</li>
+
                   <li>Our service desk issues a Return Merchandise Authorization (RMA) tracking reference.</li>
                   <li>Bring the items to <strong>Unit 4A block A East Park Mall, Lusaka</strong> or our Copperbelt branch for bench validation.</li>
                   <li>Approved refunds are processed via the original payment method (Bank Transfer or Mobile Money) within 5 business days.</li>

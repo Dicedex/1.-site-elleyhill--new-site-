@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Solar Financing, Lay-By & Payment Plans Zambia | Elleyhill Power",
@@ -14,16 +15,17 @@ export const metadata: Metadata = {
     "Solar Loans Zambia",
   ],
   alternates: {
-    canonical: "https://elleyhill.co.zm/financing",
+    canonical: `${SITE_URL}/financing`,
   },
   openGraph: {
     title: "Solar Financing & Flexible Payment Models | Elleyhill Power Zambia",
     description:
       "Affordable solar payment plans: 0% interest Lay-By, 70/30 project milestones, and mobile money acceptance in Lusaka.",
-    url: "https://elleyhill.co.zm/financing",
-    images: [{ url: "https://elleyhill.co.zm/images/logo.png", alt: "Solar Financing Zambia" }],
+    url: `${SITE_URL}/financing`,
+    images: [{ url: `${SITE_URL}/images/logo.png`, alt: "Solar Financing Zambia" }],
   },
 };
+
 
 
 export default function FinancingPage() {

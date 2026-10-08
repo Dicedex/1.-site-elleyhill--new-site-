@@ -434,10 +434,10 @@ export default function OrderConfirmationPage() {
                 <span className="text-outline-variant">|</span>
                 <a
                   className="inline-flex items-center gap-2 font-technical-data text-technical-data text-primary hover:text-secondary transition-colors"
-                  href="mailto:support@elleyhill.co.zm"
+                  href="mailto:support@elleyhillzm.com"
                 >
                   <span className="material-symbols-outlined text-[18px]">mail</span>
-                  support@elleyhill.co.zm
+                  support@elleyhillzm.com
                 </a>
               </div>
             </div>
@@ -494,9 +494,10 @@ export default function OrderConfirmationPage() {
                 </div>
                 <div className="text-[11px] text-on-surface-variant leading-tight mt-0.5">
                   Industrial &amp; Commercial Solar Engineering Zambia<br />
-                  East Park Mall, Great East Road, Lusaka • support@elleyhill.co.zm • +260 971 838 038
+                  East Park Mall, Great East Road, Lusaka • support@elleyhillzm.com • +260 971 838 038
                 </div>
               </div>
+
               <div className="text-right">
                 <div className="text-base font-bold text-primary uppercase tracking-wider">
                   OFFICIAL TAX INVOICE

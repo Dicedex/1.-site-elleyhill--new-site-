@@ -96,8 +96,9 @@ export default function PrivacyPage() {
                 <div className="p-3 bg-surface-bright rounded-lg border border-border-light">
                   <span className="font-semibold text-primary block">Compliance Office</span>
                   <span className="text-on-surface-variant">Unit 4A block A East Park Mall, Lusaka</span>
-                  <span className="text-primary block mt-1">support@elleyhill.co.zm</span>
+                  <span className="text-primary block mt-1">support@elleyhillzm.com</span>
                 </div>
+
                 <a
                   href="https://wa.me/260971838038"
                   target="_blank"

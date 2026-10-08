@@ -196,8 +196,9 @@ export default function CheckoutPage() {
     const checkoutItems = items.length > 0 ? items : [];
 
     const finalCustomerName = fullName || user?.fullName || "Online Client";
-    const finalCustomerEmail = email || user?.email || "customer@elleyhill.co.zm";
+    const finalCustomerEmail = email || user?.email || "customer@elleyhillzm.com";
     const finalPhone = momoPhone || phone || user?.phone || "0971838038";
+
     const finalAddress = address || defaultAddress?.fullAddress || user?.primaryAddress || "Lusaka Delivery";
 
     // Trigger Cloudflare Worker Edge request to payment switch if Mobile Money or Card

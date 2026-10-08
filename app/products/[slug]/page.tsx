@@ -5,6 +5,7 @@ import { PRODUCTS, Product } from "@/data/products";
 import type { Metadata } from "next";
 import ProductPurchaseActions from "@/components/ProductPurchaseActions";
 import ProductImageGallery from "@/components/ProductImageGallery";
+import { SITE_URL } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -73,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cleanPrice = product.price.replace(/[^0-9.]/g, "");
   const pageTitle = `${product.name} | Best Price in Lusaka, Zambia`;
   const pageDescription = `Buy genuine ${product.name} (${product.category}) in Lusaka, Zambia at ${product.price}. Official warranty, fast local delivery across Lusaka & nationwide. ${product.description}`;
-  const canonicalUrl = `https://elleyhill.co.zm/products/${product.slug}`;
+  const canonicalUrl = `${SITE_URL}/products/${product.slug}`;
 
   return {
     title: pageTitle,
@@ -99,7 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         {
           url: product.image.startsWith("http")
             ? product.image
-            : `https://elleyhill.co.zm${product.image}`,
+            : `${SITE_URL}${product.image}`,
           alt: product.name,
         },
       ],
@@ -111,7 +112,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         product.image.startsWith("http")
           ? product.image
-          : `https://elleyhill.co.zm${product.image}`,
+          : `${SITE_URL}${product.image}`,
       ],
     },
     other: {
@@ -149,7 +150,7 @@ export default async function DynamicProductPage({ params }: Props) {
     name: product.name,
     image: product.image.startsWith("http")
       ? product.image
-      : `https://elleyhill.co.zm${product.image}`,
+      : `${SITE_URL}${product.image}`,
     description: product.longDescription || product.description,
     sku: product.slug,
     mpn: product.slug,
@@ -159,7 +160,7 @@ export default async function DynamicProductPage({ params }: Props) {
     },
     offers: {
       "@type": "Offer",
-      url: `https://elleyhill.co.zm/products/${product.slug}`,
+      url: `${SITE_URL}/products/${product.slug}`,
       priceCurrency: "ZMW",
       price: numericPrice,
       priceValidUntil: "2027-12-31",
@@ -192,28 +193,29 @@ export default async function DynamicProductPage({ params }: Props) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://elleyhill.co.zm",
+        item: SITE_URL,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Shop",
-        item: "https://elleyhill.co.zm/shop",
+        item: `${SITE_URL}/shop`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: product.category,
-        item: `https://elleyhill.co.zm/shop?category=${encodeURIComponent(product.category)}`,
+        item: `${SITE_URL}/shop?category=${encodeURIComponent(product.category)}`,
       },
       {
         "@type": "ListItem",
         position: 4,
         name: product.name,
-        item: `https://elleyhill.co.zm/products/${product.slug}`,
+        item: `${SITE_URL}/products/${product.slug}`,
       },
     ],
   };
+
 
   const relatedProducts = PRODUCTS.filter(
     (p) => p.category === product.category && p.slug !== product.slug

@@ -1,4 +1,4 @@
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elleyhill.co.zm";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://elleyhillzm.com";
 export const SITE_NAME = "Elleyhill Power Zambia";
 
 export const COMPANY_DETAILS = {
@@ -16,8 +16,9 @@ export const COMPANY_DETAILS = {
   image: `${SITE_URL}/images/logo.png`,
   telephone: "+260971838038",
   displayPhone: "+260 97 183 8038",
-  email: "support@elleyhill.co.zm",
-  salesEmail: "sales@elleyhill.co.zm",
+  email: "support@elleyhillzm.com",
+  salesEmail: "sales@elleyhillzm.com",
+
   priceRange: "$$",
   currenciesAccepted: "ZMW, USD, ZAR",
   paymentAccepted: "Cash, Credit Card, Debit Card, Bank Transfer, MTN MoMo, Airtel Money, Zamtel Kwacha, Wire Transfer",

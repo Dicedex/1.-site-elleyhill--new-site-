@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_URL } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "About Us | Leading Solar Energy & Storage Company Zambia",
@@ -14,16 +15,17 @@ export const metadata: Metadata = {
     "Solar Contractors Lusaka",
   ],
   alternates: {
-    canonical: "https://elleyhill.co.zm/about",
+    canonical: `${SITE_URL}/about`,
   },
   openGraph: {
     title: "About Elleyhill Power Zambia | Tier-1 Solar Engineering",
     description:
       "Powering Zambia's energy resilience with certified engineering, reliable lithium storage, and high-performance solar installations.",
-    url: "https://elleyhill.co.zm/about",
-    images: [{ url: "https://elleyhill.co.zm/images/logo.png", alt: "About Elleyhill Power Zambia" }],
+    url: `${SITE_URL}/about`,
+    images: [{ url: `${SITE_URL}/images/logo.png`, alt: "About Elleyhill Power Zambia" }],
   },
 };
+
 
 
 export default function AboutUsPage() {

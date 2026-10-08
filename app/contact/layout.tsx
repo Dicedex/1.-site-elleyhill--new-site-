@@ -35,7 +35,7 @@ export default function ContactLayout({ children }: { children: React.ReactNode 
       "@type": "LocalBusiness",
       name: "Elleyhill Power Zambia",
       telephone: "+260971838038",
-      email: "support@elleyhill.co.zm",
+      email: "support@elleyhillzm.com",
       address: {
         "@type": "PostalAddress",
         streetAddress: "Unit 4A Block A, East Park Mall, Great East Road",
