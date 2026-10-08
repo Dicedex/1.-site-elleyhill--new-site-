@@ -644,8 +644,82 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Local SEO, Zambia Nationwide & Cross-Border Southern/Central Africa Footprint */}
+        <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pb-margin-desktop">
+          <div className="bg-surface-bright rounded-2xl border border-border-light p-6 md:p-10">
+            <div className="max-w-4xl mb-8">
+              <span className="inline-flex items-center gap-2 bg-primary/10 text-primary font-technical-data text-xs uppercase tracking-wider px-3 py-1 rounded-full mb-3">
+                <span className="material-symbols-outlined text-sm">public</span>
+                Lusaka Showroom HQ &bull; Zambia-Wide Distribution &bull; Cross-Border SADC Supply
+              </span>
+              <h2 className="font-display-hero text-headline-md md:text-headline-lg text-primary mb-3">
+                Zambia &amp; Southern Africa&apos;s #1 Choice for Solar Hardware, Lithium Storage &amp; Certified Installations
+              </h2>
+              <p className="font-body-lg text-text-secondary leading-relaxed">
+                Whether you are eliminating 12+ hour load shedding in Lusaka, powering commercial mining operations in the Copperbelt or DRC (Lubumbashi/Kolwezi), equipping agricultural irrigation farms in Mazabuka or Zimbabwe, or supplying off-grid systems to Malawi and Botswana, Elleyhill Power delivers Tier-1 engineering, massive warehouse inventory, and guaranteed manufacturer warranties.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-border-light">
+              <div>
+                <h3 className="font-headline-md text-sm uppercase tracking-wider text-charcoal font-bold mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-base">domain</span>
+                  Lusaka Metro Service Hub
+                </h3>
+                <p className="text-body-sm text-text-secondary leading-relaxed">
+                  Same-day express pickup &amp; certified on-site installation across Kabulonga, Woodlands, Roma, Rhodes Park, Leopards Hill, Silverest, Meanwood, Olympia, Makeni, Ibex Hill, and New Kasama. Visit our showroom at Unit 4A Block A, East Park Mall.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-headline-md text-sm uppercase tracking-wider text-charcoal font-bold mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-base">local_shipping</span>
+                  Nationwide Zambian Network
+                </h3>
+                <p className="text-body-sm text-text-secondary leading-relaxed">
+                  Fast, insured freight &amp; technician deployment across the Copperbelt (Ndola, Kitwe, Chingola), Southern Province (Livingstone, Choma, Mazabuka), Central (Kabwe), North-Western (Solwezi), Eastern (Chipata), and Northern Zambia.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-headline-md text-sm uppercase tracking-wider text-charcoal font-bold mb-3 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-base">flight_takeoff</span>
+                  Cross-Border Regional Supply (SADC)
+                </h3>
+                <p className="text-body-sm text-text-secondary leading-relaxed">
+                  Export-ready solar procurement &amp; bonded freight to the Democratic Republic of Congo (DRC - Lubumbashi/Kolwezi via Kasumbalesa), Zimbabwe (Harare/Bulawayo), Malawi (Lilongwe/Blantyre), Botswana (Kazungula/Kasane), Mozambique (Tete), and Namibia.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-border-light flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap gap-2 text-xs text-text-secondary">
+                <span className="font-semibold text-charcoal">Regional Keywords:</span>
+                <Link href="/shop?category=Complete+Kits" className="hover:text-primary hover:underline">Complete Solar Kits Lusaka</Link>
+                <span>&bull;</span>
+                <Link href="/shop?category=Batteries" className="hover:text-primary hover:underline">Greenrich Lithium Batteries SADC</Link>
+                <span>&bull;</span>
+                <Link href="/shop?category=Inverters" className="hover:text-primary hover:underline">Growatt &amp; Deye Inverters</Link>
+                <span>&bull;</span>
+                <Link href="/services" className="hover:text-primary hover:underline">Solar Borehole Water Pumping</Link>
+                <span>&bull;</span>
+                <Link href="/shop?category=Panels" className="hover:text-primary hover:underline">JA Solar Panels Zimbabwe &amp; DRC</Link>
+                <span>&bull;</span>
+                <Link href="/calculator" className="hover:text-primary hover:underline">Load Shedding Sizer</Link>
+              </div>
+              <Link
+                href="/shop"
+                className="font-label-cta text-xs text-primary font-bold hover:text-secondary flex items-center gap-1"
+              >
+                Browse Export &amp; Local Hardware &rarr;
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
     </>
   );
 }
+
 

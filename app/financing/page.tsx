@@ -3,10 +3,28 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Financing & Payment Options | ELLEYHILL POWER ZM",
+  title: "Solar Financing, Lay-By & Payment Plans Zambia | Elleyhill Power",
   description:
-    "Flexible, secure, and structured payment models designed to make modern industrial sustainability accessible for every home and business in Zambia.",
+    "Flexible solar financing and structured payment models in Zambia. 0% interest 3-6 month lay-by, 70/30 turnkey project plans, and instant mobile money / card checkout in Lusaka.",
+  keywords: [
+    "Solar Financing Zambia",
+    "Solar Lay-by Lusaka",
+    "Solar on Installments Zambia",
+    "Solar Payment Plans Lusaka",
+    "Solar Loans Zambia",
+  ],
+  alternates: {
+    canonical: "https://elleyhill.co.zm/financing",
+  },
+  openGraph: {
+    title: "Solar Financing & Flexible Payment Models | Elleyhill Power Zambia",
+    description:
+      "Affordable solar payment plans: 0% interest Lay-By, 70/30 project milestones, and mobile money acceptance in Lusaka.",
+    url: "https://elleyhill.co.zm/financing",
+    images: [{ url: "https://elleyhill.co.zm/images/logo.png", alt: "Solar Financing Zambia" }],
+  },
 };
+
 
 export default function FinancingPage() {
   return (

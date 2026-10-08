@@ -318,6 +318,174 @@ export const PRODUCTS: Product[] = [
     inStock: true
   },
   {
+    name: "Pylontech Battery Pelio 5.12Kwh (Lifepo4) 1C",
+    slug: "pylontech-battery-pelio-5-12kwh-lifepo4-1c",
+    category: "Batteries",
+    description: "Ultra-slim 5.12kWh 51.2V LiFePO4 residential battery with 1C continuous discharge rate, 95% DoD, and IP65 indoor/outdoor rating.",
+    longDescription: "The Pylontech Pelio-L-5.12 is an ultra-slim, high-performance 5.12kWh 51.2V Lithium Iron Phosphate (LiFePO4) battery module engineered for modern residential and light commercial solar installations in Zambia. Boasts a full 1C continuous charge/discharge rating (5.12kW output per unit), 95% usable Depth of Discharge, 6,000+ cycle life, built-in Wi-Fi for 24/7 cloud monitoring, and modular expansion up to 20 units (102.4 kWh).",
+    price: "K 16,236.00",
+    features: [
+      "5.12 kWh Nominal Capacity (51.2V, 100Ah LiFePO4)",
+      "1C High-Rate Continuous Charge & Discharge (5.12kW Output)",
+      "95% Usable Depth of Discharge (DoD)",
+      "6,000+ Cycles at 25°C with Grade-A LiFePO4 Chemistry",
+      "Ultra-Slim Modern Form Factor (Floor or Wall Mountable)",
+      "Scalable up to 20 Modules in Parallel (102.4 kWh Total)",
+      "Integrated Wi-Fi for 24/7 Smartphone App Monitoring",
+      "IP65 Rated Enclosure for Flexible Indoor or Outdoor Mounting"
+    ],
+    whatsInTheBox: [
+      "1 x Pylontech Pelio-L-5.12 5.12kWh Battery Unit",
+      "1 x Inter-Unit Power Connection Cable Set",
+      "1 x CAN/RS485 Inverter Communication Cable",
+      "1 x Wall / Floor Mounting Hardware Kit",
+      "1 x User Manual & Warranty Documentation"
+    ],
+    warranty: "10-Year Manufacturer Warranty",
+    image: "/images/products/pylontech-pelio-5.12kwh.png",
+    aiHint: "pylontech pelio 5.12kwh battery",
+    inStock: true
+  },
+  {
+    name: "Pylontech Battery Hm3A180 5.6Kw Hv",
+    slug: "pylontech-battery-hm3a180-5-6kw-hv",
+    category: "Batteries",
+    description: "Commercial high-voltage 5.68kWh 38.4V 148Ah LiFePO4 battery module for Pylontech PowerCube industrial energy storage systems.",
+    longDescription: "The Pylontech HM3A180 is a high-voltage commercial-grade LiFePO4 battery module delivering 5.68kWh (38.4V, 148Ah) of energy storage. Designed for integration into Pylontech PowerCube M3A high-voltage racks, it powers large-scale 3-phase commercial and industrial solar hybrid systems with unmatched thermal stability, high discharge currents, and multi-tier BMS protection.",
+    price: "K 15,560.00",
+    features: [
+      "5.68 kWh Nominal Energy Storage (38.4V, 148Ah)",
+      "High-Voltage (HV) Series Architecture for Commercial Systems",
+      "Engineered for Pylontech PowerCube-M3A Industrial Racks",
+      "90% Usable Depth of Discharge with LiFePO4 Chemistry",
+      "Multi-Tier Intelligent BMS Protection",
+      "CANBUS, Modbus RTU & TCP/IP High-Speed Communication",
+      "Slide-In Modular Rack Mount Form Factor for Rapid Deployment",
+      "Built for High Charge/Discharge Currents in C&I Installations"
+    ],
+    whatsInTheBox: [
+      "1 x Pylontech HM3A180 5.68kWh HV Battery Module",
+      "1 x High-Voltage Inter-Module Power Connection Link",
+      "1 x Rack Grounding Wire & Communication Link Cable",
+      "1 x Technical Manual & QC Report"
+    ],
+    warranty: "10-Year Manufacturer Warranty",
+    image: "/images/products/pylontech-hm3a180.png",
+    aiHint: "pylontech hm3a180 hv battery",
+    inStock: true
+  },
+  {
+    name: "Champion 1 – 12V 100Ah Gel Battery",
+    slug: "champion-1-12v-100ah-gel-battery",
+    category: "Batteries",
+    description: "Maintenance-free 12V 100Ah deep cycle sealed gel battery engineered for reliable solar backup, UPS, and inverter systems.",
+    longDescription: "The Champion 1 12V 100Ah Deep Cycle Gel Battery is a dependable, maintenance-free energy storage unit designed for residential solar backup, inverter trolleys, and UPS systems in Zambia. Utilizes advanced silica gel electrolyte technology for superior deep discharge recovery, minimal self-discharge, and high resilience to temperature variations.",
+    price: "K 3,240.00",
+    features: [
+      "12V 100Ah (1200Wh) Deep Cycle Gel Technology",
+      "Maintenance-Free Valve Regulated Sealed (VRLA) Design",
+      "Exceptional Recovery from Deep Discharges",
+      "Low Self-Discharge Rate for Extended Shelf Life",
+      "Heavy-Duty Lead-Calcium Alloy Plates for Long Life",
+      "Vibration-Resistant & Leak-Proof Robust ABS Housing",
+      "Standard M8 Screw Terminals for Easy Cable Attachment",
+      "Ideal for Solar Inverters, Backup Power Stations, & UPS"
+    ],
+    whatsInTheBox: [
+      "1 x Champion 1 12V 100Ah Deep Cycle Gel Battery",
+      "2 x Terminal Bolts & Washers (M8)",
+      "2 x Terminal Protective Covers",
+      "1 x Product Datasheet & Care Instructions"
+    ],
+    warranty: "1-Year Product Warranty",
+    image: "/images/products/champion-12v-100ah-gel.jpg",
+    aiHint: "champion 12v 100ah gel battery",
+    inStock: true
+  },
+  {
+    name: "Champion 1 – 12.8V 200Ah Lithium",
+    slug: "champion-1-12-8v-200ah-lithium-battery",
+    category: "Batteries",
+    description: "High-capacity 12.8V 200Ah (2560Wh) LiFePO4 lithium battery with built-in smart BMS, 4000+ cycles, and series/parallel support.",
+    longDescription: "The Champion 1 12.8V 200Ah Lithium Battery delivers 2560Wh of clean, high-density energy storage using premium Grade-A LiFePO4 cells. Engineered as a lightweight, long-lasting drop-in replacement for bulky lead-acid and gel batteries, it features a built-in Smart BMS with 100A continuous discharge, 400A peak discharge, 4000+ cycle life, and series/parallel connectivity for 24V or 48V battery banks.",
+    price: "K 6,700.00",
+    features: [
+      "12.8V 200Ah (2560Wh) Grade-A LiFePO4 Energy Capacity",
+      "4,000+ Deep Cycles at 80% Depth of Discharge",
+      "Integrated Smart Battery Management System (BMS)",
+      "100A Continuous Discharge / 400A Peak Surge Current",
+      "Supports Series & Parallel Configurations (Up to 48V Banks)",
+      "Ultralight Design (Up to 70% Lighter Than 200Ah Lead-Acid)",
+      "Fast Recharging Capability with Solar or AC Mains Chargers",
+      "IP65 Weatherproof Sealed Casing with Carrying Handles"
+    ],
+    whatsInTheBox: [
+      "1 x Champion 1 12.8V 200Ah LiFePO4 Lithium Battery",
+      "2 x M8 Terminal Bolts with Lock Washers",
+      "1 x User Guide & Battery Configuration Manual"
+    ],
+    warranty: "3-Year Product Warranty",
+    image: "/images/products/champion-12.8v-200ah-lithium.jpg",
+    aiHint: "champion 12.8v 200ah lithium battery",
+    inStock: true
+  },
+  {
+    name: "Champion 1 – 12.8V 100Ah lithium",
+    slug: "champion-1-12-8v-100ah-lithium-battery",
+    category: "Batteries",
+    description: "Lightweight 12.8V 100Ah (1280Wh) LiFePO4 deep cycle battery with integrated BMS protection and 3500+ cycle life.",
+    longDescription: "The Champion 1 12.8V 100Ah Lithium Iron Phosphate (LiFePO4) Battery provides 1280Wh of high-efficiency energy storage for solar installations, backup inverter kits, and mobile power stations. Equipped with a built-in BMS protecting against over-charge, over-discharge, over-current, and short circuits, delivering up to 10x longer cycle life than traditional lead-acid batteries.",
+    price: "K 7,100.00",
+    features: [
+      "12.8V 100Ah (1280Wh) High-Density LiFePO4 Chemistry",
+      "3,500+ Deep Cycles at 80% Depth of Discharge",
+      "Advanced Built-in Smart BMS for Total Cell Protection",
+      "100A Continuous Discharge (300A Surge Peak)",
+      "Series Scalable for 12V, 24V, 36V, or 48V Inverter Setups",
+      "Drop-in Replacement for 100Ah Gel & AGM Batteries",
+      "Rapid Full Recharge in Under 2.5 Hours",
+      "Robust IP65 Sealed Casing with Ergonomic Carry Handle"
+    ],
+    whatsInTheBox: [
+      "1 x Champion 1 12.8V 100Ah LiFePO4 Lithium Battery",
+      "2 x M8 Terminal Bolts & Insulated Terminal Covers",
+      "1 x User & Safety Guide"
+    ],
+    warranty: "3-Year Product Warranty",
+    image: "/images/products/champion-12.8v-100ah-lithium.jpg",
+    aiHint: "champion 12.8v 100ah lithium battery",
+    inStock: true
+  },
+  {
+    name: "Pylontech Li-ion Battery UF5000 v2",
+    slug: "pylontech-li-ion-battery-uf5000-v2",
+    category: "Batteries",
+    description: "Upgraded 4.8kWh 48V 100Ah rack-mounted LiFePO4 battery module with 95% DoD, 6000+ cycles, and multi-brand inverter communication.",
+    longDescription: "The Pylontech UF5000 v2 (UP5000 v2) is a 48V 4.8kWh (100Ah) lithium iron phosphate battery module designed for premium residential and commercial energy storage. Boasting an upgraded BMS, 95% usable Depth of Discharge, 6,000+ cycle life, and seamless CAN/RS485 integration with leading hybrid inverters (Growatt, Deye, Victron, GoodWe). Up to 16 units can be connected in parallel without an external hub.",
+    price: "K 18,900.00",
+    features: [
+      "4.8 kWh Nominal Storage Capacity (48V, 100Ah LiFePO4)",
+      "Upgraded V2 High-Efficiency Cell Architecture",
+      "95% Usable Depth of Discharge (DoD)",
+      "6,000+ Cycles at 90% DoD (25°C ambient)",
+      "Standard 19-Inch 3U Rack-Mount Design",
+      "Parallel Scalability up to 16 Units per String (76.8 kWh)",
+      "Universal Compatibility with Top Tier Hybrid Inverters",
+      "Dual CAN / RS485 Communication Ports"
+    ],
+    whatsInTheBox: [
+      "1 x Pylontech UF5000 v2 (48V 100Ah) Lithium Battery",
+      "1 x Inter-Battery Power Cable Set (Positive & Negative)",
+      "1 x Inter-Battery RJ45 Communication Cable",
+      "1 x Grounding Wire & Rack Mounting Ear Brackets",
+      "1 x User Manual & Warranty Document"
+    ],
+    warranty: "10-Year Manufacturer Warranty",
+    image: "/images/products/pylontech-uf5000-v2.png",
+    aiHint: "pylontech uf5000 v2 battery",
+    inStock: true
+  },
+  {
     name: "Growatt SPF5000 Inverter",
     slug: "growatt-spf5000-inverter",
     category: "Inverters",
@@ -328,6 +496,151 @@ export const PRODUCTS: Product[] = [
     warranty: "5-Year Standard Manufacturer Warranty.",
     image: "/images/products/growatt.png",
     aiHint: "power inverter",
+    inStock: true
+  },
+  {
+    name: "Growcol Offgrid Inverter – Mks Iv 6Kw Twin 48V",
+    slug: "growcol-offgrid-inverter-mks-iv-6kw-twin-48v",
+    category: "Inverters",
+    description: "High-performance 6kW 48V off-grid pure sine wave inverter featuring dual AC outputs for smart load management and wide MPPT solar input.",
+    longDescription: "The Growcol MKS IV 6kW Twin is a next-generation off-grid hybrid inverter designed for resilient energy independence in Zambia. Features dual AC outputs (Twin) allowing critical and non-critical loads to be smartly managed. Equipped with an ultra-wide high-voltage MPPT solar charge controller (up to 450VDC), customizable RGB status ring, large color LCD, and built-in Wi-Fi for remote monitoring.",
+    price: "K 8,825.00",
+    features: [
+      "6.0 kW (6000W) Pure Sine Wave Continuous Output",
+      "48V DC Battery Architecture",
+      "Dual AC Outputs for Smart Load Shedding Management",
+      "High-Voltage MPPT (Up to 450VDC / 6000W PV Input)",
+      "Customizable RGB LED Status Ring with 4.3\" Color LCD",
+      "Built-in Wi-Fi for Android & iOS Mobile Monitoring",
+      "Parallel Scalability up to 9 Units (Single & 3-Phase)",
+      "Battery-Independent Operation Mode"
+    ],
+    whatsInTheBox: [
+      "1 x Growcol MKS IV 6kW Twin 48V Off-Grid Inverter",
+      "1 x Integrated Wi-Fi Communication Module",
+      "1 x Current Sharing & Parallel Communication Cables",
+      "1 x Wall Mounting Bracket & Hardware",
+      "1 x User & Installation Manual"
+    ],
+    warranty: "2-Year Manufacturer Warranty",
+    image: "/images/products/growcol-mks-iv-6kw.png",
+    aiHint: "growcol mks iv 6kw inverter",
+    inStock: true
+  },
+  {
+    name: "Growcol Offgrid Inverter – Vm 3Kva Value 2.4Kw 24V",
+    slug: "growcol-offgrid-inverter-vm-3kva-value-2-4kw-24v",
+    category: "Inverters",
+    description: "Compact and reliable 3kVA / 2.4kW 24V off-grid pure sine wave inverter with integrated MPPT solar charger and smart battery management.",
+    longDescription: "The Growcol VM 3kVA Value is a cost-effective, high-reliability 2.4kW 24V pure sine wave inverter tailored for residential home backup and small business loads in Zambia. Includes an integrated MPPT solar charge controller, configurable AC/Solar input priorities, auto-restart on grid recovery, and comprehensive overcurrent protection.",
+    price: "K 4,975.00",
+    features: [
+      "3000VA / 2400W (2.4kW) Pure Sine Wave Output",
+      "24V DC Low-Voltage Battery Interface",
+      "Built-in 1000W MPPT Solar Charge Controller",
+      "Selectable Input Voltage Range for Appliances & PCs",
+      "Configurable AC/Solar Input Priority via LCD",
+      "Compatible with Mains Grid Voltage or Generator",
+      "Auto-Restart on AC Mains Recovery",
+      "Smart Battery Charger to Optimize Battery Performance"
+    ],
+    whatsInTheBox: [
+      "1 x Growcol VM 3kVA (2.4kW) 24V Inverter",
+      "1 x AC Input & Battery Connection Terminal Covers",
+      "1 x Mounting Hardware Set",
+      "1 x User Guide & Warranty Card"
+    ],
+    warranty: "2-Year Manufacturer Warranty",
+    image: "/images/products/growcol-vm-3kva.png",
+    aiHint: "growcol vm 3kva inverter",
+    inStock: true
+  },
+  {
+    name: "Growcol Offgrid Inverter - Max li 8kw 48v",
+    slug: "growcol-offgrid-inverter-max-ii-8kw-48v",
+    category: "Inverters",
+    description: "Heavy-duty 8kW 48V off-grid pure sine wave inverter with dual MPPTs, high PV capacity, and advanced parallel capability.",
+    longDescription: "The Growcol MAX II 8kW 48V is an ultra-high capacity off-grid inverter engineered for demanding residential estates, commercial lodges, and agricultural backup in Zambia. Features dual MPPT solar trackers supporting up to 8000W PV input, a 5-inch color touch LCD with RGB ring, CAN/RS485 BMS communication, and parallel support for up to 6 units.",
+    price: "K 17,650.00",
+    features: [
+      "8000W (8kW) Continuous Pure Sine Wave Output",
+      "48V DC Battery System Compatibility",
+      "Dual MPPT Solar Trackers (Up to 8000W Max PV Input)",
+      "5\" Colored LCD Screen with Touch Interface & LED Ring",
+      "Built-in Wi-Fi for Real-Time Remote Monitoring",
+      "Battery-Independent Power Delivery Mode",
+      "Parallel Scalability up to 6 Units (Single or 3-Phase)",
+      "Integrated BMS Communication (CAN-BUS & RS485)"
+    ],
+    whatsInTheBox: [
+      "1 x Growcol MAX II 8kW 48V Off-Grid Inverter",
+      "1 x Wi-Fi Antenna / Communication Dongle",
+      "1 x Parallel Communication Cable Kit",
+      "1 x Heavy-Duty Wall Mounting Bracket & Fasteners",
+      "1 x Comprehensive User Manual"
+    ],
+    warranty: "2-Year Manufacturer Warranty",
+    image: "/images/products/growcol-max-ii-8kw.png",
+    aiHint: "growcol max 8kw inverter",
+    inStock: true
+  },
+  {
+    name: "Mars 5Kw All In One Inverter",
+    slug: "mars-5kw-all-in-one-inverter",
+    category: "Inverters",
+    description: "Integrated 5kW hybrid all-in-one inverter energy storage solution with pure sine wave output, solar MPPT, and instant UPS transfer.",
+    longDescription: "The Mars 5kW All-In-One Hybrid Inverter combines a high-efficiency 5000W inverter, intelligent solar MPPT charge controller, and UPS transfer switch into a single streamlined unit. Engineered for seamless residential and commercial backup during load shedding, it seamlessly coordinates energy flow between solar panels, 48V lithium batteries, and the utility grid.",
+    price: "K 24,720.00",
+    features: [
+      "5.0 kW (5000W) Pure Sine Wave Hybrid Inverter",
+      "Streamlined All-in-One Compact Architecture",
+      "Wide MPPT Voltage Range for Optimized Solar Harvesting",
+      "<10ms Seamless UPS Automatic Transfer Switch",
+      "48V LiFePO4 Lithium Battery BMS Compatibility",
+      "Configurable Priority Modes: Solar, Utility, Generator, Battery",
+      "Smart Remote Monitoring via WiFi / RS485 Interface",
+      "Comprehensive Overload, Short Circuit & Surge Protection"
+    ],
+    whatsInTheBox: [
+      "1 x Mars 5kW All-In-One Hybrid Inverter",
+      "1 x Wi-Fi Communication Module",
+      "1 x Wall Mounting Bracket & Fasteners",
+      "1 x Battery Connection Cable Kit",
+      "1 x User & Installation Manual"
+    ],
+    warranty: "3-Year Manufacturer Warranty",
+    image: "/images/products/mars-5kw-all-in-one.webp",
+    aiHint: "mars 5kw hybrid inverter",
+    inStock: true
+  },
+  {
+    name: "Goodwe-Et-50Kw-Three Phase-Hybrid Inverter",
+    slug: "goodwe-et-50kw-three-phase-hybrid-inverter",
+    category: "Inverters",
+    description: "Commercial 50kW 3-phase high-voltage hybrid inverter with 4 MPPTs, 150% DC oversizing, and industrial UPS-level backup.",
+    longDescription: "The GoodWe ET 50kW (GW50K-ET-10) is a high-voltage commercial and industrial 3-phase hybrid inverter designed for factories, lodges, farms, and large commercial operations in Zambia. Features 4 independent MPPTs, support for up to 75kW PV input (150% oversizing), high-voltage battery storage (200V - 800V DC), peak shaving, and parallel scaling up to 500kW.",
+    price: "K 75,900.00",
+    features: [
+      "50kW (50,000W) Three-Phase Nominal AC Output (GW50K-ET)",
+      "Up to 75,000W (150%) DC Solar Array Input Oversizing",
+      "4 Independent MPPT Trackers (1000V Max DC Voltage)",
+      "High-Voltage Battery Interface (200V - 800V DC)",
+      "Max 100A / 55kW Fast Charge and Discharge Rate",
+      "UPS-Level Auto Transfer Switching (<10ms with STS)",
+      "Intelligent Peak Shaving, Time-of-Use & Generator Integration",
+      "Commercial IP66 Weatherproof Aluminum Casing",
+      "Parallel Scalable from 50kW up to 500kW Capacity"
+    ],
+    whatsInTheBox: [
+      "1 x GoodWe GW50K-ET 50kW Three-Phase Hybrid Inverter",
+      "1 x Wi-Fi / LAN Smart Communication Module",
+      "1 x Smart Meter & 3-Phase CT Sensors",
+      "1 x Industrial Wall Mounting Bracket & Fixings",
+      "1 x Factory Calibration Certificate & Documentation"
+    ],
+    warranty: "5-Year Standard Manufacturer Warranty",
+    image: "/images/products/goodwe-et-50kw.png",
+    aiHint: "goodwe 50kw commercial hybrid inverter",
     inStock: true
   },
   {
@@ -350,6 +663,119 @@ export const PRODUCTS: Product[] = [
     features: ["8kW Hybrid Inverter", "48V System", "Advanced MPPT tracking", "Grid-tie with backup"],
     image: "/images/products/Greenrich inverter.jpg",
     aiHint: "large inverter",
+    inStock: true
+  },
+  {
+    name: "MARS PORTABLE POWER SOLUTION 1000W (EXCL. BATTERY)",
+    slug: "mars-portable-power-solution-1000w-excl-battery",
+    category: "Portable",
+    description: "Compact 1000W plug-and-play portable inverter power solution with multi-output ports and rapid AC/solar charging (sold excluding battery).",
+    longDescription: "The Mars Portable Power Solution 1000W is a versatile mobile backup power unit engineered for load shedding, camping, and mobile work stations in Zambia. Designed with an external battery compartment that allows you to connect any 12V Gel, AGM, or Lithium battery of your choice. Delivers clean 1000W pure sine wave electricity to keep TVs, decoders, laptops, lighting, and Wi-Fi routers running seamlessly.",
+    price: "K 6,412.00",
+    features: [
+      "1000W Pure Sine Wave AC Power Output",
+      "External Battery Design (Compatible with 12V Gel or Lithium Batteries)",
+      "Fast AC Grid Charging & Solar MPPT Input Supported",
+      "Multiple 230V AC Sockets, Fast USB Ports, & 12V DC Outlets",
+      "Clear LCD Display Showing Real-Time Load & Battery Level",
+      "Automatic UPS Transfer Switching (<15ms)",
+      "Overload, Overheat, Short Circuit & Deep Discharge Safeguards",
+      "Compact, Portable Design with Carrying Handles"
+    ],
+    whatsInTheBox: [
+      "1 x Mars 1000W Portable Power Station Inverter Unit",
+      "1 x AC Power Charging Cable",
+      "1 x Heavy-Duty Battery Connection Cables with Terminals",
+      "1 x User Guide (Note: Battery Sold Separately)"
+    ],
+    warranty: "1-Year Hardware Warranty",
+    image: "/images/products/mars-portable-1000w.png",
+    aiHint: "mars portable power 1000w",
+    inStock: true
+  },
+  {
+    name: "Mars Portable Power Solution 2000W (Excl. Battery)",
+    slug: "mars-portable-power-solution-2000w-excl-battery",
+    category: "Portable",
+    description: "Versatile 2000W pure sine wave mobile backup trolley with solar MPPT and seamless automatic UPS transfer (sold excl. battery).",
+    longDescription: "The Mars Portable Power Solution 2000W is an essential mobile backup solution for Zambian homes and businesses during load shedding. Delivers 2000W of pure sine wave power to run TV entertainment centers, refrigeration, computers, decoders, and home lighting. Features a robust wheeled trolley design with an open battery compartment supporting 24V Gel, AGM, or Lithium battery banks.",
+    price: "K 12,075.00",
+    features: [
+      "2000W Continuous Pure Sine Wave AC Output",
+      "External Battery Design (Compatible with 24V Gel or Lithium Batteries)",
+      "Integrated AC Grid Fast Charger + Solar MPPT Controller",
+      "Instant Automatic UPS Switching During Power Grid Outages",
+      "Smooth Heavy-Duty Caster Wheels & Pull Handle for Portability",
+      "Large Digital LCD Screen Showing System Status & Battery Voltage",
+      "Overload, Overcharge, Short Circuit & High-Temp Safety Protection",
+      "Plug & Play Operation with Multiple AC Output Sockets"
+    ],
+    whatsInTheBox: [
+      "1 x Mars 2000W Mobile Inverter Power Station Unit",
+      "1 x AC Mains Input Cable",
+      "1 x Heavy-Duty Battery Terminal Cables",
+      "1 x User & Setup Manual (Note: Battery Sold Separately)"
+    ],
+    warranty: "1-Year Hardware Warranty",
+    image: "/images/products/mars-portable-2000w.jpg",
+    aiHint: "mars portable 2000w power solution",
+    inStock: true
+  },
+  {
+    name: "Mars Portable Power Solution 3000W (Excl. Battery)",
+    slug: "mars-portable-power-solution-3000w-excl-battery",
+    category: "Portable",
+    description: "Heavy-duty 3000W pure sine wave inverter mobile trolley with solar MPPT, high surge capacity, and automatic UPS backup (excl. battery).",
+    longDescription: "The Mars Portable Power Solution 3000W is a heavy-duty mobile backup unit designed for powering demanding home and office equipment including refrigerators, deep freezers, power tools, water dispensers, and office computing setups during load shedding in Zambia. Built on a heavy-duty caster-wheeled trolley with an external battery compartment that accepts 24V or 48V Gel, AGM, or LiFePO4 lithium batteries.",
+    price: "K 13,800.00",
+    features: [
+      "3000W Heavy-Duty Pure Sine Wave Continuous Output",
+      "High Surge Capability for Compressors, Fridges & Power Tools",
+      "External Battery Architecture (Pair with 24V/48V Lithium or Gel Batteries)",
+      "Integrated High-Efficiency Solar MPPT Charge Controller",
+      "Automatic Instant Transfer Switch (<15ms) for Continuous Backup",
+      "Heavy-Duty Mobile Trolley Frame with 360° Lockable Swivel Wheels",
+      "Multi-Function LCD Display for Voltage, Load % & Battery Health",
+      "Comprehensive Overload, Short Circuit & Overheat Protection"
+    ],
+    whatsInTheBox: [
+      "1 x Mars 3000W Inverter Trolley Unit",
+      "1 x AC Mains Power Cable",
+      "1 x Heavy-Gauge Battery Interlink & Connecting Cables",
+      "1 x User & Installation Guide (Note: Battery Sold Separately)"
+    ],
+    warranty: "1-Year Hardware Warranty",
+    image: "/images/products/mars-portable-3000w.jpg",
+    aiHint: "mars portable 3000w power solution",
+    inStock: true
+  },
+  {
+    name: "Jieyo 1200W Portable Power Station",
+    slug: "jieyo-1200w-portable-power-station",
+    category: "Portable",
+    description: "Compact 1200W / 1280Wh LiFePO4 portable power station with ≤10ms UPS transfer, fast AC charging, and multi-port output array.",
+    longDescription: "The Jieyo 1200W Portable Power Station (JY1280) is an all-in-one solar-ready mobile energy storage system featuring a 1280Wh Grade-A LiFePO4 battery pack and 1200W pure sine wave inverter. Provides ultra-fast UPS switching (≤10ms) during power cuts, 8,000+ cycle lifespan, 60W USB-C PD fast charging, 12V DC ports, and quick 2-3 hour AC mains recharging.",
+    price: "K 7,245.00",
+    features: [
+      "1200W Continuous Pure Sine Wave AC Power Output",
+      "1280Wh High-Capacity Grade-A LiFePO4 Internal Battery",
+      "8,000+ Ultra-Long Cycle Life (at 80% DoD)",
+      "Bidirectional Inverter for Fast AC Wall Recharging (2-3 Hours)",
+      "Ultra-Fast UPS Auto-Switchover (≤10ms Transfer Time)",
+      "Full Port Selection: 230V AC Sockets, 60W USB-C PD, USB QC, 12V Car Port",
+      "Solar Charging Input Supported (Up to 400W MPPT Solar Input)",
+      "Smart Multi-Color LCD Display with Real-Time Wattage & Battery Meter"
+    ],
+    whatsInTheBox: [
+      "1 x Jieyo 1200W (1280Wh) Portable Power Station",
+      "1 x AC Wall Charging Cable",
+      "1 x 12V Car Charging Cable",
+      "1 x Solar MC4 to DC Charging Cable",
+      "1 x User Manual & Warranty Card"
+    ],
+    warranty: "2-Year Product Warranty",
+    image: "/images/products/jieyo-1200w-power-station.jpg",
+    aiHint: "jieyo 1200w portable power station",
     inStock: true
   },
   {

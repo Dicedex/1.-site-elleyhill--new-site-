@@ -3,10 +3,28 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Us - Elleyhill Power ZM",
+  title: "About Us | Leading Solar Energy & Storage Company Zambia",
   description:
-    "Powering Zambia's Energy Resilience with engineered solutions, reliable storage, and accredited installations across Zambia.",
+    "Elleyhill Power Zambia is Zambia's trusted leader in Tier-1 hybrid solar systems, LiFePO4 lithium batteries, and accredited solar engineering. Headquartered in Lusaka with nationwide delivery and certified EPC installations.",
+  keywords: [
+    "About Elleyhill Power",
+    "Solar Energy Company Zambia",
+    "Solar Providers Lusaka",
+    "Tier-1 Solar Engineering Zambia",
+    "Solar Contractors Lusaka",
+  ],
+  alternates: {
+    canonical: "https://elleyhill.co.zm/about",
+  },
+  openGraph: {
+    title: "About Elleyhill Power Zambia | Tier-1 Solar Engineering",
+    description:
+      "Powering Zambia's energy resilience with certified engineering, reliable lithium storage, and high-performance solar installations.",
+    url: "https://elleyhill.co.zm/about",
+    images: [{ url: "https://elleyhill.co.zm/images/logo.png", alt: "About Elleyhill Power Zambia" }],
+  },
 };
+
 
 export default function AboutUsPage() {
   return (

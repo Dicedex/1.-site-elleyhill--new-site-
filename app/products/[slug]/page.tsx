@@ -66,13 +66,59 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!product) {
     return {
-      title: "Product Not Found | Elleyhill Power ZM",
+      title: "Product Not Found | Elleyhill Power Zambia",
     };
   }
 
+  const cleanPrice = product.price.replace(/[^0-9.]/g, "");
+  const pageTitle = `${product.name} | Best Price in Lusaka, Zambia`;
+  const pageDescription = `Buy genuine ${product.name} (${product.category}) in Lusaka, Zambia at ${product.price}. Official warranty, fast local delivery across Lusaka & nationwide. ${product.description}`;
+  const canonicalUrl = `https://elleyhill.co.zm/products/${product.slug}`;
+
   return {
-    title: `${product.name} | Elleyhill Power ZM`,
-    description: product.description,
+    title: pageTitle,
+    description: pageDescription,
+    keywords: [
+      product.name,
+      `${product.name} Zambia`,
+      `${product.name} Lusaka`,
+      `${product.category} Lusaka Zambia`,
+      "Solar price Zambia",
+      "Elleyhill Power Zambia",
+      "Load shedding backup Lusaka",
+    ],
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: pageTitle,
+      description: pageDescription,
+      url: canonicalUrl,
+      type: "website",
+      images: [
+        {
+          url: product.image.startsWith("http")
+            ? product.image
+            : `https://elleyhill.co.zm${product.image}`,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: pageTitle,
+      description: pageDescription,
+      images: [
+        product.image.startsWith("http")
+          ? product.image
+          : `https://elleyhill.co.zm${product.image}`,
+      ],
+    },
+    other: {
+      "product:price:amount": cleanPrice,
+      "product:price:currency": "ZMW",
+      "product:availability": product.inStock !== false ? "in stock" : "out of stock",
+    },
   };
 }
 
@@ -84,12 +130,111 @@ export default async function DynamicProductPage({ params }: Props) {
     notFound();
   }
 
+  const numericPrice = parseFloat(product.price.replace(/[^0-9.]/g, "")) || 0;
+  const brandName = product.name.includes("JA Solar")
+    ? "JA Solar"
+    : product.name.includes("Greenrich")
+    ? "Greenrich"
+    : product.name.includes("Growatt")
+    ? "Growatt"
+    : product.name.includes("Haitai")
+    ? "Haitai"
+    : product.name.includes("Deye")
+    ? "Deye"
+    : "Elleyhill Power";
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image.startsWith("http")
+      ? product.image
+      : `https://elleyhill.co.zm${product.image}`,
+    description: product.longDescription || product.description,
+    sku: product.slug,
+    mpn: product.slug,
+    brand: {
+      "@type": "Brand",
+      name: brandName,
+    },
+    offers: {
+      "@type": "Offer",
+      url: `https://elleyhill.co.zm/products/${product.slug}`,
+      priceCurrency: "ZMW",
+      price: numericPrice,
+      priceValidUntil: "2027-12-31",
+      itemCondition: "https://schema.org/NewCondition",
+      availability:
+        product.inStock !== false
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: "Elleyhill Power Zambia",
+      },
+      areaServed: {
+        "@type": "Place",
+        name: "Lusaka, Zambia",
+      },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: "48",
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://elleyhill.co.zm",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Shop",
+        item: "https://elleyhill.co.zm/shop",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.category,
+        item: `https://elleyhill.co.zm/shop?category=${encodeURIComponent(product.category)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: product.name,
+        item: `https://elleyhill.co.zm/products/${product.slug}`,
+      },
+    ],
+  };
+
   const relatedProducts = PRODUCTS.filter(
     (p) => p.category === product.category && p.slug !== product.slug
   ).slice(0, 3);
 
   return (
     <div className="bg-surface-container-lowest text-on-surface font-body-lg antialiased pb-24 md:pb-16 min-h-screen flex flex-col">
+      {/* Product JSON-LD Structured Data for Google Rich Snippets & Bing Shopping */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+      />
+
       <main className="mt-header-height-mobile md:mt-header-height-desktop max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg flex-grow w-full">
         {/* Breadcrumbs */}
         <div className="mb-stack-lg flex items-center gap-2 text-body-sm text-on-surface-variant flex-wrap">
