@@ -32,15 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  // Direct category filter entry points
-  const categories = ["Complete Kits", "Batteries", "Inverters", "Panels", "Accessories", "Portable"];
-  const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
-    url: `${baseUrl}/shop?category=${encodeURIComponent(cat)}`,
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: 0.85,
-  }));
-
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+  return [...staticRoutes, ...productRoutes];
 }
+
 
